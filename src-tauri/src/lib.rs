@@ -119,6 +119,7 @@ pub fn run() {
             commands::commit_states,
             commands::change_request,
             commands::commit_checks,
+            commands::commit_runs,
             commands::rerun_failed_checks,
             commands::save_settings_file,
             commands::read_settings_file,

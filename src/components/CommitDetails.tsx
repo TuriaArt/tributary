@@ -52,6 +52,8 @@ interface Props {
   isShown?: (path: string) => boolean;
   /** Say what was done (like re-running failed checks). */
   notify?: (text: string) => void;
+  /** Show the commit's checks, each run as a graph of its jobs. */
+  onShowChecks?: () => void;
 }
 
 export interface DetailsAction {
@@ -190,7 +192,7 @@ export function CommitDetailsPanel(props: Props) {
             <MentionedIssues text={`${details?.summary ?? commit.summary}\n${details?.body ?? ""}\n${commit.refs.map((ref) => ref.name).join("\n")}`} open={openRequests} />
           </section>
 
-          {props.notify && <CommitChecks repoPath={repoPath} id={commit.id} notify={props.notify} />}
+          {props.notify && <CommitChecks repoPath={repoPath} id={commit.id} notify={props.notify} onShow={props.onShowChecks} />}
 
           <section className="details-section">
             <div className="details-section-head">

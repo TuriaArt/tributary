@@ -5,7 +5,7 @@ import { anyRunning, checkName, checkTime } from "../lib/pullRequests";
 import { useNow } from "../lib/useNow";
 import { openInBrowser } from "../lib/weblinks";
 import { SlidingText } from "./SlidingText";
-import { ExternalLinkIcon, RefreshIcon } from "./Icons";
+import { ExternalLinkIcon, RefreshIcon, WorkflowIcon } from "./Icons";
 import { Button } from "./ui/Button";
 
 type State = "failure" | "pending" | "success" | "cancelled" | "skipped";
@@ -22,7 +22,7 @@ const FIRST = 4;
  * them when asked), and the failed ones run again from here. Only for commits the list knows
  * a state for.
  */
-export function CommitChecks({ repoPath, id, notify }: { repoPath: string; id: string; notify: (text: string) => void }) {
+export function CommitChecks({ repoPath, id, notify, onShow }: { repoPath: string; id: string; notify: (text: string) => void; onShow?: () => void }) {
   const state = useContext(CiStatesContext).get(id);
   const [checks, setChecks] = useState<Checks | null>(null);
   const [all, setAll] = useState(false);
@@ -67,6 +67,12 @@ export function CommitChecks({ repoPath, id, notify }: { repoPath: string; id: s
           <button className="commit-checks-rerun" disabled={busy} onClick={rerun}>
             <RefreshIcon size={12} />
             <span className="button-label">{busy ? "Asking…" : "Re-run failed"}</span>
+          </button>
+        )}
+        {onShow && (
+          <button className="commit-checks-rerun commit-checks-open" onClick={onShow} title="Open the checks, each run as a graph of its jobs">
+            <WorkflowIcon size={12} />
+            <span className="button-label">Open</span>
           </button>
         )}
       </div>

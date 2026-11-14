@@ -407,6 +407,12 @@ pub async fn commit_checks(path: String, id: String) -> Result<crate::ci::Commit
     crate::ci::commit_checks(&PathBuf::from(path), id).await
 }
 
+/// A commit's CI run by run, with each run's jobs in groups and which waits for which.
+#[tauri::command]
+pub async fn commit_runs(path: String, id: String) -> Result<crate::ci::CommitRuns> {
+    crate::ci::commit_runs(&PathBuf::from(path), id).await
+}
+
 /// Run a commit's failed checks again.
 #[tauri::command]
 pub async fn rerun_failed_checks(path: String, id: String) -> Result<String> {

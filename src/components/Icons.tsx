@@ -378,6 +378,16 @@ export const CopyIcon = (p: IconProps) => (
   </Icon>
 );
 
+/** A workflow run: a job, and two that wait for it. */
+export const WorkflowIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <circle cx="3.5" cy="8" r="2" />
+    <circle cx="12.5" cy="3.75" r="2" />
+    <circle cx="12.5" cy="12.25" r="2" />
+    <path d="M5.5 8H7c1.6 0 1.4-4.25 3-4.25h.5M7 8c1.6 0 1.4 4.25 3 4.25h.5" />
+  </Icon>
+);
+
 export const CommitIcon = (p: IconProps) => (
   <Icon {...p}>
     <circle cx="8" cy="8" r="2.5" />

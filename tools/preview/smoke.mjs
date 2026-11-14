@@ -15,7 +15,7 @@ import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, wr
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { buildDemos, demoEnv, STUDIO_PULL_REQUEST_CONVERSATIONS, STUDIO_PULL_REQUEST_DETAILS, STUDIO_PULL_REQUESTS } from "./demo.mjs";
+import { buildDemos, demoEnv, studioCommitRuns, STUDIO_PULL_REQUEST_CONVERSATIONS, STUDIO_PULL_REQUEST_DETAILS, STUDIO_PULL_REQUESTS } from "./demo.mjs";
 import { CONTROLS, describe as describeAligned, EXCEPT, misaligned } from "./aligned.mjs";
 import { describeOffCentre, moving, offCentre as offInPixels, probe, restore } from "../e2e/centred.mjs";
 import { decodePng } from "../e2e/png.mjs";
@@ -1393,6 +1393,43 @@ try {
     await checks.getByRole("button", { name: "Re-run failed" }).click();
     await page.locator(".toast", { hasText: "Running the failed jobs again" }).waitFor({ timeout: 5000 });
     await dismissToast();
+  });
+
+  await step("shows a commit's checks as a graph of each run, and opens a job's page", async () => {
+    await page.evaluate((runs) => Object.assign(window.__PREVIEW__, { commitRuns: runs }), studioCommitRuns());
+    const current = page.locator(".commit-row", { has: page.locator(".ref-pill.current") }).first();
+    await page.locator(".details .commit-checks").getByRole("button", { name: "Open" }).click();
+    const view = page.locator(".checks-view");
+    const build = view.locator(".run-card", { hasText: "Build" }).first();
+    // The platforms in one box, the one still running at its step, and the jobs still waiting.
+    await build.locator(".run-group", { hasText: "3 jobs" }).waitFor({ timeout: 10_000 });
+    await build.locator(".run-job.running .run-step-name", { hasText: "Cook the tavern level" }).waitFor({ timeout: 5000 });
+    expect((await build.locator(".run-card-job.waiting").count()) === 2, "the jobs still waiting aren't shown");
+    // A line from each group to each that waits for it, left to right: Version and Lint to
+    // Build, Build to Package, Package to Upload.
+    await page.waitForFunction(() => document.querySelector(".checks-view .run-card")?.querySelectorAll(".run-edge path").length === 4, null, { timeout: 5000 });
+    const ends = await build.locator(".run-edge path").evaluateAll((paths) => paths.map((path) => path.getAttribute("d").match(/^M([\d.]+) [\d.]+ C.* ([\d.]+) [\d.]+$/)));
+    expect(ends.every((found) => found && Number(found[1]) < Number(found[2])), `a line doesn't go left to right: ${JSON.stringify(ends)}`);
+    // Wider than the view beside the panels: the graph scrolls rather than squeezing, with an
+    // arrow on the side there's more of.
+    const graph = build.locator(".run-graph-scroll");
+    expect(await graph.evaluate((element) => element.scrollWidth > element.clientWidth), "the Build graph was squeezed to fit");
+    await build.locator(".run-graph-more.right").click();
+    await build.locator(".run-graph-more.left").waitFor({ timeout: 5000 });
+    expect(await graph.evaluate((element) => element.scrollLeft > 0), "the arrow didn't scroll the graph");
+    await view.locator(".checks-count.failure", { hasText: "1 failed" }).waitFor({ timeout: 5000 });
+    await accessible("a commit's checks as graphs");
+    // A job opens its page.
+    await view.locator(".run-card-job", { hasText: "Audio loudness" }).click();
+    expect((await page.evaluate(() => window.__PREVIEW__.opened)).some((url) => url.endsWith("/42/job/7")), "the job's page didn't open");
+    await page.keyboard.press("Escape");
+    await view.waitFor({ state: "detached", timeout: 5000 });
+    // The commit's menu opens them too.
+    await current.click({ button: "right" });
+    await page.locator(".menu-item", { hasText: "Show checks" }).click();
+    await view.locator(".run-card", { hasText: "Asset checks" }).waitFor({ timeout: 10_000 });
+    await page.keyboard.press("Escape");
+    await view.waitFor({ state: "detached", timeout: 5000 });
   });
 
   await step("shows a pull request's reviews and checks", async () => {
