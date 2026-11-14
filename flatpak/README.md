@@ -19,6 +19,8 @@ flatpak install --user Tributary.flatpak
 flatpak run io.github.shikoko.tributary
 ```
 
+Each Build run also installs it on a fresh Ubuntu (the **Flatpak starts** job), checks that its git is the computer's, and checks that Tributary starts in a virtual display and keeps running. Using it, like opening a repository or committing, is for people on Linux to try.
+
 A Flatpak installed from a file isn't updated. Tributary doesn't offer its own updates in a Flatpak (only the AppImage does), so it's for trying until it's on Flathub.
 
 ## The computer's git
