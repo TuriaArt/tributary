@@ -309,12 +309,14 @@ jobs:
       - name: The .deb, by the name the manifest uses
         run: mv flatpak/input/*.deb flatpak/input/tributary.deb
 
-      # flatpak-builder from Flathub's image, with the GNOME runtime and SDK from Flathub. The
-      # container has no FUSE, so without rofiles-fuse.
+      # flatpak-builder from Flathub's image, with the GNOME runtime and SDK the image comes with
+      # (Flathub builds the image again as they change). Not updated from Flathub here: they're
+      # in the image's own layers, which the container can't swap files in, so an update fails
+      # ("Invalid cross-device link") whenever Flathub has a newer one. The container has no
+      # FUSE, so without rofiles-fuse.
       - name: Build the Flatpak
         run: |
-          flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
-          flatpak-builder --disable-rofiles-fuse --install-deps-from=flathub --force-clean --repo=repo build flatpak/io.github.shikoko.tributary.yml
+          flatpak-builder --disable-rofiles-fuse --force-clean --repo=repo build flatpak/io.github.shikoko.tributary.yml
           flatpak build-bundle repo Tributary.flatpak io.github.shikoko.tributary
           ls -l Tributary.flatpak
 
