@@ -250,6 +250,13 @@ pub enum Action {
     Rebase { onto: String },
     /// Apply the changes of a commit on top of the checked-out branch.
     CherryPick { id: String },
+    /// Apply the changes of commit `id` on top of `branch`: the checked-out one as
+    /// [`Action::CherryPick`] does, or another without checking it out (stopping, changing
+    /// nothing, when that would conflict).
+    CherryPickOnto { id: String, branch: String },
+    /// Move `branch` back off its tip `id`, onto its parent, when it's still there: undoes
+    /// [`Action::CherryPickOnto`] onto a branch that isn't checked out.
+    DropTip { branch: String, id: String },
     /// Make a new commit that undoes a commit.
     Revert { id: String },
     /// Carry on with a merge, rebase, cherry-pick or revert after resolving conflicts.
@@ -708,6 +715,10 @@ fn perform(
         Action::Merge { target, mode } => history::merge(&repo, &git, target, mode),
         Action::Rebase { onto } => history::rebase(&repo, &git, onto),
         Action::CherryPick { id } => history::cherry_pick(&repo, &git, id),
+        Action::CherryPickOnto { id, branch } => {
+            history::cherry_pick_onto(&repo, &git, id, branch, extra)
+        }
+        Action::DropTip { branch, id } => history::drop_tip(&repo, &git, branch, id),
         Action::Revert { id } => history::revert(&repo, &git, id),
         Action::ContinueOperation => conflicts::continue_operation(&repo, &git),
         Action::SkipCommit => conflicts::skip_commit(&repo, &git),

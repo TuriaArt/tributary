@@ -75,6 +75,8 @@ export type Action =
   | { kind: "merge"; target: string; mode?: MergeMode }
   | { kind: "rebase"; onto: string }
   | { kind: "cherryPick"; id: string }
+  | { kind: "cherryPickOnto"; id: string; branch: string }
+  | { kind: "dropTip"; branch: string; id: string }
   | { kind: "revert"; id: string }
   | { kind: "continueOperation" }
   | { kind: "skipCommit" }
