@@ -19,7 +19,7 @@ import type { ToastMessage } from "./components/Toast";
 import { shortcutLabel } from "./app/appCommand";
 import { aboutCommandsFor, appMenus, helpCommandsFor, settingsCommand, startCommands, type MenuBarContext } from "./app/appMenus";
 import { AppOverlays } from "./app/AppOverlays";
-import { FOCUS_REFRESH_INTERVAL, type Running } from "./app/constants";
+import { FOCUS_REFRESH_INTERVAL, reachedRemote, type Running } from "./app/constants";
 import { chooseFilesToLock } from "./app/lockPicker";
 import { paletteCommands } from "./app/paletteCommands";
 import { RepositoryView } from "./app/RepositoryView";
@@ -234,8 +234,8 @@ export default function App() {
       // Locks change when you lock or unlock, and may have changed on the server; a push
       // can open the way for a pull request, and a fetch can bring new ones.
       if (action.kind === "lockFiles" || action.kind === "unlockFiles") lfs.refresh(true);
-      else if (kind && kind !== "other" && kind !== "checkout") lfs.refresh();
-      if (kind && kind !== "other" && kind !== "checkout") prs.refresh(true);
+      else if (reachedRemote(kind)) lfs.refresh();
+      if (reachedRemote(kind)) prs.refresh(true);
       if (action.kind === "push" && outcome?.pushedFiles) lockRelease.pushedFiles(outcome.pushedFiles);
       submodules.ran(action);
     },
