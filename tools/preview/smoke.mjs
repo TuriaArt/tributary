@@ -1035,6 +1035,43 @@ try {
     await row("Add a tavern chair").waitFor({ timeout: 10_000 });
   });
 
+  await step("sizes tabs to their names, with the close button over the name's end on hover", async () => {
+    const tabs = page.locator(".tabs > .tab[data-path]");
+    const notebook = tabs.filter({ hasText: /^notebook$/ });
+    const close = notebook.locator(".tab-close");
+    // No room is kept for the close button: a tab is its name, the padding either side (26px)
+    // and a new commits dot if it has one (11px), or 64px for a short name. With room for the
+    // button, it was the name and about 50px.
+    const widths = await tabs.evaluateAll((all) =>
+      all.map((tab) => {
+        const name = tab.querySelector(".tab-name > span");
+        return { name: name.textContent, width: tab.getBoundingClientRect().width, text: name.scrollWidth };
+      }),
+    );
+    for (const { name, width, text } of widths) expect(width <= Math.max(64, text + 38), `${name}'s tab is ${width}px wide, for a name ${text}px wide`);
+    await page.mouse.move(5, 400);
+    expect((await close.evaluate((element) => getComputedStyle(element).opacity)) === "0", "the close button shows without the pointer on the tab");
+    // On the tab: over the end of the name, which fades out under it.
+    await notebook.hover();
+    await page.waitForFunction(() => getComputedStyle(document.querySelector(".tabs > .tab[data-path]:hover .tab-close")).opacity === "1", null, { timeout: 2000 });
+    const x = await close.boundingBox();
+    const tab = await notebook.boundingBox();
+    const name = await notebook.locator(".tab-name").boundingBox();
+    expect(x.x + x.width <= tab.x + tab.width && x.x < name.x + name.width, "the close button isn't over the end of the name");
+    await close.click();
+    await notebook.waitFor({ state: "detached", timeout: 5000 });
+    await page.keyboard.press("Control+Shift+R");
+    await row("Export notes as Markdown").waitFor({ timeout: 10_000 });
+    // In a narrow window, a name cut short fades out at the tab's end.
+    const size = page.viewportSize();
+    await page.setViewportSize({ width: 560, height: size.height });
+    await page.waitForFunction(() => document.querySelector(".tabs > .tab[data-clipped]") !== null, null, { timeout: 5000 });
+    await page.setViewportSize(size);
+    await page.waitForFunction(() => document.querySelector(".tabs > .tab[data-clipped]") === null, null, { timeout: 5000 });
+    await tabs.filter({ hasText: "studio" }).dispatchEvent("mousedown", { button: 0 });
+    await row("Add a tavern chair").waitFor({ timeout: 10_000 });
+  });
+
   await step("shows who holds Git LFS locks", async () => {
     await page.locator(".sidebar-locked", { hasText: "Tavern" }).waitFor({ timeout: 15_000 });
     await accessible("the repository, with its locks");

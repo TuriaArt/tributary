@@ -79,21 +79,51 @@
   overflow: hidden;
 }
 
+/* As wide as its name, as in a browser: the close button isn't given room of its own, but
+   shows over the name's end when the pointer is on the tab (see .tab::after). */
 .tab {
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--space-6);
-  min-width: 90px;
+  min-width: 64px;
   max-width: 220px;
   height: 30px;
   /* 1px below, to balance the border above (it has none below, where it joins the window): its
      name is in the middle of the whole tab. */
-  padding: 0 var(--space-6) 1px var(--space-12);
+  padding: 0 var(--space-12) 1px;
   border: 1px solid transparent;
   border-bottom: none;
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   color: var(--text-muted);
   cursor: default;
+  /* What's behind it: the fade at its end is drawn in this. */
+  --tab-bg: var(--chrome);
+}
+
+/* The end of the name fades into the tab: when it's too long to show whole, and, further in,
+   under the close button while the pointer is on the tab. */
+.tab::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 32px;
+  /* Its corner, inside the tab's (and its border), doesn't round past it. */
+  border-top-right-radius: var(--radius-lg);
+  background: linear-gradient(to right, transparent, var(--tab-bg) 20px);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.tab[data-clipped]::after {
+  opacity: 1;
+}
+
+.tab:hover::after {
+  width: 46px;
+  opacity: 1;
 }
 
 /* A tab dragged along the bar (useTabDrag): above the others, which slide aside to make
@@ -121,6 +151,7 @@
 .tab:hover {
   background: var(--chrome-hover);
   color: var(--text-secondary);
+  --tab-bg: var(--chrome-hover);
 }
 
 .tab.active {
@@ -128,6 +159,7 @@
   background: var(--bg-panel);
   color: var(--text);
   font-weight: 600;
+  --tab-bg: var(--bg-panel);
 }
 
 /* A tab is as wide as its name in bold, whether or not it's the active one (in bold), so
@@ -149,7 +181,6 @@
   text-box: trim-both cap alphabetic;
   height: var(--cap-pixels);
   align-content: unsafe end;
-  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
@@ -161,23 +192,29 @@
   visibility: hidden;
 }
 
+/* Over the end of the name, in the middle of the tab's height (less the 1px below, as the
+   name is). */
 .tab-close {
+  position: absolute;
+  top: 0;
+  right: var(--space-6);
+  bottom: 1px;
+  z-index: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 20px;
   height: 20px;
+  margin: auto 0;
   padding: 0;
   border: none;
   border-radius: var(--radius-sm);
   background: transparent;
   color: var(--text-faint);
   opacity: 0;
-  flex: none;
 }
 
-.tab:hover .tab-close,
-.tab.active .tab-close {
+.tab:hover .tab-close {
   opacity: 1;
 }
 
