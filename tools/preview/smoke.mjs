@@ -1092,12 +1092,32 @@ try {
     await notebook.waitFor({ state: "detached", timeout: 5000 });
     await page.keyboard.press("Control+Shift+R");
     await row("Export notes as Markdown").waitFor({ timeout: 10_000 });
-    // In a narrow window, a name cut short fades out at the tab's end.
+    // Only a name cut short fades out at the tab's end: none at full width (two tabs), and
+    // notebook's in a window too narrow for both tabs (at 560px they just fit; at 440px the open
+    // tab shrinks to 64px). On a timeout, each tab's measurements say why.
+    const measured = () =>
+      tabs.evaluateAll((all) =>
+        all.map((tab) => {
+          const name = tab.querySelector(".tab-name > span");
+          return `${name.textContent}: tab ${tab.getBoundingClientRect().width}px, name ${name.scrollWidth}px in ${name.clientWidth}px${tab.hasAttribute("data-clipped") ? ", cut short" : ""}`;
+        }),
+      );
+    const until = async (clipped, why, which = ".tabs > .tab[data-clipped]") => {
+      for (let tries = 0; tries < 50; tries++) {
+        if ((await page.locator(which).count()) > 0 === clipped) return;
+        await page.waitForTimeout(100);
+      }
+      throw new Error(`${why}: ${(await measured()).join("; ")}`);
+    };
+    await until(false, "a name is cut short at full width");
     const size = page.viewportSize();
-    await page.setViewportSize({ width: 560, height: size.height });
-    await page.waitForFunction(() => document.querySelector(".tabs > .tab[data-clipped]") !== null, null, { timeout: 5000 });
-    await page.setViewportSize(size);
-    await page.waitForFunction(() => document.querySelector(".tabs > .tab[data-clipped]") === null, null, { timeout: 5000 });
+    await page.setViewportSize({ width: 440, height: size.height });
+    try {
+      await until(true, "notebook's name isn't cut short in a narrow window", '.tabs > .tab.active[data-clipped]');
+    } finally {
+      await page.setViewportSize(size);
+    }
+    await until(false, "a name is still cut short at full width again");
     await tabs.filter({ hasText: "studio" }).dispatchEvent("mousedown", { button: 0 });
     await row("Add a tavern chair").waitFor({ timeout: 10_000 });
   });
