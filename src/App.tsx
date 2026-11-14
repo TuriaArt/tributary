@@ -17,7 +17,7 @@ import { TabBar } from "./components/TabBar";
 import { LinkPreview } from "./components/LinkPreview";
 import type { ToastMessage } from "./components/Toast";
 import { shortcutLabel } from "./app/appCommand";
-import { aboutCommandsFor, appMenus, helpCommandsFor, settingsCommand, startCommands, type MenuBarContext } from "./app/appMenus";
+import { aboutCommandsFor, appMenus, helpCommandsFor, reopenTabCommand, settingsCommand, startCommands, type MenuBarContext } from "./app/appMenus";
 import { AppOverlays } from "./app/AppOverlays";
 import { FOCUS_REFRESH_INTERVAL, reachedRemote, type Running } from "./app/constants";
 import { chooseFilesToLock } from "./app/lockPicker";
@@ -164,6 +164,7 @@ export default function App() {
         closeOthers: () => tabbing.closeOthers(path),
         moveLeft: () => tabbing.nudgeTab(path, -1),
         moveRight: () => tabbing.nudgeTab(path, 1),
+        reopen: tabbing.canReopen ? tabbing.reopenTab : null,
       }),
     );
   const search = useSearch(snapshot?.commits, selection.select, selection.selectedIndex, snapshot?.path ?? null);
@@ -346,6 +347,7 @@ export default function App() {
     hiddenCount: settings.hiddenCount,
     highlightingMine: highlight.highlightingMine,
     teamOpen,
+    canReopenTab: tabbing.canReopen,
     usesLocks: Boolean(lfs.locks),
     usesLfs: Boolean(checks?.usesLfs),
     lfsPointers: lfsHealth.health?.pointers ?? 0,
@@ -360,6 +362,7 @@ export default function App() {
       zoom: zoomBy,
       newTab: tabbing.newTab,
       closeTab: tabbing.closeTab,
+      reopenTab: tabbing.reopenTab,
       search: search.focus,
       showAllBranches: settings.showAllBranches,
       highlightMine: highlight.highlightMine,
@@ -395,6 +398,7 @@ export default function App() {
     open: repo.pick,
     newTab: tabbing.newTab,
     closeTab: tabbing.closeCurrent,
+    reopenTab: tabbing.reopenTab,
     showTab: (index) => tabs[index] && tabbing.switchTab(tabs[index].path),
     cycleTab: tabbing.cycle,
     moveTab: (step) => snapshot && tabbing.nudgeTab(snapshot.path, step),
@@ -430,7 +434,7 @@ export default function App() {
           openSettings: () => openSettings(),
           highlightMine: highlight.highlightMine,
         })
-      : [...startCommands(menuBarContext), settingsCommand(menuBarContext), ...helpCommandsFor(menuBarContext), ...aboutCommandsFor(menuBarContext)].map((c) => ({
+      : [...startCommands(menuBarContext), ...(tabbing.canReopen ? [reopenTabCommand(menuBarContext)] : []), settingsCommand(menuBarContext), ...helpCommandsFor(menuBarContext), ...aboutCommandsFor(menuBarContext)].map((c) => ({
           id: c.id,
           label: c.label,
           keywords: c.keywords,

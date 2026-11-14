@@ -8,6 +8,7 @@ import { newPullRequestUrl, openInBrowser, siteName, webRemote } from "../lib/we
 import { splitRemoteBranch, type OpenDialog } from "../menus";
 import { isSubmenu, type AppCommand, type MenuEntry } from "./appCommand";
 import type { Running } from "./constants";
+import { REOPEN_TAB_KEYS } from "./tabMenu";
 import type { Preferences } from "./usePreferences";
 
 /** One menu of the menu bar. */
@@ -30,6 +31,8 @@ export interface MenuBarContext {
   highlightingMine: boolean;
   /** The team activity view is open. */
   teamOpen: boolean;
+  /** A tab was closed lately, and can be opened again. */
+  canReopenTab: boolean;
   /** Whether the repository uses Git LFS locking, and Git LFS at all. */
   usesLocks: boolean;
   usesLfs: boolean;
@@ -47,6 +50,7 @@ export interface MenuBarContext {
     zoom: (step: 1 | -1 | 0) => void;
     newTab: () => void;
     closeTab: (path: string) => void;
+    reopenTab: () => void;
     search: () => void;
     showAllBranches: () => void;
     highlightMine: () => void;
@@ -75,6 +79,11 @@ export interface MenuBarContext {
 /** The Settings… command: in the app menu on macOS, at the end of the File menu elsewhere. */
 export function settingsCommand(ctx: MenuBarContext): AppCommand {
   return { id: "settings", label: "Settings…", icon: <GearIcon />, keys: "CmdOrCtrl+,", run: ctx.do.settings };
+}
+
+/** The tab closed last, back in its place: there with or without a repository open. */
+export function reopenTabCommand(ctx: MenuBarContext): AppCommand {
+  return { id: "reopen-tab", label: "Reopen Closed Tab", icon: <HistoryIcon />, keys: REOPEN_TAB_KEYS, enabled: ctx.canReopenTab, keywords: "restore undo close", run: ctx.do.reopenTab };
 }
 
 /** Open, clone or create a repository: there with or without one open. */
@@ -131,7 +140,7 @@ export function appMenus(ctx: MenuBarContext): AppMenuDefinition[] {
   const menus = (): AppMenuDefinition[] => {
     if (!snapshot) {
       return [
-        { label: "File", entries: [...fileCommands, ...(isMac ? [] : ["-" as const, settings])] },
+        { label: "File", entries: [...fileCommands, reopenTabCommand(ctx), ...(isMac ? [] : ["-" as const, settings])] },
         { label: "View", entries: [...settingCommands, "-", ...zoomCommands] },
         { label: "Help", entries: [...helpCommands, "-", ...aboutCommands] },
       ];
@@ -147,6 +156,7 @@ export function appMenus(ctx: MenuBarContext): AppMenuDefinition[] {
         label: "File",
         entries: [
           { id: "new-tab", label: "New Tab", keys: "CmdOrCtrl+T", icon: <PlusIcon />, run: run.newTab },
+          reopenTabCommand(ctx),
           ...fileCommands,
           "-",
           { id: "close-tab", label: "Close Tab", keys: "CmdOrCtrl+W", icon: <CloseIcon />, run: () => run.closeTab(snapshot.path) },
