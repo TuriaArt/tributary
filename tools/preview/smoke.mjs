@@ -1137,6 +1137,38 @@ try {
     expect(await page.locator(".sidebar-item .pr-badge.failure .pr-number", { hasText: "#14" }).first().isVisible(), "no number in the sidebar");
   });
 
+  await step("keeps the words in the middle of badges and buttons at 150% and 200% too", async () => {
+    // The checks so far are at 100%. At other scales letters round differently: their baseline
+    // goes on a whole CSS pixel and a control's edges on the nearest screen pixel, so a control
+    // starting half a pixel down had its words a screen pixel low (the sidebar's pull request
+    // badges, and the toolbar's buttons and branch). In a page of its own at each scale, in
+    // Chromium: WebKit's rounding hasn't been looked at at these scales.
+    if (browserName !== "chromium") return;
+    for (const scale of [1.5, 2]) {
+      const scaled = await browser.newPage({ viewport: { width: 1440, height: 860 }, deviceScaleFactor: scale, userAgent });
+      try {
+        await scaled.addInitScript(([pick, pullRequests]) => {
+          window.__PREVIEW__ = { pick, pullRequests };
+          localStorage.setItem("tributary.fetch.auto", "false");
+          localStorage.setItem("tributary.whatsNew.seen", JSON.stringify("999.0.0"));
+          localStorage.setItem("tributary.tours.off", "true");
+        }, [demos.studio, STUDIO_PULL_REQUESTS]);
+        await scaled.goto(preview.url);
+        await scaled.getByText("Open repository").first().click();
+        await scaled.locator(".sidebar-item .pr-badge").first().waitFor({ timeout: 15_000 });
+        await scaled.evaluate(() => document.fonts.ready);
+        await scaled.waitForFunction(`(${moving})() === 0`, null, { timeout: 3000 }).catch(() => {});
+        const measured = await scaled.evaluate(`(${probe})(${JSON.stringify(CONTROLS)}, ${JSON.stringify(EXCEPT)})`);
+        expect(measured.some((control) => control.classes === "pr-badge"), "no pull request badge measured");
+        const shot = await scaled.screenshot();
+        const found = describeOffCentre(offInPixels(shot, measured, { tolerance: 1 }));
+        expect(found.length === 0, `at ${scale * 100}%: ${found.slice(0, 6).join("; ")}`);
+      } finally {
+        await scaled.close();
+      }
+    }
+  });
+
   await step("shows pull requests' numbers on their labels when asked", async () => {
     const number = page.locator(".commit-list .pr-badge.failure", { hasText: "#14" }).first().locator(".pr-number");
     await page.keyboard.press("Control+,");

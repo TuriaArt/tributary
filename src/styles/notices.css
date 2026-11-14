@@ -285,6 +285,18 @@
   margin-left: auto;
 }
 
+/* The number is drawn with its baseline on a whole CSS pixel, at every display scale, while
+   the badge's colour goes on the nearest screen pixel. So the badge has to start on a whole
+   pixel too, or the number sits half a pixel low in it: a screen pixel at 150% and 200%,
+   where a pull request's number in the sidebar had 6 pixels above it and 3 below. Centred in the sidebar's
+   27px rows, or in a label's 19px inside, the 14px badge starts half a pixel down; a pixel
+   of margin below moves it up onto a whole one, as the toolbar's buttons and the commit
+   list's labels are (see .toolbar .tool-button and .refs-cell .ref-pill). */
+.sidebar-item .pr-badge,
+.ref-pill .pr-badge {
+  margin-bottom: 1px;
+}
+
 .sidebar-item .pr-badge + .sidebar-counts {
   margin-left: var(--space-4);
 }
