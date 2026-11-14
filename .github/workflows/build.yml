@@ -324,6 +324,52 @@ jobs:
           path: Tributary.flatpak
           if-no-files-found: error
 
+  # The Flatpak as someone on Linux gets it: installed from the file on a fresh Ubuntu, with
+  # the GNOME runtime from Flathub. Its git reaches the computer's, and Tributary starts in a
+  # virtual display and is still running 30 seconds later (the runtime's libraries, WebKit,
+  # the sandbox and its permissions all work). Using it, nobody's tried here.
+  flatpak-check:
+    name: Flatpak starts
+    needs: flatpak
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: Tributary-flatpak
+
+      - name: Flatpak, a virtual display, and the GNOME runtime
+        timeout-minutes: 15
+        run: |
+          # Ubuntu 24.04 keeps programs from making their own user namespaces, which Flatpak's
+          # sandbox (bubblewrap) needs.
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          sudo apt-get -o Acquire::Retries=3 update
+          sudo apt-get -o Acquire::Retries=3 install -y flatpak xvfb dbus-x11
+          flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+          flatpak install --user -y --noninteractive Tributary.flatpak
+
+      - name: Its git is the computer's
+        run: |
+          inside=$(dbus-run-session -- flatpak run --command=git io.github.shikoko.tributary --version)
+          outside=$(git --version)
+          echo "In the Flatpak: $inside. On the computer: $outside."
+          if [ "$inside" != "$outside" ]; then
+            echo "::error::The Flatpak's git isn't the computer's."
+            exit 1
+          fi
+
+      - name: Tributary starts, and keeps running
+        run: |
+          code=0
+          dbus-run-session -- xvfb-run -a timeout 30 flatpak run io.github.shikoko.tributary > tributary.log 2>&1 || code=$?
+          cat tributary.log
+          # 124: still running when timeout stopped it.
+          if [ "$code" != 124 ]; then
+            echo "::error::Tributary ended within 30 seconds (exit code $code)."
+            exit 1
+          fi
+
   # Builds of develop: a beta. It's published as a pre-release (which GitHub's "latest"
   # skips, so only the copies that get betas are offered it), with what was merged since
   # the beta before, and the beta channel points at it. The newest few betas are kept.
