@@ -444,6 +444,7 @@ export function RepositoryView(props: Props) {
               onColumnWidths={preferences.setColumnWidths}
               columnOptions={preferences.columnOptions}
               daySeparators={preferences.daySeparators}
+              prNumbers={preferences.prNumbers}
               onHeaderContextMenu={(x, y) =>
                 menu.show(x, y, columnMenuItems(preferences.columnOptions, preferences.setColumnOptions, preferences.daySeparators, preferences.setDaySeparators))
               }
