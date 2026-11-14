@@ -140,8 +140,8 @@ Every pull request into `develop` or `main` runs the **Checks** workflow (`.gith
 The **Build** workflow (`.github/workflows/build.yml`) makes the installers:
 
 - **macOS:** `.dmg` with a universal app (Apple Silicon and Intel)
-- **Windows:** `-setup.exe`, Tributary's own setup, which the automatic updates run too
-- **Linux:** `.AppImage`, built on Ubuntu 22.04 (an AppImage runs where the C library is as new as the one it was built with, or newer), which the automatic updates replace. A copy of Tributary built from source isn't offered updates (`src-tauri/src/updates.rs`).
+- **Windows:** `-setup.exe`, Tributary's own setup, which the automatic updates run too: `_x64-setup.exe`, and `_arm64-setup.exe` for Windows on ARM, built on an ARM runner (`windows-11-arm`)
+- **Linux:** `.AppImage` (`_amd64`, and `_aarch64` for ARM, built on Ubuntu 22.04's ARM runner), built on Ubuntu 22.04 (an AppImage runs where the C library is as new as the one it was built with, or newer), which the automatic updates replace. A copy of Tributary built from source isn't offered updates (`src-tauri/src/updates.rs`).
 
 Every merge into `develop` (but one of only documentation) is a **beta**: the installers are signed for updates and published as a GitHub pre-release, like `v0.3.0-beta.4`, with what was merged since the beta before. GitHub's latest release skips pre-releases, so only the copies of Tributary that get betas are offered it (**About Tributary → Get beta versions**): they read `latest.json` from the release tagged `beta`, the beta channel, which each new beta and each new release points at itself if it's newer than what it offered (`.github/scripts/beta-channel.sh`). The newest five betas are kept. To try a branch before it's merged, start a build by hand: **Actions → Build → Run workflow**, and choose the branch, then download the installers from the run's **Artifacts**. These aren't signed for updates, so they install by hand but aren't offered as an update.
 
