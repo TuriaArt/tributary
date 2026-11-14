@@ -45,6 +45,7 @@ export const RETRYABLE = new Set<Action["kind"]>([
   "merge",
   "rebase",
   "cherryPick",
+  "cherryPickOnto",
   "revert",
   "cherryPickMany",
   "revertMany",

@@ -51,6 +51,8 @@ function undoOf(action: Action, outcome: Outcome, before: RepoSnapshot): Action 
   const discarded = action.kind === "discardFiles" || action.kind === "discardAll" || action.kind === "applyLines" || (action.kind === "shelve" && !action.keep);
   if (backup && discarded) return { kind: "restoreDiscarded", reference: backup };
   // Restored from the local history: what the files were just before was kept too.
+  // Cherry-picked onto a branch that isn't checked out: that branch goes back where it was.
+  if (backup && action.kind === "cherryPickOnto") return { kind: "dropTip", branch: action.branch, id: backup };
   if (backup && action.kind === "restoreFromHistory") return { kind: "restoreFromHistory", reference: backup, paths: action.paths };
   return undoFor(action, before);
 }

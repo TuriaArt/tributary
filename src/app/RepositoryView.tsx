@@ -1,4 +1,5 @@
 import { useContext, useEffect, useRef, useState, useMemo } from "react";
+import { onCommitDrop } from "../lib/drag";
 import { usePresence } from "../lib/usePresence";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import { fullRefName, PAGE_SIZE, teamPulse, type Action, type CommitRow, type DiffSource, type FileChange, type FileChecks, type Lock, type Overlap, type PullRequest, type RepoSnapshot, type Worktree } from "../api";
@@ -264,6 +265,14 @@ export function RepositoryView(props: Props) {
   const { theme } = useContext(ThemeContext);
   // The branch or tag label the pointer is on: its lanes light up in the graph.
   const [laneLabel, hoverLane] = useLaneHover();
+  // A commit dragged onto a local branch's label is cherry-picked onto it (with Undo). The
+  // label moves to the new commit's row, so the pointer never leaves it: its lane goes out here.
+  const dropCommit = useRef<(id: string, branch: string) => void>(() => {});
+  dropCommit.current = (id, branch) => {
+    hoverLane(null);
+    if (canChange) act({ kind: "cherryPickOnto", id, branch });
+  };
+  useEffect(() => onCommitDrop((id, branch) => dropCommit.current(id, branch)), []);
   const showBranch = (branch: string) => {
     const tip = snapshot.commits.find((commit) => commit.refs.some((ref) => (ref.kind === "branch" || ref.kind === "remote") && ref.name === branch));
     if (!tip) return notLoaded();

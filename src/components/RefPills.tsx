@@ -120,6 +120,8 @@ function Pill({ pill, color, onActivate, onContextMenu, onFocusPill, onHoverPill
     <span
       className={`ref-pill ${pill.kind}${pill.current ? " current" : ""}`}
       data-tour={pill.current && draggable ? "current-branch" : undefined}
+      // A commit dropped on a local branch's label is cherry-picked onto it.
+      data-drop-branch={draggable && pill.kind === "branch" && pill.local ? pill.name : undefined}
       style={style}
       title={
         describePill(pill) +
