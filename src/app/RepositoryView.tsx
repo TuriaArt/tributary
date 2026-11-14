@@ -63,6 +63,7 @@ const REMOTE_ACTIONS: Record<RemoteAction, Action> = {
   fetch: { kind: "fetch" },
   pull: { kind: "pull" },
   push: { kind: "push", force: false },
+  sync: { kind: "sync" },
 };
 
 interface Props {
@@ -389,7 +390,7 @@ export function RepositoryView(props: Props) {
           onSearchStep={search.step}
           onSearchMode={search.setMode}
           onRemote={(action) => act(REMOTE_ACTIONS[action], action)}
-          onPushMenu={(anchor) => menu.under(anchor, pushMenuItems(() => act({ kind: "push", force: false }, "push"), openDialog))}
+          onPushMenu={(anchor) => menu.under(anchor, pushMenuItems(() => act({ kind: "push", force: false }, "push"), () => act({ kind: "sync" }, "sync"), openDialog))}
           lastFetch={snapshot.lastFetched ? snapshot.lastFetched * 1000 : null}
           sidebarOpen={sidebarOpen}
           onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}

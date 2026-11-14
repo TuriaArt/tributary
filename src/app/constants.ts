@@ -37,6 +37,7 @@ export const ACTIVITY_SIZE = 300;
 /** Actions that can be retried after stashing when uncommitted changes are in the way. */
 export const RETRYABLE = new Set<Action["kind"]>([
   "pull",
+  "sync",
   "fetchLatest",
   "checkoutBranch",
   "checkoutRemoteBranch",
@@ -57,6 +58,7 @@ export const RUNNING_LABELS: Record<Exclude<Running, "other" | null>, string> = 
   fetch: "Fetching",
   pull: "Pulling",
   push: "Pushing",
+  sync: "Syncing",
   download: "Downloading Git LFS files",
   submodules: "Updating submodules",
   checkout: "Checking out",

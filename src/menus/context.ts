@@ -9,7 +9,8 @@ import type { CompareRequest } from "../app/useComparison";
 export type OpenDialog =
   | { kind: "reset"; target: CommitRow }
   | { kind: "newBranch"; target: CommitRow }
-  | { kind: "forcePush" }
+  /** `reason`: why it's asked for, when something stopped for it (a sync, into a rewritten branch). */
+  | { kind: "forcePush"; reason?: string }
   /** Go to Commit (Ctrl+G). */
   | { kind: "goToCommit" }
   /** `paths`: the files to start with (all of them when left out). */

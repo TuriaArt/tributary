@@ -91,6 +91,7 @@ pub use prune::{
     CommitBrief, LostCommits, PruneCandidate, PruneInfo, lost_commits, prune_candidates,
 };
 pub use releases::{ReleaseItem, ReleaseNotes, release_notes};
+pub use remote::REWRITTEN;
 pub use remote_settings::{RemoteInfo, remotes};
 pub use rewrites::{BranchVersion, CommitPair, PairStatus, RangeDiff, branch_versions, range_diff};
 pub use search::{SearchMode, SearchResult, search_commits};
@@ -139,6 +140,9 @@ pub enum Action {
     Pull,
     /// Fetch, and fast-forward the checked-out branch when nothing's in the way (never a merge).
     FetchLatest,
+    /// Pull, then push, the checked-out branch: for one with commits of its own and its
+    /// remote branch's. Stops on conflicts, and before pulling into a rewritten branch.
+    Sync,
     /// Push the checked-out branch, setting its upstream if it has none.
     /// `force` uses `--force-with-lease`; `no_verify` skips the pre-push hook.
     Push {
@@ -624,6 +628,7 @@ fn perform(
         Action::Fetch { background } => remote::fetch(&repo, &git, background, on_progress),
         Action::Pull => remote::pull(&repo, &git, on_progress),
         Action::FetchLatest => remote::fetch_latest(&repo, &git, on_progress),
+        Action::Sync => remote::sync(&repo, &git, on_progress, extra),
         Action::Push { force, no_verify } => {
             remote::push(&repo, &git, force, no_verify, on_progress, extra)
         }

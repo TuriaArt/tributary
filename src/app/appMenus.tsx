@@ -1,7 +1,7 @@
 import { open as openFile } from "@tauri-apps/plugin-dialog";
 import type { Action, CommitRow, InstalledApp, RepoSnapshot } from "../api";
 import { WORKTREE_ID } from "../api";
-import { BranchIcon, BroomIcon, CheckIcon, CloneIcon, CloseIcon, CodeIcon, CommitIcon, CopyIcon, DownloadIcon, ExternalLinkIcon, FetchIcon, FileHistoryIcon, FolderIcon, GearIcon, HistoryIcon, IgnoreIcon, InfoIcon, KeyboardIcon, LockIcon, NewRepoIcon, NotesIcon, PlusIcon, PullIcon, PullRequestIcon, PushIcon, RecoverIcon, RefreshIcon, SearchIcon, ShelfIcon, StashIcon, TagIcon, TerminalIcon, ViewIcon } from "../components/Icons";
+import { BranchIcon, BroomIcon, CheckIcon, CloneIcon, CloseIcon, CodeIcon, CommitIcon, CopyIcon, DownloadIcon, ExternalLinkIcon, FetchIcon, FileHistoryIcon, FolderIcon, GearIcon, HistoryIcon, IgnoreIcon, InfoIcon, KeyboardIcon, LockIcon, NewRepoIcon, NotesIcon, PlusIcon, PullIcon, PullRequestIcon, PushIcon, RecoverIcon, RefreshIcon, SearchIcon, ShelfIcon, StashIcon, SyncIcon, TagIcon, TerminalIcon, ViewIcon } from "../components/Icons";
 import type { NativeMenu } from "../lib/nativeMenu";
 import { isMac } from "../lib/platform";
 import { newPullRequestUrl, openInBrowser, siteName, webRemote } from "../lib/weblinks";
@@ -197,6 +197,7 @@ export function appMenus(ctx: MenuBarContext): AppMenuDefinition[] {
           { id: "fetch", label: "Fetch", icon: <FetchIcon />, enabled: hasRemotes && canChange, run: () => run.act({ kind: "fetch" }, "fetch") },
           { id: "pull", label: "Pull", icon: <PullIcon />, enabled: hasRemotes && canChange && Boolean(snapshot.upstream), run: () => run.act({ kind: "pull" }, "pull") },
           { id: "push", label: "Push", icon: <PushIcon />, enabled: hasRemotes && canChange && Boolean(snapshot.headBranch), run: () => run.act({ kind: "push", force: false }, "push") },
+          { id: "sync", label: "Sync (Pull, Then Push)", icon: <SyncIcon />, keywords: "pull push both diverged", enabled: hasRemotes && canChange && Boolean(snapshot.upstream), run: () => run.act({ kind: "sync" }, "sync") },
           { id: "force-push", label: "Force Push…", icon: <PushIcon />, danger: true, enabled: hasRemotes && canChange && Boolean(snapshot.headBranch), run: () => run.dialog({ kind: "forcePush" }) },
           "-",
           { id: "commit", label: "Commit…", icon: <PlusIcon />, enabled: Boolean(snapshot.worktree) && canChange, run: () => run.select(WORKTREE_ID) },

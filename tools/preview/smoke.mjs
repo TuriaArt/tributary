@@ -1816,6 +1816,59 @@ try {
     await card.waitFor({ state: "detached", timeout: 5000 });
   });
 
+  await step("syncs a branch with commits on both sides, and asks for a force push when it was rewritten", async () => {
+    const was = (await page.locator('.tabs > .tab[aria-selected="true"]').textContent()).trim();
+    await page.locator(".tab", { hasText: /^notebook$/ }).dispatchEvent("mousedown", { button: 0 });
+    await row("Export notes as Markdown").waitFor({ timeout: 10_000 });
+    const git = (...args) => execFileSync("git", ["-C", demos.notebook, ...args], { encoding: "utf8" }).trim();
+    // A teammate pushes a commit of their own to main.
+    const teammate = join(folder, "sync-teammate");
+    execFileSync("git", ["clone", "-q", git("remote", "get-url", "origin"), teammate]);
+    const theirs = (...args) => execFileSync("git", ["-C", teammate, "-c", "user.name=Lea Fischer", "-c", "user.email=lea@example.com", ...args], { encoding: "utf8" }).trim();
+    writeFileSync(join(teammate, "TEAM.md"), "Who looks after what.\n");
+    theirs("add", "TEAM.md");
+    theirs("commit", "-qm", "Say who looks after what");
+    theirs("push", "-q", "origin", "HEAD:main");
+    // Fetched, main has commits on both sides: Push becomes Sync.
+    await page.getByRole("button", { name: "Fetch", exact: true }).click();
+    const sync = page.locator(".split-button .tool-button").first();
+    await sync.filter({ hasText: "Sync" }).waitFor({ timeout: 15_000 });
+    await sync.click();
+    // git won't merge while changes are staged (the notebook has some): Sync offers to put
+    // them aside, sync, and bring them back, as a pull does.
+    const synced = page.locator(".toast", { hasText: /Synced main: pulled \d+ commits?, then pushed \d+ commits?/ });
+    const aside = page.getByRole("button", { name: "Stash changes and retry" });
+    await synced.or(aside).first().waitFor({ timeout: 20_000 });
+    if (await aside.isVisible()) await aside.click();
+    await synced.waitFor({ timeout: 20_000 });
+    expect(git("rev-parse", "main") === git("rev-parse", "origin/main"), "main and origin/main differ after syncing");
+    expect(git("ls-tree", "--name-only", "main").split("\n").includes("TEAM.md"), "the teammate's commit wasn't pulled");
+    await dismissToast();
+    // Amended after it was pushed: Sync stops before pulling the old version back, and asks
+    // for a force push instead. Nothing is pushed.
+    const pushed = git("rev-parse", "main");
+    // --only: just the message, not what's staged.
+    git("-c", "user.name=Sam Okafor", "-c", "user.email=sam@example.com", "commit", "-q", "--amend", "--only", "--allow-empty", "-m", "Sync with the team, amended");
+    // The remote moves on too, so main has commits on both sides again.
+    theirs("pull", "-q", "--no-rebase", "origin", "main");
+    writeFileSync(join(teammate, "TEAM.md"), "Who looks after what, and when.\n");
+    theirs("commit", "-qam", "Say when, too");
+    theirs("push", "-q", "origin", "HEAD:main");
+    await page.getByRole("button", { name: "Fetch", exact: true }).click();
+    await sync.filter({ hasText: "Sync" }).waitFor({ timeout: 15_000 });
+    await sync.click();
+    const dialog = page.locator(".dialog", { hasText: "Force push main?" });
+    await dialog.getByText("Sync stopped.", { exact: false }).waitFor({ timeout: 20_000 });
+    await dialog.getByRole("button", { name: "Cancel" }).click();
+    expect(git("rev-parse", "origin/main") !== git("rev-parse", "main"), "something was pushed");
+    // Back as it was before the amend, for the steps after this one (the working files as they are).
+    git("reset", "-q", "--soft", pushed);
+    await page.keyboard.press("F5");
+    await page.locator(".tabs > .tab[data-path]").filter({ hasText: new RegExp(`^${was}$`) }).dispatchEvent("mousedown", { button: 0 });
+    await page.locator('.tabs > .tab[aria-selected="true"]', { hasText: was }).waitFor({ timeout: 10_000 });
+    await page.locator(".commit-row").first().waitFor({ timeout: 10_000 });
+  });
+
   await step("exports the settings to a git repository, and imports them back", async () => {
     const remote = join(folder, "settings.git");
     execFileSync("git", ["init", "--quiet", "--bare", remote]);
