@@ -404,6 +404,7 @@ export default function App() {
     moveTab: (step) => snapshot && tabbing.nudgeTab(snapshot.path, step),
     refresh: repo.refresh,
     focusSearch: search.focus,
+    goToCommit: () => snapshot && setDialog({ kind: "goToCommit" }),
     toggleSidebar: () => preferences.setSidebarOpen((open) => !open),
     toggleActivity: () => preferences.setActivityOpen((open) => !open),
     toggleTeam: () => setTeamOpen((open) => !open),

@@ -5,6 +5,7 @@ import { Button } from "./ui/Button";
 const SHORTCUTS: [string, string][] = [
   [`${modKey}K`, "Command palette"],
   [`${modKey}F`, "Search commits (Enter / Shift+Enter: next / previous match)"],
+  [`${modKey}G`, "Go to a commit: by its id, a branch, a tag or a day"],
   [`${modKey}O`, "Open a repository"],
   [`${modKey},`, "Settings"],
   [`${modKey}T`, "New tab: open, clone or create a repository, or pick a recent one"],

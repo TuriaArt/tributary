@@ -17,6 +17,7 @@ mod diff_tools;
 mod elsewhere;
 mod file_names;
 mod files;
+mod goto;
 mod history;
 mod hooks;
 mod identity;
@@ -76,6 +77,7 @@ pub use diff_tools::{DiffToolSettings, Scope, ToolChoice, diff_tool_settings, se
 pub use elsewhere::{OtherChange, Overlap, changed_elsewhere};
 pub use file_names::{LONG_PATH, NameProblem, Problem};
 pub use files::{FileHistory, file_history};
+pub use goto::find_commit;
 pub use identity::{CommitTemplate, RepoIdentity, commit_template, repo_identity};
 pub use ignored::{IgnoreReason, IgnoreRule, ignore_reason};
 pub use lfs::{FileChecks, LargeFile, LfsStorage, file_checks, lfs_storage_of};

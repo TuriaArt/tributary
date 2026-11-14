@@ -10,6 +10,8 @@ export type OpenDialog =
   | { kind: "reset"; target: CommitRow }
   | { kind: "newBranch"; target: CommitRow }
   | { kind: "forcePush" }
+  /** Go to Commit (Ctrl+G). */
+  | { kind: "goToCommit" }
   /** `paths`: the files to start with (all of them when left out). */
   | { kind: "stash"; paths?: string[] }
   | { kind: "rename"; branch: string }

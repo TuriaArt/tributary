@@ -17,6 +17,8 @@ export interface ShortcutHandlers {
   moveTab: (step: -1 | 1) => void;
   refresh: () => void;
   focusSearch: () => void;
+  /** ⌘G: Go to Commit. */
+  goToCommit: () => void;
   toggleSidebar: () => void;
   toggleActivity: () => void;
   toggleTeam: () => void;
@@ -58,6 +60,7 @@ export function useKeyboardShortcuts(handlers: ShortcutHandlers) {
       else if (mod && event.shiftKey && key === "r") run(on.reopenTab);
       else if ((mod && key === "r") || event.key === "F5") run(on.refresh);
       else if (mod && key === "f") run(on.focusSearch);
+      else if (mod && key === "g" && !event.shiftKey) run(on.goToCommit);
       else if (mod && key === "b") run(on.toggleSidebar);
       else if (mod && event.shiftKey && key === "l") run(on.toggleActivity);
       else if (mod && event.shiftKey && key === "t") run(on.toggleTeam);

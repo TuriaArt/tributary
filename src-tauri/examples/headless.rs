@@ -188,6 +188,10 @@ fn handle(command: &str, args: &Value) -> Result<Value> {
             let query: String = arg(args, "query")?;
             to_json(actions::search_commits(&path()?, mode, &query)?)
         }
+        "find_commit" => {
+            let query: String = arg(args, "query")?;
+            to_json(actions::find_commit(&path()?, &query)?)
+        }
         "blame_file" => {
             let file: String = arg(args, "file")?;
             let at: Option<String> = optional(args, "at")?;

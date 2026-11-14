@@ -31,6 +31,7 @@ Everything Tributary does, in detail. For a quick look, see the [README](../READ
   - Every file is listed, however many there are, and a long list has a filter: type part of a name or folder, like `level03 instance`. In your changes, the filter also turns **Stage all** into **Stage these 12**.
   - Links, issue numbers like `#12` (or Jira and Linear keys like `FEAST-12`) and commit ids in the message can be clicked, and the issues it mentions are listed with their titles and states ([see below](#pull-requests-and-remotes)).
 - **Search:** find commits by message, author, branch, tag or SHA. Matches are highlighted and you can jump between them. Switch the search box to **Files** to find the commits in any branch that changed a file whose path contains what you type (or matches a pattern like `*.psd`), or to **Code** for the commits that added or removed some exact text, like a function's name (`git log -S`). Matches further back than the loaded commits are counted, and appear as you scroll.
+- **Go to a commit:** ⌘G / Ctrl+G (or **View → Go to Commit…**) goes to a commit by its id or the start of it, a branch, a tag, or a day (`2026-10-01`: the last commit made by its end, in any branch). The list scrolls to it and outlines it, loading older history first when it's further back than what's loaded. Picking a commit when comparing branches, or in **Also changed elsewhere**, loads older history the same way.
 - **Branch sidebar:** every branch, tag and stash, with a filter.
   - Each branch is listed once: a branch and its copy on the remote are one row. The checked-out branch and the protected ones (like `main`) are at the top.
   - Names that share a prefix, like `feature/…`, are grouped into folders, and you can pin the ones you use most to the top.
@@ -337,6 +338,7 @@ The branch can be switched from the top, next to **Shelves** and **Local history
 | <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Page Up</kbd> / <kbd>Page Down</kbd> | Move the tab left or right (or drag it) |
 | <kbd>⌘</kbd>/<kbd>Ctrl</kbd> + <kbd>R</kbd> or <kbd>F5</kbd> | Refresh |
 | <kbd>⌘</kbd>/<kbd>Ctrl</kbd> + <kbd>F</kbd> | Search; <kbd>Enter</kbd> / <kbd>Shift</kbd>+<kbd>Enter</kbd> for the next / previous match |
+| <kbd>⌘</kbd>/<kbd>Ctrl</kbd> + <kbd>G</kbd> | Go to a commit: by its id, a branch, a tag or a day |
 | <kbd>⌘</kbd>/<kbd>Ctrl</kbd> + <kbd>B</kbd> | Show or hide the branch sidebar |
 | <kbd>⌘</kbd>/<kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>L</kbd> | Show or hide the activity log |
 | <kbd>⌘</kbd>/<kbd>Ctrl</kbd> + <kbd>Enter</kbd> | Commit, in the commit message box |

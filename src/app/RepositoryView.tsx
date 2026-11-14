@@ -55,6 +55,7 @@ import type { Submodules } from "./useSubmodules";
 import type { Selection } from "./useSelection";
 import type { ActivityLog } from "./useWindowEvents";
 import { ThemeContext } from "./useAppearance";
+import { useGoToCommit } from "./useGoToCommit";
 import { ViewPanel } from "../components/ViewPanel";
 
 const REMOTE_ACTIONS: Record<RemoteAction, Action> = {
@@ -242,6 +243,20 @@ export function RepositoryView(props: Props) {
 
   const myLocks = lfs.locks?.locks.filter((lock) => lock.mine) ?? [];
   const notLoaded = () => props.notify({ text: "That commit isn't loaded: load more commits, or fetch" });
+  // Go to Commit, and links to commits that aren't loaded yet (a parent, a commit a message
+  // mentions): older history loads until they are.
+  const { goTo } = useGoToCommit({
+    snapshot,
+    load: repo.load,
+    select,
+    onMissing: (reason) =>
+      props.notify({
+        text:
+          reason === "far"
+            ? "That commit is too far back to load here"
+            : "That commit isn't in the graph as it's shown: its branch may be hidden, or it may only be in a stash or the reflog",
+      }),
+  });
   /** The status bar's "changed elsewhere": the branches, and your files on each. */
   const [elsewhereAt, setElsewhereAt] = useState<HTMLElement | null>(null);
   // The View button at the end of the column headings, which the View panel opens under.
@@ -310,7 +325,7 @@ export function RepositoryView(props: Props) {
         comparing={comparing}
         onOpenFile={(file) => compared && showChanges(file, { kind: "range", from: compared.base, to: compared.to.id })}
         isShown={(path) => Boolean(compared && isShown(shownDiff && { source: shownDiff.source, path: shownDiff.file.path }, { kind: "range", from: compared.base, to: compared.to.id }, path))}
-        onSelect={(id) => (byId.has(id) ? select(id) : notLoaded())}
+        onSelect={goTo}
         hasCommit={(id) => byId.has(id)}
       />
     ) : detailsOpen ? (
@@ -581,7 +596,7 @@ export function RepositoryView(props: Props) {
           overlaps={props.overlaps}
           anchor={elsewhereAt}
           onClose={() => setElsewhereAt(null)}
-          onShowCommit={(id) => (byId.has(id) ? select(id) : notLoaded())}
+          onShowCommit={goTo}
           onShowBranch={showBranch}
         />
       )}
@@ -601,6 +616,7 @@ export function RepositoryView(props: Props) {
         loadDetails={props.details.load}
         run={act}
         select={select}
+        goTo={goTo}
         open={openDialog}
         onClose={() => openDialog(null)}
         onFinish={(message, undo) => {
