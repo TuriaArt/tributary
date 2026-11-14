@@ -594,6 +594,12 @@ pub async fn search_commits(
     blocking(move || actions::search_commits(&PathBuf::from(path), mode, &query)).await
 }
 
+/// The commit `query` names (an id or its start, a branch, a tag, or a day), for Go to Commit.
+#[tauri::command]
+pub async fn find_commit(path: String, query: String) -> Result<Option<String>> {
+    blocking(move || actions::find_commit(&PathBuf::from(path), &query)).await
+}
+
 /// What the team changed in the last `days` days: kinds of file, hotspots, lines of code.
 #[tauri::command]
 pub async fn team_work(path: String, days: u32) -> Result<actions::TeamWork> {

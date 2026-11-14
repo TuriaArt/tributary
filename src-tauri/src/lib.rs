@@ -139,6 +139,7 @@ pub fn run() {
             commands::actor_names,
             commands::blame_file,
             commands::search_commits,
+            commands::find_commit,
             commands::team_activity,
             commands::team_work,
             commands::team_pulse,

@@ -1779,6 +1779,55 @@ try {
     await reloaded;
   });
 
+  await step("goes to a commit by its id, a tag or a day, loading older history to reach it", async () => {
+    // A history longer than a page (10,000 commits), made at once with git fast-import: a
+    // commit a minute from 2023-11-14 22:13 (UTC).
+    const long = join(folder, "long-history");
+    mkdirSync(long);
+    execFileSync("git", ["init", "-q", "-b", "main", long]);
+    let stream = "";
+    for (let step = 1; step <= 10_050; step++) {
+      const message = `Step ${step}`;
+      stream += `commit refs/heads/main\nmark :${step}\ncommitter Ada Wright <ada@example.com> ${1_700_000_000 + step * 60} +0000\ndata ${message.length}\n${message}\n${step > 1 ? `from :${step - 1}\n` : ""}\n`;
+    }
+    execFileSync("git", ["-C", long, "fast-import", "--quiet"], { input: stream });
+    const at = (step) => execFileSync("git", ["-C", long, "rev-parse", `main~${10_050 - step}`], { encoding: "utf8" }).trim();
+    execFileSync("git", ["-C", long, "tag", "v0.1", at(10)]);
+    // The tab that was open, to go back to.
+    const was = (await page.locator('.tabs > .tab[aria-selected="true"]').textContent()).trim();
+    await page.evaluate((pick) => Object.assign(window.__PREVIEW__, { pick }), long);
+    await page.getByRole("button", { name: "New tab" }).click();
+    await page.getByText("Open repository").first().click();
+    await row("Step 10050").waitFor({ timeout: 20_000 });
+    const selected = page.locator(".commit-row.selected .summary");
+    const goTo = async (query) => {
+      await page.keyboard.press("Control+g");
+      const dialog = page.locator(".dialog", { hasText: "Go to commit" });
+      await dialog.getByRole("textbox").fill(query);
+      await dialog.getByRole("button", { name: "Go" }).click();
+      return dialog;
+    };
+    // The first commit, by the start of its id: past the first page, so older history loads.
+    await goTo(at(1).slice(0, 10));
+    await page.waitForFunction(() => document.querySelector(".commit-row.selected .summary")?.textContent.trim() === "Step 1", null, { timeout: 30_000 });
+    // A tag, and a day: the last commit made by its end (2023-11-15 23:59 is step 1546).
+    await goTo("v0.1");
+    await page.waitForFunction(() => document.querySelector(".commit-row.selected .summary")?.textContent.trim() === "Step 10", null, { timeout: 10_000 });
+    await goTo("2023-11-15");
+    await page.waitForFunction(() => document.querySelector(".commit-row.selected .summary")?.textContent.trim() === "Step 1546", null, { timeout: 10_000 });
+    // Nothing called that: said in the dialog, which stays open.
+    const dialog = await goTo("no-such-thing");
+    await dialog.getByText('no commit, branch or tag called "no-such-thing"').waitFor({ timeout: 5000 });
+    expect((await selected.textContent()).trim() === "Step 1546", "the selection moved");
+    await page.keyboard.press("Escape");
+    await dialog.waitFor({ state: "detached", timeout: 5000 });
+    await page.keyboard.press("Control+w");
+    await page.locator(".tab", { hasText: "long-history" }).waitFor({ state: "detached", timeout: 5000 });
+    await page.locator(".tabs > .tab[data-path]").filter({ hasText: new RegExp(`^${was}$`) }).dispatchEvent("mousedown", { button: 0 });
+    await page.locator('.tabs > .tab[aria-selected="true"]', { hasText: was }).waitFor({ timeout: 10_000 });
+    await page.locator(".commit-row").first().waitFor({ timeout: 10_000 });
+  });
+
   await step("reads well in the light theme", async () => {
     await page.keyboard.press("Control+,");
     const settings = page.locator(".settings-window");
