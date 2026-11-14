@@ -121,7 +121,7 @@ async function whatsNew() {
 // The update file, with stand-ins for the installers and their signatures.
 function updateFile() {
   const folder = mkdtempSync(join(tmpdir(), "tributary-release-check-assets-"));
-  const assets = ["Tributary.app.tar.gz", `Tributary_${version}_amd64.AppImage`, `Tributary_${version}_universal.dmg`, `Tributary_${version}_x64-setup.exe`];
+  const assets = ["Tributary.app.tar.gz", `Tributary_${version}_universal.dmg`, `Tributary_${version}_x64-setup.exe`, `Tributary_${version}_arm64-setup.exe`, `Tributary_${version}_amd64.AppImage`, `Tributary_${version}_aarch64.AppImage`];
   mkdirSync(join(folder, "signatures"));
   for (const name of assets) writeFileSync(join(folder, "signatures", `${name}.sig`), "stand-in signature");
   writeFileSync(join(folder, "assets.json"), JSON.stringify({ body: "", assets: assets.map((name) => ({ name })) }));
@@ -129,7 +129,7 @@ function updateFile() {
   execFileSync("node", [join(root, ".github", "scripts", "latest-json.mjs"), repository, `v${version}`, join(folder, "assets.json"), join(folder, "signatures"), latest, notesFile], { stdio: "ignore" });
   const file = JSON.parse(readFileSync(latest, "utf8"));
   const platforms = Object.keys(file.platforms);
-  const expected = ["windows-x86_64", "windows-x86_64-nsis", "darwin-aarch64", "darwin-x86_64", "linux-x86_64"];
+  const expected = ["windows-x86_64", "windows-x86_64-nsis", "windows-aarch64", "windows-aarch64-nsis", "darwin-aarch64", "darwin-x86_64", "linux-x86_64", "linux-aarch64"];
   const missing = expected.filter((platform) => !platforms.includes(platform));
   if (file.version !== version) wrong(`The update file is for ${file.version}, not ${version}.`);
   if (missing.length > 0) wrong(`The update file has no ${missing.join(", ")}.`);
