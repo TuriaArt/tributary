@@ -9,7 +9,7 @@ The files Flatpak needs to package Tributary, as `io.github.shikoko.tributary` o
 
 ## Trying it
 
-Every Build run (on `develop`, `main`, or started by hand on a branch) makes `Tributary.flatpak`, in the run's **Artifacts** (as `Tributary-x86_64`). Install it for yourself, and start it:
+Every Build run (on `develop`, `main`, or started by hand on a branch) makes `Tributary.flatpak`, in the run's **Artifacts** (as `Tributary-flatpak`). Install it for yourself, and start it:
 
 ```bash
 flatpak install --user Tributary.flatpak
