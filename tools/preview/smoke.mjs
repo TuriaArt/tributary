@@ -1828,6 +1828,46 @@ try {
     await page.locator(".commit-row").first().waitFor({ timeout: 10_000 });
   });
 
+  await step("offers old branches to prune when asked, with how long they've gone without commits, and undoes it", async () => {
+    // The tab that was open, to go back to.
+    const was = (await page.locator('.tabs > .tab[aria-selected="true"]').textContent()).trim();
+    await page.locator(".tab", { hasText: "studio" }).dispatchEvent("mousedown", { button: 0 });
+    await row("Add a tavern chair").waitFor({ timeout: 10_000 });
+    // A branch with a commit of its own that nobody has touched since March 2024.
+    const when = "2024-03-01T12:00:00Z";
+    const git = (...args) =>
+      execFileSync("git", ["-C", demos.studio, ...args], { encoding: "utf8", env: { ...process.env, GIT_AUTHOR_DATE: when, GIT_COMMITTER_DATE: when } }).trim();
+    const old = git("commit-tree", git("rev-parse", "HEAD^{tree}"), "-p", "HEAD", "-m", "Try a lantern on the sign");
+    git("branch", "spike/lantern", old);
+    await page.evaluate(() => window.dispatchEvent(new Event("focus")));
+    await page.getByRole("button", { name: "Prune branches" }).click();
+    const dialog = page.locator(".dialog", { hasText: "Prune branches" });
+    const idle = dialog.locator(".prune-idle select");
+    await idle.waitFor({ timeout: 20_000 });
+    const lantern = dialog.locator(".prune-row", { hasText: "spike/lantern" });
+    expect((await lantern.count()) === 0, "an old branch was offered without asking");
+    await idle.selectOption("6");
+    await lantern.waitFor({ timeout: 10_000 });
+    const said = await lantern.innerText();
+    expect(/no commits for over (a|\d+) years?/.test(said), `the old branch says "${said.replace(/\s+/g, " ")}"`);
+    expect(!(await lantern.locator("input").isChecked()), "the old branch, with a commit in no other branch, was ticked");
+    // Just it: deleted, then back with Undo.
+    for (const box of await dialog.locator(".prune-row input:checked").all()) await box.uncheck();
+    await lantern.locator("input").check();
+    await dialog.getByRole("button", { name: "Delete 1 branch" }).click();
+    await page.locator(".toast", { hasText: "Deleted branch spike/lantern" }).waitFor({ timeout: 10_000 });
+    expect(git("branch", "--list", "spike/lantern") === "", "the branch is still there");
+    await page.locator(".toast").getByRole("button", { name: "Undo" }).click();
+    for (let tries = 0; tries < 20 && git("branch", "--list", "spike/lantern") === ""; tries++) await page.waitForTimeout(250);
+    expect(git("rev-parse", "spike/lantern") === old, "Undo didn't bring the branch back");
+    await dismissToast();
+    git("branch", "-D", "spike/lantern");
+    await page.evaluate(() => localStorage.removeItem("tributary.prune.idleMonths"));
+    await page.locator(".tabs > .tab[data-path]").filter({ hasText: new RegExp(`^${was}$`) }).dispatchEvent("mousedown", { button: 0 });
+    await page.locator('.tabs > .tab[aria-selected="true"]', { hasText: was }).waitFor({ timeout: 10_000 });
+    await page.locator(".commit-row").first().waitFor({ timeout: 10_000 });
+  });
+
   await step("reads well in the light theme", async () => {
     await page.keyboard.press("Control+,");
     const settings = page.locator(".settings-window");
