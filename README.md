@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/images/hero.png" alt="Tributary: a fast, friendly git client for macOS and Windows, with first-class Git LFS, locks and art diffs. Beside it, the app showing a repository's commit graph.">
+  <img src="docs/images/hero.png" alt="Tributary: a fast, friendly git client for macOS, Windows and Linux, with first-class Git LFS, locks and art diffs. Beside it, the app showing a repository's commit graph.">
 </p>
 
 <p align="center">
@@ -127,6 +127,7 @@ One line each here; the [feature guide](docs/features.md) has the details.
 ### Changes and committing
 - Diffs coloured by syntax, in one column or side by side.
 - Stage, unstage or discard whole files, hunks or single lines.
+- Changed files as a list or as a tree of their folders, with a whole folder staged at once.
 - The branch's Jira or Linear issue in the summary, message templates and co-authors.
 - Fix up or split earlier commits; signed commits with GPG or SSH.
 - Warnings before committing file names that break on Windows or macOS, and missing Unity `.meta` files.
@@ -148,7 +149,7 @@ One line each here; the [feature guide](docs/features.md) has the details.
 → [More about investigating](docs/features.md#who-changed-what-and-why)
 
 ### Pull requests, CI and issues
-- Pull and merge requests in the app: open, review, comment and merge.
+- Pull and merge requests in the app: open, review, comment and merge, and see an open one from its branch's commit.
 - Checks drawn as streams flowing into the verdict, over a timeline of each workflow run.
 - CI status on every commit (merges show it on their own dot), and re-running failed jobs.
 - GitHub, GitLab, Jira and Linear issues, with branches named after them.
@@ -177,8 +178,9 @@ One line each here; the [feature guide](docs/features.md) has the details.
 → [More about safety nets](docs/features.md#safety-nets)
 
 ### Comfortable every day
-- Tabs, worktrees and submodules; a start screen with every recent repository's state.
+- Tabs you can drag into any order, worktrees and submodules; a start screen with every recent repository's state.
 - A command palette and keyboard shortcuts for everything.
+- A View panel over the commits for the theme, the graph's look, and the list's columns and rows, each seen straight away.
 - Dark and light themes, your own accent and graph colours, and colour-blind safe palettes.
 - Open in your editor or terminal; export your settings and import them on another computer.
 - Automatic, signed updates, and What's new after each one.
