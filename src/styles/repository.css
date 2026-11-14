@@ -276,11 +276,11 @@
 }
 
 .graph-ci.success {
-  background: var(--success);
+  background: var(--check-success);
 }
 
 .graph-ci.failure {
-  background: var(--danger);
+  background: var(--check-failure);
 }
 
 .graph-ci.cancelled {
@@ -288,7 +288,7 @@
 }
 
 .graph-ci.pending {
-  background: var(--warning);
+  background: var(--check-pending);
   animation: request-pending 1.4s ease-in-out infinite;
 }
 
@@ -317,15 +317,15 @@
    their colour, ringed in its lane's ("ringed"); in its lane's colour, ringed in theirs
    ("halo"); or in their colour alone ("filled"). A selected commit's ring goes around it. */
 .graph-ci.success {
-  --ci: var(--success);
+  --ci: var(--check-success);
 }
 
 .graph-ci.failure {
-  --ci: var(--danger);
+  --ci: var(--check-failure);
 }
 
 .graph-ci.pending {
-  --ci: var(--warning);
+  --ci: var(--check-pending);
 }
 
 .graph-ci.cancelled {

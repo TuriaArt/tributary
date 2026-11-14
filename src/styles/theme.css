@@ -102,6 +102,21 @@
   --success-rgb: 54 224 124;
   --success-text: #b8f5cf;
   --success-strong-text: #d8fbe6;
+
+  /* Checks, by state: running, passed and failed. The theme's colours (these follow the
+     light theme's too), unless you pick your own in Settings → Appearance, which
+     applyAppearance sets on the page instead (with the text that reads on each). For what
+     shows a check's state: pull request badges, the dots on commits, the checks' bars,
+     dots, timeline and river. */
+  --check-pending: var(--warning);
+  --check-pending-rgb: var(--warning-rgb);
+  --on-check-pending: var(--on-bright);
+  --check-success: var(--success);
+  --check-success-rgb: var(--success-rgb);
+  --on-check-success: var(--on-bright);
+  --check-failure: var(--danger);
+  --check-failure-rgb: var(--danger-rgb);
+  --on-check-failure: var(--on-danger);
   /* Branches that are safe to delete. */
   --safe-rgb: 140 224 74;
   --safe-text: #a9e57b;

@@ -19,9 +19,9 @@ const queued = (check: RequestCheck) => check.state === "pending" && !check.star
 const WORDS = { success: "passed", failure: "failed", pending: "running", cancelled: "cancelled" };
 
 const COLOURS: Record<Tone, string> = {
-  success: "var(--success)",
-  failure: "var(--danger)",
-  pending: "var(--warning)",
+  success: "var(--check-success)",
+  failure: "var(--check-failure)",
+  pending: "var(--check-pending)",
   cancelled: "var(--text-faint)",
 };
 

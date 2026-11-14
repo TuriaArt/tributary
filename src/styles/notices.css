@@ -228,20 +228,20 @@
 /* The whole badge in its checks' colour: green passed, red failed, amber running. */
 .pr-badge.success,
 .ref-pill.current .pr-badge.success {
-  background: var(--success);
-  color: var(--on-bright);
+  background: var(--check-success);
+  color: var(--on-check-success);
 }
 
 .pr-badge.failure,
 .ref-pill.current .pr-badge.failure {
-  background: var(--danger);
-  color: var(--on-danger);
+  background: var(--check-failure);
+  color: var(--on-check-failure);
 }
 
 .pr-badge.pending,
 .ref-pill.current .pr-badge.pending {
-  background: var(--warning);
-  color: var(--on-bright);
+  background: var(--check-pending);
+  color: var(--on-check-pending);
 }
 
 .pr-badge.success:hover,
