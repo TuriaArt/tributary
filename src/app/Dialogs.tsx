@@ -282,6 +282,7 @@ export function RepositoryDialogs(props: Props) {
     {dialog?.kind === "forcePush" && (
       <ForcePushDialog
         snapshot={snapshot}
+        reason={dialog.reason}
         protectedName={protectedHead}
         onCancel={() => onClose()}
         onDone={(message) => onFinish(message)}

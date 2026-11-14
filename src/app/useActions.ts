@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type MutableRefObject } from "react";
 import { onProgress, PAGE_SIZE, runActionFor, type Action, type Outcome, type Progress, type RepoSnapshot } from "../api";
-import { hookFailure, involvesUntrackedFiles, isLocalChangesError, NOT_ENOUGH_SPACE } from "../lib/errors";
+import { hookFailure, involvesUntrackedFiles, isLocalChangesError, NOT_ENOUGH_SPACE, REWRITTEN } from "../lib/errors";
 import { undoFor } from "../lib/undo";
 import { openInBrowser } from "../lib/weblinks";
 import { notifySystem } from "../lib/notify";
@@ -183,6 +183,12 @@ export function useActions({ snapshot, load, protectedHead, openDialog, setError
       }
       if (failure || !outcome) {
         const message = failure ?? "Something went wrong";
+        // A sync stopped before pulling into a branch rewritten since it was pushed: what
+        // it needs is a force push, which is asked for.
+        if (message.startsWith(REWRITTEN)) {
+          openDialog({ kind: "forcePush", reason: `Sync stopped. ${message.slice(REWRITTEN.length).replace(/^[:\s]+/, "")}` });
+          return false;
+        }
         const retry: Action | undefined =
           RETRYABLE.has(action.kind) && isLocalChangesError(message)
             ? { kind: "stashAndRetry", action, includeUntracked: involvesUntrackedFiles(message) }

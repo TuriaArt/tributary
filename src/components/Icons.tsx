@@ -624,6 +624,13 @@ export const ClockIcon = (p: IconProps) => (
   </Icon>
 );
 
+/** A down arrow and an up arrow side by side: pulling, then pushing (Sync). */
+export const SyncIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M5.5 2.5v10.5M3 10.5L5.5 13 8 10.5M10.5 13.5V3M8 5.5L10.5 3 13 5.5" />
+  </Icon>
+);
+
 /** Two arrows passing, for moving settings in and out (export and import). */
 export const TransferIcon = (p: IconProps) => (
   <Icon {...p}>
