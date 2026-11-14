@@ -466,7 +466,7 @@ try {
     writeFileSync(store, before);
   });
 
-  await step("discards all changes, new files too, and puts them back", async () => {
+  await step("discards all changes, new files too, showing it's working, and puts them back", async () => {
     const git = (...args) => execFileSync("git", ["-C", demos.notebook, ...args], { encoding: "utf8" });
     const status = () => git("status", "--porcelain", "--untracked-files=all");
     const sketches = join(demos.notebook, "sketches");
@@ -484,9 +484,28 @@ try {
     await listed.waitFor({ timeout: 5000 });
     await page.getByRole("button", { name: "Discard all changes" }).click();
     const dialog = page.locator(".dialog", { hasText: "Discard all uncommitted changes?" });
-    await dialog.locator("li", { hasText: /new files? will be deleted/ }).waitFor({ timeout: 5000 });
-    await dialog.getByRole("button", { name: "Discard changes" }).click();
-    await page.locator(".toast", { hasText: "Discarded all uncommitted changes" }).waitFor({ timeout: 10_000 });
+    // The new folder, with everything in it: not "1 new file".
+    await dialog.locator("li", { hasText: "1 new folder will be deleted, with everything in it" }).waitFor({ timeout: 5000 });
+    // git says nothing while it puts thousands of files away. Held back here for a moment, as
+    // a big discard is, it shows it's working, with how many files go, and no Cancel: stopped
+    // halfway, some of the files would be gone and some not.
+    const slowly = async (route) => {
+      if (route.request().postData()?.includes('"discardAll"')) await new Promise((done) => setTimeout(done, 1500));
+      // Already let through if the step stopped holding requests back while this one waited.
+      await route.continue().catch(() => {});
+    };
+    await page.route("**/__preview/invoke", slowly);
+    try {
+      await dialog.getByRole("button", { name: "Discard changes" }).click();
+      const strip = page.locator(".progress-strip");
+      await strip.waitFor({ timeout: 5000 });
+      const said = (await strip.innerText()).replace(/\s+/g, " ");
+      expect(/Discarding \d+ files? and 1 new folder…/.test(said), `the progress said "${said}"`);
+      expect((await strip.getByRole("button", { name: "Cancel" }).count()) === 0, "a discard can be cancelled halfway");
+      await page.locator(".toast", { hasText: "Discarded all uncommitted changes" }).waitFor({ timeout: 10_000 });
+    } finally {
+      await page.unroute("**/__preview/invoke", slowly);
+    }
     expect(!existsSync(sketches), "the new file wasn't deleted");
     expect(status() === "", "changes were left");
     await page.locator(".toast").getByRole("button", { name: "Undo" }).click();

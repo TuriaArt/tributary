@@ -7,7 +7,7 @@ import { notifySystem } from "../lib/notify";
 import { overallPercent } from "../lib/progress";
 import type { ToastMessage } from "../components/Toast";
 import { splitRemoteBranch, type OpenDialog } from "../menus";
-import { checkoutTarget, LONG_ACTION, PROGRESS_DELAY, RETRYABLE, RUNNING_LABELS, type Running } from "./constants";
+import { checkoutTarget, discardLabel, LONG_ACTION, PROGRESS_DELAY, RETRYABLE, RUNNING_LABELS, type Running } from "./constants";
 import type { LoadMode, RepoError } from "./useRepository";
 
 export interface ActOptions {
@@ -105,9 +105,11 @@ export function useActions({ snapshot, load, protectedHead, openDialog, setError
   const act = useCallback(
     async (action: Action, requested: Running = "other", options: ActOptions = {}): Promise<boolean> => {
       if (!snapshot) return false;
-      // Checkouts show their progress too (big ones, and Git LFS files, take a while).
+      // Checkouts show their progress too (big ones, and Git LFS files, take a while), and so
+      // does discarding changes (thousands of files take a while to put away).
       const target = checkoutTarget(action);
-      const kind: Running = requested === "other" && target !== null ? "checkout" : requested;
+      const discarding = discardLabel(action, snapshot.worktree);
+      const kind: Running = requested !== "other" ? requested : target !== null ? "checkout" : discarding !== null ? "discard" : "other";
       const { openDialog, setError, notify, after, showChanges } = callbacks.current;
       if (!options.confirmed && protectedHead && (action.kind === "rebase" || action.kind === "interactiveRebase" || action.kind === "fixupInto" || action.kind === "splitCommit" || action.kind === "restack" || action.kind === "migrateToLfs")) {
         openDialog({ kind: "protectedAction", action, branch: protectedHead });
@@ -123,10 +125,12 @@ export function useActions({ snapshot, load, protectedHead, openDialog, setError
         change(before.path, (run) => run && { ...run, progress: update(run.progress) });
 
       // Fetches, pulls, pushes and downloads show a progress bar, unless they finish quickly.
+      // A checkout or a discard can't be stopped: the files would be left half done.
       let stopListening: (() => void) | undefined;
       let showTimer: number | undefined;
       if (kind && kind !== "other") {
-        setProgress(() => ({ label: kind === "checkout" ? `Checking out ${target}` : RUNNING_LABELS[kind], value: null, visible: false, cancellable: kind !== "checkout" }));
+        const label = kind === "checkout" ? `Checking out ${target}` : kind === "discard" ? (discarding ?? RUNNING_LABELS.discard) : RUNNING_LABELS[kind];
+        setProgress(() => ({ label, value: null, visible: false, cancellable: kind !== "checkout" && kind !== "discard" }));
         showTimer = window.setTimeout(() => setProgress((current) => current && { ...current, visible: true }), PROGRESS_DELAY);
         stopListening = await onProgress((value, path) => {
           // Another repository's, or a clone's.
