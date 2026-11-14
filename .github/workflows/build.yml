@@ -218,7 +218,8 @@ jobs:
           echo "$config" > "$RUNNER_TEMP/tauri-config.json"
           # On Linux, only the AppImage (not the .deb and .rpm "all" would add); on Windows, only
           # the NSIS installer the setup carries (not the .msi).
-          npm run tauri build -- --target ${{ matrix.target }} --config "$config" ${{ runner.os == 'Linux' && '--bundles appimage' || runner.os == 'Windows' && '--bundles nsis' || '' }}
+          # The x64 Linux job makes a .deb too, for the Flatpak (see below).
+          npm run tauri build -- --target ${{ matrix.target }} --config "$config" ${{ matrix.target == 'x86_64-unknown-linux-gnu' && '--bundles appimage,deb' || runner.os == 'Linux' && '--bundles appimage' || runner.os == 'Windows' && '--bundles nsis' || '' }}
 
       # The disk image opens on a window showing Tributary and Applications over the
       # background, telling people to drag one onto the other: Finder keeps that window's
@@ -277,6 +278,52 @@ jobs:
           path: ${{ matrix.bundles }}
           if-no-files-found: error
 
+      # The program the Flatpak is made from: not an installer of the release's.
+      - uses: actions/upload-artifact@v7
+        if: matrix.target == 'x86_64-unknown-linux-gnu'
+        with:
+          name: flatpak-input
+          path: src-tauri/target/x86_64-unknown-linux-gnu/release/bundle/deb/*.deb
+          if-no-files-found: error
+
+  # Tributary's Flatpak (flatpak/), made from the Linux job's .deb on the GNOME runtime: in
+  # the run's artifacts as Tributary.flatpak, to try (flatpak install --user
+  # Tributary.flatpak). It isn't one of the release's files: Flathub builds its own.
+  flatpak:
+    name: Flatpak
+    needs: [version, build]
+    if: needs.version.outputs.build == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    container:
+      image: ghcr.io/flathub-infra/flatpak-github-actions:gnome-50
+      options: --privileged
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: flatpak-input
+          path: flatpak/input
+
+      - name: The .deb, by the name the manifest uses
+        run: mv flatpak/input/*.deb flatpak/input/tributary.deb
+
+      # flatpak-builder from Flathub's image, with the GNOME runtime and SDK from Flathub. The
+      # container has no FUSE, so without rofiles-fuse.
+      - name: Build the Flatpak
+        run: |
+          flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+          flatpak-builder --disable-rofiles-fuse --install-deps-from=flathub --force-clean --repo=repo build flatpak/io.github.shikoko.tributary.yml
+          flatpak build-bundle repo Tributary.flatpak io.github.shikoko.tributary
+          ls -l Tributary.flatpak
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: Tributary-flatpak
+          path: Tributary.flatpak
+          if-no-files-found: error
+
   # Builds of develop: a beta. It's published as a pre-release (which GitHub's "latest"
   # skips, so only the copies that get betas are offered it), with what was merged since
   # the beta before, and the beta channel points at it. The newest few betas are kept.
@@ -296,6 +343,7 @@ jobs:
       - uses: actions/download-artifact@v8
         with:
           path: artifacts
+          pattern: tributary-*
           merge-multiple: true
 
       - name: Gather the installers
@@ -361,6 +409,7 @@ jobs:
       - uses: actions/download-artifact@v8
         with:
           path: artifacts
+          pattern: tributary-*
           merge-multiple: true
 
       # The build jobs' files come in their bundle folders (dmg/, macos/, msi/, nsis/):
