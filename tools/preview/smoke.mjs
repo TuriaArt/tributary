@@ -1082,6 +1082,27 @@ try {
 
   await step("shows pull requests on their branches", async () => {
     await page.locator(".pr-badge").first().waitFor({ timeout: 10_000 });
+    // On the commit list's labels, the icon for the checks alone (a cross for #14's failed
+    // ones), with the number in the badge's name for screen readers. The sidebar has both.
+    const label = page.locator(".commit-list .pr-badge.failure", { hasText: "#14" }).first();
+    expect(await label.locator(".pr-check-icon").isVisible(), "no icon for the failed checks");
+    expect(!(await label.locator(".pr-number").isVisible()), "the number shows on the label");
+    expect((await label.getAttribute("aria-label")).includes("#14"), `the badge's name is ${await label.getAttribute("aria-label")}`);
+    expect(await page.locator(".sidebar-item .pr-badge.failure .pr-number", { hasText: "#14" }).first().isVisible(), "no number in the sidebar");
+  });
+
+  await step("shows pull requests' numbers on their labels when asked", async () => {
+    const number = page.locator(".commit-list .pr-badge.failure", { hasText: "#14" }).first().locator(".pr-number");
+    await page.keyboard.press("Control+,");
+    const settings = page.locator(".dialog", { hasText: "Settings" }).first();
+    await settings.locator(".settings-nav").getByText("Commit list").click();
+    const toggle = settings.getByRole("switch", { name: "Pull request numbers" });
+    await toggle.click();
+    await number.waitFor({ state: "visible", timeout: 5000 });
+    await toggle.click();
+    await number.waitFor({ state: "hidden", timeout: 5000 });
+    await page.keyboard.press("Escape");
+    await settings.waitFor({ state: "detached", timeout: 5000 });
   });
 
   await step("colours checks as you pick, and as the theme does again", async () => {

@@ -244,6 +244,37 @@
   color: var(--on-check-pending);
 }
 
+/* The checks' icon before the number: a spinner while they run (still, for people who ask
+   their system for less motion), a tick or a cross once they're done. It shows the state
+   when the badge's colour is close to its label's. 10px in a 14px badge: two pixels above
+   and below. */
+.pr-check-icon {
+  flex: none;
+}
+
+.pr-check-icon.spinning {
+  animation: spin 1.2s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pr-check-icon.spinning {
+    animation: none;
+  }
+}
+
+/* On the commit list's labels, just the icon, to leave the branch's name room: a 14px square.
+   Settings → Appearance → Commit list → Pull request numbers puts the number back (pr-numbers).
+   The badge's name for screen readers has the number either way. */
+.commit-list:not(.pr-numbers) .refs-cell .pr-badge.with-icon {
+  width: 14px;
+  padding: 0;
+  justify-content: center;
+}
+
+.commit-list:not(.pr-numbers) .refs-cell .pr-badge.with-icon .pr-number {
+  display: none;
+}
+
 .pr-badge.success:hover,
 .pr-badge.failure:hover,
 .pr-badge.pending:hover {

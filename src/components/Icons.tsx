@@ -603,6 +603,13 @@ export const DownloadIcon = (p: IconProps) => (
 );
 
 /** A clock, for what happens at a set time (Fetch latest). */
+/** Three quarters of a circle: something running, turned by its CSS (a pull request's checks). */
+export const SpinnerIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M13.75 8A5.75 5.75 0 1 1 8 2.25" />
+  </Icon>
+);
+
 export const ClockIcon = (p: IconProps) => (
   <Icon {...p}>
     <circle cx="8" cy="8" r="5.75" />
