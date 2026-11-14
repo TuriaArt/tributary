@@ -27,6 +27,7 @@ pub mod repo;
 pub mod requests;
 pub mod reviews;
 pub mod settings_repo;
+mod spelling;
 pub mod textures;
 pub mod unreal;
 pub mod updates;
@@ -65,6 +66,7 @@ pub fn run() {
                 let _ = handle.emit("activity", entry);
             });
             app_icon::restore(app.handle());
+            spelling::turn_on(app.handle());
             // The version it was built as (a release's, not Cargo.toml's), for the log and
             // Diagnostics.
             diagnostics::set_app_version(app.package_info().version.to_string());

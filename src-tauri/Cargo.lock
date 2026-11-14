@@ -6019,6 +6019,7 @@ dependencies = [
  "tauri-plugin-window-state",
  "thiserror 2.0.21",
  "ts-rs",
+ "webkit2gtk",
  "windows",
 ]
 
