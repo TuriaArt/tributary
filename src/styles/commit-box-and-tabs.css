@@ -121,9 +121,19 @@
   opacity: 1;
 }
 
-.tab:hover::after {
+.tab:not(.active):hover::after {
   width: 46px;
   opacity: 1;
+}
+
+/* The open tab keeps its close button showing, with room for it after its name (the button,
+   and the gap before it): its name is never under it. Cut short, its name fades out before it. */
+.tab.active {
+  padding-right: calc(var(--space-6) + 20px + var(--space-6)); /* the close button's room */
+}
+
+.tab.active::after {
+  width: 52px;
 }
 
 /* A tab dragged along the bar (useTabDrag): above the others, which slide aside to make
@@ -192,11 +202,14 @@
   visibility: hidden;
 }
 
-/* Over the end of the name, in the middle of the tab's height (less the 1px below, as the
-   name is). */
+/* At the tab's end, over the end of the name in a tab that isn't open. Its X lines up with the
+   middle of the name's small letters (most names are lowercase), 2px below the middle of the
+   capitals, where the name's box is centred (see .tab-name): 4px from the top, not 0, puts it
+   there in the room left with the 1px below. Measured in screenshots at 100% to 200%, its ink
+   is within half a screen pixel of the letters' middle. */
 .tab-close {
   position: absolute;
-  top: 0;
+  top: 4px;
   right: var(--space-6);
   bottom: 1px;
   z-index: 1;
@@ -214,7 +227,8 @@
   opacity: 0;
 }
 
-.tab:hover .tab-close {
+.tab:hover .tab-close,
+.tab.active .tab-close {
   opacity: 1;
 }
 

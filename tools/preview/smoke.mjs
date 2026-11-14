@@ -18,6 +18,7 @@ import { join, resolve } from "node:path";
 import { buildDemos, demoEnv, STUDIO_PULL_REQUEST_CONVERSATIONS, STUDIO_PULL_REQUEST_DETAILS, STUDIO_PULL_REQUESTS } from "./demo.mjs";
 import { CONTROLS, describe as describeAligned, EXCEPT, misaligned } from "./aligned.mjs";
 import { describeOffCentre, moving, offCentre as offInPixels, probe, restore } from "../e2e/centred.mjs";
+import { decodePng } from "../e2e/png.mjs";
 import { startLockServer } from "./lfs-locks.mjs";
 import { startPreview } from "./server.mjs";
 
@@ -1035,39 +1036,88 @@ try {
     await row("Add a tavern chair").waitFor({ timeout: 10_000 });
   });
 
-  await step("sizes tabs to their names, with the close button over the name's end on hover", async () => {
+  await step("sizes tabs to their names, with the close button on the open one and over the name's end on hover", async () => {
     const tabs = page.locator(".tabs > .tab[data-path]");
     const notebook = tabs.filter({ hasText: /^notebook$/ });
     const close = notebook.locator(".tab-close");
-    // No room is kept for the close button: a tab is its name, the padding either side (26px)
-    // and a new commits dot if it has one (11px), or 64px for a short name. With room for the
-    // button, it was the name and about 50px.
+    const opacity = (locator) => locator.evaluate((element) => getComputedStyle(element).opacity);
+    // A tab is its name, the padding either side (26px) and a new commits dot if it has one
+    // (11px), or 64px for a short name. Only the open one has room for its close button (26px):
+    // with room for it in every tab, each was the name and about 50px.
     const widths = await tabs.evaluateAll((all) =>
       all.map((tab) => {
         const name = tab.querySelector(".tab-name > span");
-        return { name: name.textContent, width: tab.getBoundingClientRect().width, text: name.scrollWidth };
+        return { name: name.textContent, width: tab.getBoundingClientRect().width, text: name.scrollWidth, open: tab.classList.contains("active") };
       }),
     );
-    for (const { name, width, text } of widths) expect(width <= Math.max(64, text + 38), `${name}'s tab is ${width}px wide, for a name ${text}px wide`);
+    for (const { name, width, text, open } of widths) expect(width <= Math.max(64, text + 38 + (open ? 26 : 0)), `${name}'s tab is ${width}px wide, for a name ${text}px wide`);
     await page.mouse.move(5, 400);
-    expect((await close.evaluate((element) => getComputedStyle(element).opacity)) === "0", "the close button shows without the pointer on the tab");
-    // On the tab: over the end of the name, which fades out under it.
+    // The open tab's close button shows, after its name.
+    const open = page.locator(".tabs > .tab.active[data-path]");
+    const openName = await open.locator(".tab-name").boundingBox();
+    expect((await opacity(open.locator(".tab-close"))) === "1", "the open tab's close button doesn't show");
+    expect((await open.locator(".tab-close").boundingBox()).x >= openName.x + openName.width, "the open tab's close button is over its name");
+    expect((await opacity(close)) === "0", "the close button shows without the pointer on the tab");
+    // On another tab: over the end of the name, which fades out under it.
     await notebook.hover();
     await page.waitForFunction(() => getComputedStyle(document.querySelector(".tabs > .tab[data-path]:hover .tab-close")).opacity === "1", null, { timeout: 2000 });
     const x = await close.boundingBox();
     const tab = await notebook.boundingBox();
     const name = await notebook.locator(".tab-name").boundingBox();
     expect(x.x + x.width <= tab.x + tab.width && x.x < name.x + name.width, "the close button isn't over the end of the name");
+    // Its X lines up with the middle of the name's small letters, in the screen's own pixels:
+    // "no", where notebook starts, has nothing taller. (The pointer is still on the tab.)
+    const scale = await page.evaluate(() => devicePixelRatio);
+    const shot = decodePng(await page.screenshot());
+    const screen = (box) => ({ x: Math.round(box.x * scale), y: Math.round(box.y * scale), w: Math.round(box.width * scale), h: Math.round(box.height * scale) });
+    const area = screen(await notebook.boundingBox());
+    const behind = shot.at(area.x + 4, area.y + area.h - 4);
+    const inked = (from, width) => {
+      const rows = [];
+      for (let y = area.y; y < area.y + area.h; y++)
+        for (let at = from; at < from + width; at++) {
+          const pixel = shot.at(at, y);
+          if (pixel.reduce((sum, value, index) => sum + Math.abs(value - behind[index]), 0) > 120) {
+            rows.push(y);
+            break;
+          }
+        }
+      return (rows[0] + rows[rows.length - 1]) / 2;
+    };
+    const letters = inked(screen(await notebook.locator(".tab-name").boundingBox()).x, Math.round(12 * scale));
+    const button = screen(await close.boundingBox());
+    const cross = inked(button.x + 2, button.w - 4);
+    expect(Math.abs(cross - letters) <= 1, `the X's middle is ${letters - cross} screen pixels above the letters'`);
     await close.click();
     await notebook.waitFor({ state: "detached", timeout: 5000 });
     await page.keyboard.press("Control+Shift+R");
     await row("Export notes as Markdown").waitFor({ timeout: 10_000 });
-    // In a narrow window, a name cut short fades out at the tab's end.
+    // Only a name cut short fades out at the tab's end: none at full width (two tabs), and
+    // notebook's in a window too narrow for both tabs (at 560px they just fit; at 440px the open
+    // tab shrinks to 64px). On a timeout, each tab's measurements say why.
+    const measured = () =>
+      tabs.evaluateAll((all) =>
+        all.map((tab) => {
+          const name = tab.querySelector(".tab-name > span");
+          return `${name.textContent}: tab ${tab.getBoundingClientRect().width}px, name ${name.scrollWidth}px in ${name.clientWidth}px${tab.hasAttribute("data-clipped") ? ", cut short" : ""}`;
+        }),
+      );
+    const until = async (clipped, why, which = ".tabs > .tab[data-clipped]") => {
+      for (let tries = 0; tries < 50; tries++) {
+        if ((await page.locator(which).count()) > 0 === clipped) return;
+        await page.waitForTimeout(100);
+      }
+      throw new Error(`${why}: ${(await measured()).join("; ")}`);
+    };
+    await until(false, "a name is cut short at full width");
     const size = page.viewportSize();
-    await page.setViewportSize({ width: 560, height: size.height });
-    await page.waitForFunction(() => document.querySelector(".tabs > .tab[data-clipped]") !== null, null, { timeout: 5000 });
-    await page.setViewportSize(size);
-    await page.waitForFunction(() => document.querySelector(".tabs > .tab[data-clipped]") === null, null, { timeout: 5000 });
+    await page.setViewportSize({ width: 440, height: size.height });
+    try {
+      await until(true, "notebook's name isn't cut short in a narrow window", '.tabs > .tab.active[data-clipped]');
+    } finally {
+      await page.setViewportSize(size);
+    }
+    await until(false, "a name is still cut short at full width again");
     await tabs.filter({ hasText: "studio" }).dispatchEvent("mousedown", { button: 0 });
     await row("Add a tavern chair").waitFor({ timeout: 10_000 });
   });
