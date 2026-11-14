@@ -52,6 +52,7 @@ Everything Tributary does, in detail. For a quick look, see the [README](../READ
 - **What changed in a file:** click a file in a commit, a stash or your changes to see its changes over the commit list.
   - Added and removed lines coloured by their syntax (TypeScript, C++, C#, Rust, Python, shaders, JSON, YAML and some twenty more), with the words that changed within a line marked, and an option to ignore whitespace.
   - The side-by-side button shows before and after in two columns, removed lines next to the lines that replaced them.
+  - The wrap button, beside it, wraps long lines to the width of the window instead of scrolling sideways to them, and stays on for the next file until you turn it off. Side by side, long lines always wrap.
   - <kbd>[</kbd> and <kbd>]</kbd> go to the previous and next file, <kbd>Esc</kbd> closes. Your own changes update as you edit.
   - Text stored with Git LFS is compared by its real contents; pictures, sounds, videos and 3D models show as what they are ([see below](#game-projects-big-files-and-git-lfs)). Other binary files show their sizes, with a button to open them in your diff tool.
 - **Diff and merge tools:** choose them in Settings, under **Diff and merge**: the tools git finds on your computer (Meld, Beyond Compare, WinMerge, P4Merge, KDiff3, …), Visual Studio Code, or a command of your own. They're git's own settings (`diff.tool`, `merge.tool`), so `git difftool` and `git mergetool` use them too. Until one is chosen, the diff view's button offers to choose one.

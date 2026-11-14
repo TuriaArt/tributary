@@ -102,6 +102,13 @@ export const SplitIcon = (p: IconProps) => (
   </Icon>
 );
 
+/** Lines of text, one running on round the end onto the next: long lines wrapped. */
+export const WrapIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M2 3.5h12M2 8h9.25a2.25 2.25 0 0 1 0 4.5H8.5M10 11l-1.5 1.5L10 14M2 12.5h3.5" />
+  </Icon>
+);
+
 /** Two arrows, one each way: comparing two things (and swapping them). */
 export const CompareIcon = (p: IconProps) => (
   <Icon {...p}>

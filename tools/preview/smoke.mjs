@@ -373,6 +373,49 @@ try {
     await page.locator(".details", { hasText: "Priya Nair" }).waitFor({ timeout: 5000 });
   });
 
+  await step("wraps long lines when asked, and remembers it", async () => {
+    const store = join(demos.notebook, "src", "store.ts");
+    const before = readFileSync(store, "utf8");
+    writeFileSync(store, `${before}// ${"How notebooks are kept, a note that goes on and on. ".repeat(6).trim()}\n`);
+    try {
+      await page.evaluate(() => window.dispatchEvent(new Event("focus")));
+      await page.locator(".commit-row", { has: page.locator(".summary.wip") }).click();
+      const open = async () => {
+        await page.locator(".details .file", { hasText: "store.ts" }).first().click();
+        await view.locator(".diff-row.added", { hasText: "goes on and on" }).waitFor({ timeout: 10_000 });
+      };
+      const close = async () => {
+        await view.getByRole("button", { name: "Close the changes" }).click();
+        await view.waitFor({ state: "detached", timeout: 5000 });
+      };
+      const view = page.locator(".diff-view");
+      const wrap = view.getByRole("button", { name: "Wrap lines" });
+      const pressed = async () => (await wrap.getAttribute("aria-pressed")) === "true";
+      const sideways = () => view.locator(".diff-body").evaluate((element) => element.scrollWidth > element.clientWidth + 1);
+      await open();
+      expect(!(await pressed()) && (await sideways()), "the long line didn't need scrolling to");
+      await wrap.click();
+      expect(!(await sideways()), "wrapped, the changes still scroll sideways");
+      const tall = (await view.locator(".diff-row.added", { hasText: "goes on and on" }).boundingBox()).height;
+      expect(tall >= 40, `the wrapped line is ${tall}px tall`);
+      // Remembered the next time.
+      await close();
+      await open();
+      expect(await pressed(), "Wrap lines wasn't remembered");
+      // Side by side, lines always wrap: pressed, and not to be turned off there.
+      await view.getByRole("button", { name: "Side by side" }).click();
+      await view.locator(".diff-split-row").first().waitFor({ timeout: 5000 });
+      expect((await pressed()) && (await wrap.isDisabled()), "side by side, Wrap lines isn't pressed and greyed");
+      await view.getByRole("button", { name: "Side by side" }).click();
+      await view.locator(".diff-row").first().waitFor({ timeout: 5000 });
+      await wrap.click();
+      expect(await sideways(), "unwrapped again, the long line doesn't need scrolling to");
+      await close();
+    } finally {
+      writeFileSync(store, before);
+    }
+  });
+
   await step("shows your changes, and follows a file you stage", async () => {
     await page.locator(".commit-row", { has: page.locator(".summary.wip") }).click();
     await page.locator(".details .file", { hasText: "README.md" }).click();
