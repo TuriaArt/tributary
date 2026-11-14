@@ -95,10 +95,6 @@
   font-size: var(--type-sm);
 }
 
-.prune-idle select {
-  width: auto;
-}
-
 .prune-summary {
   overflow: hidden;
   color: var(--text-muted);

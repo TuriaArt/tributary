@@ -93,7 +93,7 @@ export function PruneDialog({ repoPath, fetchFirst, pinned, protectedNames, onCa
   const idleChoice = (
     <label className="prune-idle">
       Also old branches, with no commits in
-      <select className="text-input" value={idleMonths} onChange={(event) => chooseIdle(Number(event.target.value))}>
+      <select className="settings-select" value={idleMonths} onChange={(event) => chooseIdle(Number(event.target.value))}>
         {IDLE_MONTHS.map((months) => (
           <option key={months} value={months}>
             {months === 0 ? "(not offered)" : months === 12 ? "a year" : `${months} months`}
@@ -196,7 +196,9 @@ export function PruneDialog({ repoPath, fetchFirst, pinned, protectedNames, onCa
             <div className="dialog-warning">
               {riskyChosen.length > 0
                 ? `${riskyChosen.map((c) => c.name).join(", ")} ${riskyChosen.length === 1 ? "has" : "have"} commits that aren't in ${base}. If ${riskyChosen.length === 1 ? "it was" : "they were"} squash-merged, that's expected; otherwise that work is only in this repository.`
-                : `Branches with commits that aren't in ${base} are left unticked. They're often squash-merged pull requests, but check before deleting them.`}
+                : risky.some((candidate) => candidate.idle)
+                  ? `Branches with commits that aren't in ${base} are left unticked. Some are squash-merged pull requests, but an old one may hold work that's nowhere else: check before deleting them.`
+                  : `Branches with commits that aren't in ${base} are left unticked. They're often squash-merged pull requests, but check before deleting them.`}
             </div>
           )}
         </>
