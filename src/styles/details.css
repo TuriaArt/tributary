@@ -691,15 +691,15 @@
 }
 
 .commit-checks-bar > .success {
-  background: var(--success);
+  background: var(--check-success);
 }
 
 .commit-checks-bar > .failure {
-  background: var(--danger);
+  background: var(--check-failure);
 }
 
 .commit-checks-bar > .pending {
-  background: var(--warning);
+  background: var(--check-pending);
 }
 
 .commit-checks-list {
@@ -745,15 +745,15 @@ button.commit-check-row:hover {
 }
 
 .commit-check.success .commit-check-dot {
-  background: var(--success);
+  background: var(--check-success);
 }
 
 .commit-check.failure .commit-check-dot {
-  background: var(--danger);
+  background: var(--check-failure);
 }
 
 .commit-check.pending .commit-check-dot {
-  background: var(--warning);
+  background: var(--check-pending);
   animation: request-pending 1.4s ease-in-out infinite;
 }
 

@@ -433,11 +433,11 @@ body:not(.resizing):not(.list-resizing) .commit-list:not(.graph-growing) .graph-
 }
 
 .ci-dot.success {
-  background: var(--success);
+  background: var(--check-success);
 }
 
 .ci-dot.failure {
-  background: var(--danger);
+  background: var(--check-failure);
 }
 
 /* Cancelled (replaced by a newer run, say): neither passed nor failed. */
@@ -446,7 +446,7 @@ body:not(.resizing):not(.list-resizing) .commit-list:not(.graph-growing) .graph-
 }
 
 .ci-dot.pending {
-  background: var(--warning);
+  background: var(--check-pending);
   animation: request-pending 1.4s ease-in-out infinite;
 }
 

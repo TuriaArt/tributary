@@ -2,6 +2,8 @@ import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent as R
 import { moved } from "../lib/order";
 import {
   ACCENTS,
+  CHECK_DEFAULTS,
+  CHECK_STATES,
   CI_DOTS,
   CURVE_STYLES,
   DEFAULT_APPEARANCE,
@@ -13,6 +15,7 @@ import {
   parseHex,
   toHex,
   type Appearance,
+  type CheckState,
   type CiDots,
   type CurveStyle,
   type LaneChoice,
@@ -135,6 +138,47 @@ function AccentPicker({ value, onChange }: { value: string; onChange: (value: st
         </label>
       </div>
       <HexField value={value} onChange={onChange} label="Accent colour, as a hex code" />
+    </div>
+  );
+}
+
+const CHECK_NAMES: Record<CheckState, string> = { pending: "Running", success: "Passed", failure: "Failed" };
+
+/**
+ * The checks' colours, running, passed and failed: the theme's, or yours. Click one to pick
+ * another; "The theme's" goes back to the theme's three.
+ */
+function CheckColorsPicker({
+  value,
+  theme,
+  onChange,
+}: {
+  value: Partial<Record<CheckState, string>>;
+  theme: Theme;
+  onChange: (value: Partial<Record<CheckState, string>>) => void;
+}) {
+  const own = CHECK_STATES.some((state) => value[state]);
+  return (
+    <div className="check-colors">
+      {CHECK_STATES.map((state) => {
+        const color = value[state] ?? CHECK_DEFAULTS[theme][state];
+        return (
+          <label key={state} className="check-color" title={`${CHECK_NAMES[state]}: ${color}${value[state] ? "" : ", the theme's"}. Click to pick another.`}>
+            <span className="check-color-swatch" style={{ background: color }}>
+              <input
+                type="color"
+                value={color}
+                aria-label={`${CHECK_NAMES[state]} checks' colour`}
+                onChange={(event) => onChange({ ...value, [state]: event.target.value })}
+              />
+            </span>
+            <span className="check-color-name">{CHECK_NAMES[state]}</span>
+          </label>
+        );
+      })}
+      <Button kind="outline" size="small" disabled={!own} onClick={() => onChange({})}>
+        The theme's
+      </Button>
     </div>
   );
 }
@@ -476,6 +520,12 @@ export function appearanceRows(stored: Partial<Appearance>, set: (value: Partial
         { value: "blue-orange", label: "Blue and orange" },
       ],
       set: (value) => change({ diffColors: value as Appearance["diffColors"] }),
+    },
+    {
+      kind: "custom",
+      label: "Checks' colours",
+      hint: "Pull requests' badges, the dots on commits, and a commit's or pull request's checks. Pick your own when one is too close to a branch's colour, or to tell them apart more easily.",
+      content: <CheckColorsPicker value={appearance.checkColors} theme={theme} onChange={(checkColors) => change({ checkColors })} />,
     },
     {
       kind: "custom",

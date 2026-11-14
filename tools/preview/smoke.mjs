@@ -1084,6 +1084,26 @@ try {
     await page.locator(".pr-badge").first().waitFor({ timeout: 10_000 });
   });
 
+  await step("colours checks as you pick, and as the theme does again", async () => {
+    // A pull request whose checks failed, in the failed checks' colour: the theme's, yours, then the theme's.
+    const badge = page.locator(".commit-list .pr-badge.failure").first();
+    const fill = () => badge.evaluate((element) => getComputedStyle(element).backgroundColor);
+    const theirs = await fill();
+    await page.keyboard.press("Control+,");
+    const settings = page.locator(".dialog", { hasText: "Settings" }).first();
+    await settings.locator(".settings-nav").getByText("Appearance").click();
+    await settings.getByLabel("Failed checks' colour").fill("#cc00ff");
+    await page.waitForFunction(() => document.documentElement.style.getPropertyValue("--check-failure") === "#cc00ff", null, { timeout: 5000 });
+    expect((await fill()) === "rgb(204, 0, 255)", `the badge is ${await fill()}, not the colour picked`);
+    await settings.locator(".check-colors").scrollIntoViewIfNeeded();
+    await accessible("the checks' colours in Settings");
+    await settings.getByRole("button", { name: "The theme's", exact: true }).click();
+    await page.waitForFunction(() => document.documentElement.style.getPropertyValue("--check-failure") === "", null, { timeout: 5000 });
+    await page.keyboard.press("Escape");
+    await settings.waitFor({ state: "detached", timeout: 5000 });
+    expect((await fill()) === theirs, `the badge is ${await fill()}, not the theme's ${theirs}`);
+  });
+
   await step("shows a commit's failed check, and runs it again", async () => {
     // The checked-out commit (every commit has the checks above).
     await page.locator(".commit-row", { has: page.locator(".ref-pill.current") }).first().click();

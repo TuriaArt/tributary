@@ -294,6 +294,7 @@ The branch can be switched from the top, next to **Shelves** and **Local history
 - **Appearance:**
   - **Theme:** dark, light, or the same as your system (switching when it does). The app's icon follows it, in the Dock or on the taskbar.
   - **Accent colour:** for buttons, selections, links and the checked-out branch: one of nine, or any colour (picker or a hex code like `#e8702a`). Text on it is darkened or lightened until it's easy to read; notes and warnings keep their own colours.
+  - **Checks' colours:** running, passed and failed, as pull requests' badges, the dots on commits and a commit's or pull request's checks show them: the theme's amber, green and red, or colours of your own (click one to pick another; **The theme's** goes back). Useful when one is too close to a branch's colour, like an amber branch whose pull request's checks are running. Text on them is dark or white, whichever reads better.
   - **Graph** (inside Appearance) has the graph's colours, its commits, their checks and its line bends.
   - **Graph colours:** vivid, soft, colour-blind safe (Okabe–Ito), or your own (start from any of them, then change, add or remove colours).
   - **Commits on the graph:** as their authors' pictures or initials, ringed in their branch's colour, or as dots. Lines between lanes bend smoothly (the default), or round, tight or sweeping everywhere.
