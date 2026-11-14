@@ -18,6 +18,7 @@ pub mod git;
 pub mod github;
 pub mod gitlab;
 pub mod graph;
+pub mod host;
 pub mod issues;
 pub mod links;
 pub mod locks;
