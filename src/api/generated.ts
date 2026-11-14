@@ -1540,7 +1540,8 @@ export type ProjectSetup = {
 };
 
 /**
- * A local branch that could be pruned: its remote branch is gone, or it's merged.
+ * A local branch that could be pruned: its remote branch is gone, it's merged, or (when
+ * asked) nobody has committed to it for a while.
  */
 export type PruneCandidate = {
   name: string;
@@ -1566,6 +1567,10 @@ export type PruneCandidate = {
    * How many of its commits aren't in the base branch (0 when merged).
    */
   unmerged: number;
+  /**
+   * Its last commit is older than the time asked for: an old branch nobody works on.
+   */
+  idle: boolean;
   /**
    * Its upstream configuration, to put back if the prune is undone.
    */
