@@ -1003,6 +1003,38 @@ try {
     await row("Add a tavern chair").waitFor({ timeout: 10_000 });
   });
 
+  await step("reopens closed tabs in their places, from the keyboard or a tab's menu", async () => {
+    const tabs = page.locator(".tabs > .tab[data-path]");
+    const tab = (name) => tabs.filter({ hasText: name });
+    const order = async () => (await tabs.allTextContents()).map((name) => name.trim()).join(", ");
+    const tabMenu = async (name, item) => {
+      await tab(name).click({ button: "right" });
+      await page.locator(".menu-item", { hasText: item }).click();
+    };
+    const before = await order();
+    // A tab closed from its menu comes back with Ctrl+Shift+R, where it was, and open.
+    await tabMenu(/^notebook$/, "Close tab");
+    await tab(/^notebook$/).waitFor({ state: "detached", timeout: 5000 });
+    await page.keyboard.press("Control+Shift+R");
+    await row("Export notes as Markdown").waitFor({ timeout: 10_000 });
+    expect((await order()) === before, `reopened, the tabs are ${await order()}, not ${before}`);
+    // The others, closed at once, come back one by one from a tab's menu, each in its place.
+    await tabMenu("studio", "Close other tabs");
+    await row("Add a tavern chair").waitFor({ timeout: 10_000 });
+    expect((await tabs.count()) === 1, `${await tabs.count()} tabs after closing the others`);
+    for (let left = before.split(", ").length - 1; left > 0; left--) {
+      await tabMenu("studio", "Reopen closed tab");
+      await page.waitForFunction((count) => document.querySelectorAll(".tabs > .tab[data-path]").length === count, before.split(", ").length - left + 1, { timeout: 10_000 });
+    }
+    expect((await order()) === before, `reopened, the tabs are ${await order()}, not ${before}`);
+    // Nothing left to reopen.
+    await tab("studio").click({ button: "right" });
+    expect(await page.locator(".menu-item", { hasText: "Reopen closed tab" }).isDisabled(), "Reopen closed tab with nothing to reopen");
+    await page.keyboard.press("Escape");
+    await tab("studio").dispatchEvent("mousedown", { button: 0 });
+    await row("Add a tavern chair").waitFor({ timeout: 10_000 });
+  });
+
   await step("shows who holds Git LFS locks", async () => {
     await page.locator(".sidebar-locked", { hasText: "Tavern" }).waitFor({ timeout: 15_000 });
     await accessible("the repository, with its locks");

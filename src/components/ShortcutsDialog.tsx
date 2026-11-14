@@ -9,6 +9,7 @@ const SHORTCUTS: [string, string][] = [
   [`${modKey},`, "Settings"],
   [`${modKey}T`, "New tab: open, clone or create a repository, or pick a recent one"],
   [`${modKey}W`, "Close the tab"],
+  [isMac ? "⇧⌘R" : "Ctrl+Shift+R", "Reopen the tab closed last, in its place"],
   [`${modKey}1 … ${modKey}9`, "Switch to a tab"],
   [isMac ? "⌃⇧PgUp / ⌃⇧PgDn" : "Ctrl+Shift+PgUp / PgDn", "Move the tab left or right (or drag it)"],
   [`${modKey}R or F5`, "Refresh"],
