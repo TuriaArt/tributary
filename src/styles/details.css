@@ -650,6 +650,11 @@
   opacity: 0.6;
 }
 
+/* Open beside Re-run failed: both at the right. */
+.commit-checks-rerun + .commit-checks-open {
+  margin-left: 0;
+}
+
 .commit-checks-summary {
   display: flex;
   flex-wrap: wrap;

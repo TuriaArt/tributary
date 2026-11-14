@@ -1,5 +1,6 @@
-import type { Action, Lock, Overlap, PullRequest, RepoSnapshot } from "../api";
+import type { Action, CommitRow, Lock, Overlap, PullRequest, RepoSnapshot } from "../api";
 import { BlameView } from "../components/BlameView";
+import { ChecksView } from "../components/ChecksView";
 import { DiffView } from "../components/diff/DiffView";
 import { PullRequestView } from "../components/PullRequestView";
 import { RewriteView } from "../components/RewriteView";
@@ -31,6 +32,9 @@ interface Props {
   rewrite: RewriteShown | null;
   onShowRewrite: (rewrite: RewriteShown) => void;
   onCloseRewrite: () => void;
+  /** A commit whose checks are shown, each run as a graph of its jobs. */
+  checksOf: CommitRow | null;
+  onCloseChecks: () => void;
 }
 
 /** A branch (like "origin/fix/door") and the branch it's on top of (found when null). */
@@ -39,7 +43,7 @@ export interface RewriteShown {
   base: string | null;
 }
 
-/** What shows over the commit list: a file's changes, who changed each line, team activity, a pull request. */
+/** What shows over the commit list: a file's changes, who changed each line, team activity, a pull request, a commit's checks. */
 export function ListOverlays({
   snapshot,
   views,
@@ -59,6 +63,8 @@ export function ListOverlays({
   rewrite,
   onShowRewrite,
   onCloseRewrite,
+  checksOf,
+  onCloseChecks,
 }: Props) {
   const { shownDiff, diffTargets, diffIndex, stepDiff, closeDiff, showBlame, blameAt, closeBlame } = views;
   return (
@@ -125,6 +131,7 @@ export function ListOverlays({
         />
       )}
       {rewrite && <RewriteView repoPath={snapshot.path} branch={rewrite.branch} base={rewrite.base} onClose={onCloseRewrite} />}
+      {checksOf && <ChecksView repoPath={snapshot.path} commit={checksOf} onClose={onCloseChecks} openUrl={openInBrowser} notify={notify} />}
       {blameAt && <BlameView repoPath={snapshot.path} path={blameAt.path} at={blameAt.at} onClose={closeBlame} onSelectCommit={select} hasCommit={hasCommit} />}
     </>
   );

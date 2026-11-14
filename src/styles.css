@@ -36,6 +36,7 @@
 @import "./styles/check-timeline.css";
 @import "./styles/request-actions.css";
 @import "./styles/commit-checks.css";
+@import "./styles/run-graph.css";
 @import "./styles/reviews.css";
 @import "./styles/merge-and-patches.css";
 @import "./styles/rewrites.css";

@@ -153,10 +153,19 @@ export function RepositoryView(props: Props) {
   const stacks = useStacks(snapshot);
   /** A branch whose rewrite is shown over the list (what changed when it was force-pushed). */
   const [rewrite, setRewrite] = useState<RewriteShown | null>(null);
+  /** A commit whose checks are shown over the list, each run as a graph. */
+  const [checksOf, setChecksOf] = useState<CommitRow | null>(null);
   const shownIn = useRef(snapshot.path);
   if (shownIn.current !== snapshot.path) {
     shownIn.current = snapshot.path;
     if (rewrite) setRewrite(null);
+    if (checksOf) setChecksOf(null);
+  }
+  // A pull request or the team view opened since: it's shown, not the checks over it.
+  const othersShown = useRef<unknown[]>([props.request, props.teamOpen]);
+  if (othersShown.current[0] !== props.request || othersShown.current[1] !== props.teamOpen) {
+    othersShown.current = [props.request, props.teamOpen];
+    if ((props.request || props.teamOpen) && checksOf) setChecksOf(null);
   }
 
   // A file's changes, who changed each line, and two commits compared.
@@ -170,6 +179,7 @@ export function RepositoryView(props: Props) {
       if (props.teamOpen) props.onCloseTeam();
       if (props.request) props.onCloseRequest();
       setRewrite(null);
+      setChecksOf(null);
     },
   });
   const { comparing, compared, showChanges, showBlame, shownDiff } = views;
@@ -195,6 +205,7 @@ export function RepositoryView(props: Props) {
     openDialog,
     showRequest: props.onShowRequest,
     showRewrite: setRewrite,
+    showChecks: setChecksOf,
     stacks,
     highlight,
     settings,
@@ -341,6 +352,7 @@ export function RepositoryView(props: Props) {
     ) : detailsOpen ? (
       <DetailsPane
         notify={(text) => props.notify({ text })}
+        onShowChecks={setChecksOf}
         snapshot={snapshot}
         selection={selection}
         actions={actions}
@@ -521,6 +533,8 @@ export function RepositoryView(props: Props) {
               rewrite={rewrite}
               onShowRewrite={setRewrite}
               onCloseRewrite={() => setRewrite(null)}
+              checksOf={checksOf}
+              onCloseChecks={() => setChecksOf(null)}
             />
           </div>
           {detailsPanel.shown && (
