@@ -535,12 +535,33 @@ try {
     }
     try {
       await page.keyboard.press("F5");
+      // Once the app has read the repository again, with the stash: its row goes in near the
+      // top and the commits below move down one. A right-click while they move landed on the
+      // row that took the commit's place (High-contrast theme, on feature/themes, not in
+      // main's history), and bisecting from there failed.
+      await row("smoke: bisect").waitFor({ timeout: 10_000 });
       await row("Fix the note counter in the sidebar").click({ button: "right" });
       await page.locator(".menu-item", { hasText: "Find what broke since this commit (bisect)…" }).click();
       const dialog = page.locator(".dialog", { hasText: "Find the commit that broke it" });
+      await dialog.waitFor({ timeout: 5000 });
+      expect((await dialog.innerText()).includes("Fix the note counter in the sidebar"), `bisecting from the wrong commit: ${(await dialog.innerText()).replace(/\s+/g, " ")}`);
       await dialog.getByRole("button", { name: "Start bisecting" }).click();
       const bar = page.locator(".bisect-bar");
-      await bar.filter({ hasText: "then say whether it's good or bad" }).waitFor({ timeout: 10_000 });
+      const prompt = bar.filter({ hasText: "then say whether it's good or bad" });
+      const failed = page.locator(".error-banner");
+      // Started, or said why not: either way, without waiting the whole time for it.
+      await prompt.or(failed).first().waitFor({ timeout: 15_000 }).catch(() => {});
+      if (!(await prompt.count())) {
+        // What the bar, an error and git said, so a failure here says why.
+        const said = async (locator) => ((await locator.count()) ? (await locator.first().innerText()).replace(/\s+/g, " ").trim() : "nothing");
+        let log;
+        try {
+          log = git("bisect", "log").split("\n").filter((line) => !line.startsWith("#")).join("; ");
+        } catch {
+          log = "not bisecting";
+        }
+        throw new Error(`no bisect prompt. The bar: ${await said(bar)}. An error: ${await said(failed)}. git bisect log: ${log}. git status: ${git("status", "--short") || "clean"}`);
+      }
       // Everything after the good commit is bad: the first one after it is the culprit.
       for (let tries = 0; tries < 5 && !(await bar.filter({ hasText: "Found it" }).count()); tries++) {
         await bar.getByRole("button", { name: "Bad", exact: true }).click();
@@ -1274,6 +1295,9 @@ try {
     await page.getByRole("button", { name: "Create worktree" }).click();
     await page.locator(".head-chip", { hasText: "feature/themes" }).waitFor({ timeout: 15_000 });
     await page.locator(".tab.active", { hasText: "notebook-feature-themes" }).waitFor({ timeout: 5000 });
+    // The sidebar reads the worktrees after the tab opens: counted once they're there, as
+    // counting straight away found none now and then.
+    await page.waitForFunction(() => document.querySelectorAll(".sidebar-worktree").length === 2, null, { timeout: 10_000 }).catch(() => {});
     const entries = await page.locator(".sidebar-worktree").count();
     expect(entries === 2, `${entries} worktrees in the sidebar`);
     await dismissToast();
