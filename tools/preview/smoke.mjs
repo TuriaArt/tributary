@@ -883,6 +883,31 @@ try {
     await row("Add a tavern chair").waitFor({ timeout: 10_000 });
   });
 
+  await step("checks the spelling of commit messages, with the webview's menu for suggestions", async () => {
+    await page.locator(".tab", { hasText: /^notebook$/ }).dispatchEvent("mousedown", { button: 0 });
+    await row("Export notes as Markdown").waitFor({ timeout: 10_000 });
+    await page.locator(".commit-row", { has: page.locator(".summary.wip") }).click();
+    const summary = page.getByPlaceholder("Commit summary");
+    const description = page.getByLabel("Commit description");
+    await summary.waitFor({ timeout: 5000 });
+    for (const field of [summary, description]) {
+      const checked = await field.evaluate((element) => element.spellcheck);
+      expect(checked, `${await field.getAttribute("aria-label")} isn't spell-checked`);
+    }
+    // A right-click keeps the webview's own menu, with its suggestions, only in text fields.
+    const prevented = (locator) =>
+      locator.evaluate((element) => {
+        const event = new MouseEvent("contextmenu", { bubbles: true, cancelable: true });
+        element.dispatchEvent(event);
+        return event.defaultPrevented;
+      });
+    expect(!(await prevented(description)), "the description's own menu was stopped");
+    expect(!(await prevented(summary)), "the summary's own menu was stopped");
+    expect(await prevented(page.locator("body")), "the webview's menu showed outside a text field");
+    await page.locator(".tab", { hasText: "studio" }).dispatchEvent("mousedown", { button: 0 });
+    await row("Add a tavern chair").waitFor({ timeout: 10_000 });
+  });
+
   await step("puts a tab elsewhere by dragging it, or from the keyboard", async () => {
     const tabs = page.locator(".tabs > .tab[data-path]");
     const order = async () => (await tabs.allTextContents()).map((name) => name.trim()).join(", ");
