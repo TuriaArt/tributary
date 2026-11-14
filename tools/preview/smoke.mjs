@@ -1097,6 +1097,10 @@ try {
 
   await step("shows a pull request's reviews and checks", async () => {
     await page.evaluate((details) => Object.assign(window.__PREVIEW__, { pullRequestDetails: details }), STUDIO_PULL_REQUEST_DETAILS);
+    // Pressing the badge opens the pull request, and leaves the selected commit as it was: a
+    // press that selected the badge's row could scroll it, and the click would miss the badge.
+    const selected = () => page.evaluate(() => document.querySelector(".commit-row.selected")?.id ?? "");
+    const before = await selected();
     await page.locator(".pr-badge", { hasText: "#14" }).first().click();
     const view = page.locator(".request-view");
     await view.locator(".request-merge", { hasText: "changes were asked for" }).waitFor({ timeout: 10_000 });
@@ -1110,6 +1114,7 @@ try {
     expect((await page.evaluate(() => window.__PREVIEW__.opened)).some((url) => url.endsWith("/actions/runs/7")), "the check's page didn't open");
     await page.keyboard.press("Escape");
     await view.waitFor({ state: "detached", timeout: 5000 });
+    expect((await selected()) === before, `pressing the badge selected ${await selected()}, not ${before}`);
   });
 
   await step("shows an open pull request from its branch's commit", async () => {
