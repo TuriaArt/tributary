@@ -280,6 +280,18 @@
   height: 6px;
 }
 
+/* Clicked, it opens the commit's checks: a target wider than the dot, around it. */
+.graph-ci {
+  cursor: pointer;
+}
+
+.graph-ci::before {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  border-radius: 50%;
+}
+
 .commit-row:hover .graph-ci {
   --ci-ring: var(--bg-hover);
 }
