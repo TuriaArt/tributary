@@ -62,20 +62,20 @@ export default {
   async "checks-graph"({ open, point, pause, demos, record }) {
     const page = await open(demos.studio, { width: 1152, height: 720, fakes: { ciStates: { "": "failure" }, commitChecks: studioChecks(), commitRuns: studioCommitRuns() } });
     // The branches sidebar out of the way, for the graph's room; the checked-out commit chosen,
-    // so its details show its pull request's and checks' cards.
+    // so its details show its pull request and checks.
     await page.getByRole("button", { name: "Toggle the branches sidebar" }).click();
     const head = page.locator(".commit-row", { has: page.locator(".ref-pill.current") }).first();
     await head.locator(".cell.description").click();
-    await page.locator(".details .commit-checks .details-card").waitFor({ timeout: 10_000 });
+    await page.locator(".details .commit-checks .check-pips").waitFor({ timeout: 10_000 });
     await page.mouse.move(page.pointerAt.x, page.pointerAt.y);
     await pause(page, 600);
     const view = page.locator(".checks-view");
     await record(page, { x: 0, y: 0, width: 1152, height: 720 }, async () => {
       await pause(page, 700);
-      await press(page, point, pause, head.locator(".graph-ci"), 2200);
+      await press(page, point, pause, head.locator(".graph-ci"), 1900);
       // Wider than the view: its arrow scrolls the Build graph along to the jobs still waiting.
       const more = view.locator(".run-graph-more.right").first();
-      if (await more.isVisible()) await press(page, point, pause, more, 1800);
+      if (await more.isVisible()) await press(page, point, pause, more, 1500);
       await page.keyboard.press("Escape");
       await view.waitFor({ state: "detached", timeout: 5000 });
       await pause(page, 700);
