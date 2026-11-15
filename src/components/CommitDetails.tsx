@@ -197,7 +197,7 @@ export function CommitDetailsPanel(props: Props) {
           </section>
 
           {/* What the site says about it: its pull requests and its checks, as cards. */}
-          <CommitRequests requests={mentions.filter((mention) => mention.request)} />
+          <CommitRequests repoPath={repoPath} requests={mentions.filter((mention) => mention.request)} />
           <CommitChecks shown={checks} onShow={props.onShowChecks} />
 
           <section className="details-section">

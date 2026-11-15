@@ -30,14 +30,30 @@
   color: var(--text-muted);
 }
 
-/* A pull request's icon in its state's colour: merged purple, open green. (The checks' icon,
-   RunStateIcon, has its own.) */
+/* A pull request's icon in the colour of where it stands, as its view's status card has it:
+   merged purple, ready green, held back red, waiting amber. (The checks' icon, RunStateIcon,
+   has its own.) */
 .commit-request.merged .site-item-icon {
   color: var(--purple);
 }
 
-.commit-request.open .site-item-icon {
+.commit-request.good .site-item-icon {
   color: var(--success-text);
+}
+
+.commit-request.bad .site-item-icon {
+  color: var(--danger-text);
+}
+
+.commit-request.waiting .site-item-icon {
+  color: var(--warning-text);
+}
+
+/* Under it, its number (a link to it on the site), title and who opened it, cut short to fit. */
+.commit-request-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .site-item-text {
@@ -48,6 +64,13 @@
   font-weight: 550;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* Where a pull request stands can be a long sentence ("Conflicts with main: merge main into
+   fix/door (or rebase it) and resolve them"), so it wraps instead of being cut short. */
+.commit-request-standing {
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 /* A pull request's number, a link to it on the site. */

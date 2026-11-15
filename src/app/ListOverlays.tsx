@@ -1,6 +1,6 @@
-import type { Action, CommitRow, Lock, Overlap, PullRequest, RepoSnapshot } from "../api";
+import type { Action, Lock, Overlap, PullRequest, RepoSnapshot } from "../api";
 import { BlameView } from "../components/BlameView";
-import { ChecksView } from "../components/ChecksView";
+import { ChecksView, type ChecksOf } from "../components/ChecksView";
 import { DiffView } from "../components/diff/DiffView";
 import { PullRequestView } from "../components/PullRequestView";
 import { RewriteView } from "../components/RewriteView";
@@ -33,7 +33,9 @@ interface Props {
   onShowRewrite: (rewrite: RewriteShown) => void;
   onCloseRewrite: () => void;
   /** A commit whose checks are shown, each run as a graph of its jobs. */
-  checksOf: CommitRow | null;
+  checksOf: ChecksOf | null;
+  /** Show a commit's checks, like a pull request's latest commit's. */
+  onShowChecks: (commit: ChecksOf) => void;
   onCloseChecks: () => void;
 }
 
@@ -64,6 +66,7 @@ export function ListOverlays({
   onShowRewrite,
   onCloseRewrite,
   checksOf,
+  onShowChecks,
   onCloseChecks,
 }: Props) {
   const { shownDiff, diffTargets, diffIndex, stepDiff, closeDiff, showBlame, blameAt, closeBlame } = views;
@@ -114,6 +117,7 @@ export function ListOverlays({
           hasCommit={hasCommit}
           notify={notify}
           onShowRewrite={(branch, base) => onShowRewrite({ branch: `${request.remote}/${branch}`, base: `${request.remote}/${base}` })}
+          onShowChecks={(id, summary) => onShowChecks({ id, summary })}
           onCompare={(details) => {
             if (!details.baseSha || !details.headSha) return;
             views.comparing.compare({ from: { id: details.baseSha, label: details.base }, to: { id: details.headSha, label: details.branch }, split: true });

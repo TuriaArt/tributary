@@ -1451,6 +1451,25 @@ try {
     await view.locator(".request-merge", { hasText: "changes were asked for" }).waitFor({ timeout: 10_000 });
     await view.locator(".request-check.failure", { hasText: "Audio loudness" }).waitFor({ timeout: 5000 });
     await view.locator(".request-status-said", { hasText: "diego-ramos asked for changes" }).waitFor({ timeout: 5000 });
+    // The river under the checks' summary counts them and shows each, so the summary's title
+    // names what failed instead, and it has no pips.
+    await view.locator(".request-status .commit-checks-headline", { hasText: /^Audio loudness failed$/ }).waitFor({ timeout: 5000 });
+    await view.locator(".tributaries-line", { hasText: /checks failed/ }).waitFor({ timeout: 5000 });
+    expect((await view.locator(".request-status .check-pips").count()) === 0, "the pull request's checks have pips as well as the river");
+    // In the smallest window, with the sidebar and details open, the river's verdict goes under
+    // its streams instead of over them, and the checks under it keep their names (without bars).
+    const size = page.viewportSize();
+    await page.setViewportSize({ width: 900, height: size.height });
+    try {
+      await page.waitForFunction(() => {
+        const streams = document.querySelector(".request-view .tributaries-streams")?.getBoundingClientRect();
+        const verdict = document.querySelector(".request-view .tributaries-verdict")?.getBoundingClientRect();
+        const name = document.querySelector(".request-view .request-timeline-row .request-check-name")?.getBoundingClientRect();
+        return streams && verdict && name && verdict.top >= streams.bottom && name.width > 40;
+      }, null, { timeout: 5000 });
+    } finally {
+      await page.setViewportSize(size);
+    }
     // The description and comments are Markdown, shown as such.
     await view.locator(".request-comment-text").first().waitFor({ timeout: 5000 });
     await accessible("a pull request");
@@ -1463,13 +1482,14 @@ try {
   });
 
   await step("shows an open pull request from its branch's commit", async () => {
-    // The commit at the tip of fix/door: its pull request, open, with who opened it and Show,
-    // under a heading with the site's chip, and its checks under it, built the same way.
+    // The commit at the tip of fix/door: its pull request, saying where it stands as its view
+    // does, with its title, who opened it and Show, under a heading with the site's chip, and
+    // its checks under it, built the same way.
     await page.locator(".commit-row", { has: page.locator(".pr-badge", { hasText: "#14" }) }).first().click();
     const card = page.locator(".details .commit-request", { hasText: "#14" });
-    await card.locator(".mentioned-issue-status", { hasText: "Open" }).waitFor({ timeout: 5000 });
-    await card.locator(".commit-request-title", { hasText: "Make the door creak" }).waitFor({ timeout: 5000 });
-    await card.locator(".commit-request-state", { hasText: "by theo-park" }).waitFor({ timeout: 5000 });
+    await card.locator(".commit-request-standing", { hasText: "Can't be merged yet: changes were asked for" }).waitFor({ timeout: 5000 });
+    expect(await card.evaluate((item) => item.classList.contains("bad")), "a pull request that can't be merged isn't shown in red");
+    await card.locator(".commit-request-name", { hasText: "Make the door creak · theo-park" }).waitFor({ timeout: 5000 });
     await page.locator(".details .commit-requests h3", { hasText: "Pull request" }).waitFor({ timeout: 5000 });
     await page.locator(".details .commit-requests .site-chip", { hasText: "GitHub" }).waitFor({ timeout: 5000 });
     // Its checks, built the same way, with a pip for each.
