@@ -1456,8 +1456,9 @@ try {
     await view.locator(".tributaries-title", { hasText: /^Audio loudness failed$/ }).waitFor({ timeout: 5000 });
     await view.locator(".tributaries-line", { hasText: /^1 of 6 checks failed, 2 still running, 1 skipped$/ }).waitFor({ timeout: 5000 });
     expect((await view.locator(".request-status .site-checks").count()) === 0, "the pull request's checks say how they went above the river as well as beside it");
-    // In the smallest window, with the sidebar and details open, the river's verdict goes under
-    // its streams instead of over them, and the checks under it keep their names (without bars).
+    // In the smallest window, with the details open, the river's streams don't run under its
+    // verdict (it goes under them when there's no room beside them), and the checks under it
+    // keep their names.
     const size = page.viewportSize();
     await page.setViewportSize({ width: 900, height: size.height });
     try {
@@ -1465,7 +1466,7 @@ try {
         const streams = document.querySelector(".request-view .tributaries-streams")?.getBoundingClientRect();
         const verdict = document.querySelector(".request-view .tributaries-verdict")?.getBoundingClientRect();
         const name = document.querySelector(".request-view .request-timeline-row .request-check-name")?.getBoundingClientRect();
-        return streams && verdict && name && verdict.top >= streams.bottom && name.width > 40;
+        return streams && verdict && name && (verdict.top >= streams.bottom || verdict.left >= streams.right) && name.width > 40;
       }, null, { timeout: 5000 });
     } finally {
       await page.setViewportSize(size);
@@ -1663,7 +1664,7 @@ try {
     expect(first && second && first !== second && nextMenu !== second, `focus went ${first} → ${second} → ${nextMenu}`);
   });
 
-  await step("fits the smallest window: every window a command opens, Settings, About, the View panel and a long menu", async () => {
+  await step("fits the smallest window: the sidebar as a strip, every window a command opens, Settings, About, the View panel and a long menu", async () => {
     // 900 by 560, the smallest the window can be (tauri.conf.json), with the sidebar and the
     // details open: no window inside it runs past its edges out of reach, and no words sit on
     // other words or are cut off without an ellipsis (fits.mjs).
@@ -1698,6 +1699,19 @@ try {
     try {
       await closeAll();
       await fits("the repository");
+      // The sidebar is a strip of icons beside the list. One opens it over the list, at its
+      // section; Esc closes it, with the focus back on the icon.
+      await page.locator(".sidebar-strip").waitFor({ timeout: 5000 });
+      expect((await page.locator(".sidebar-frame").count()) === 0, "the sidebar takes its full width in the smallest window");
+      const tagsIcon = page.locator(".sidebar-strip-button[data-section=tags]");
+      await tagsIcon.click();
+      const over = page.locator(".sidebar-over");
+      await over.locator('[data-tour="section-tags"] .sidebar-heading[aria-expanded="true"]').waitFor({ timeout: 5000 });
+      await fits("the sidebar over the list");
+      await accessible("the sidebar's strip, open at Tags");
+      await page.keyboard.press("Escape");
+      await over.waitFor({ state: "detached", timeout: 5000 });
+      expect(await tagsIcon.evaluate((element) => element === document.activeElement), "the focus didn't go back to the strip's Tags icon");
       for (const label of ["Go to Commit", "New Branch", "New Tag", "New Worktree", "Stash Changes", "Prune Branches", "Restore Branch", "Recover Commits", "Repository Settings", "Shelves", "Local History", "What Makes It Big", "Check Project Setup", "Clean Up Git LFS Files", "Force Push", "Clone Repository", "Tours", "Third-Party Licences", "Why Is a File Ignored", "Keyboard Shortcuts"]) {
         if (!(await command(label))) continue;
         await fits(label);
