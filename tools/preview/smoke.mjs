@@ -1596,6 +1596,29 @@ try {
     await dismissToast();
   });
 
+  await step("lists the keyboard shortcuts in a window that fits a short one, scrolling inside it", async () => {
+    const size = page.viewportSize();
+    // Shorter than the list: it used to run past the window's top and bottom.
+    await page.setViewportSize({ width: 1100, height: 560 });
+    try {
+      await page.locator(".menu-bar-item", { hasText: "Help" }).dispatchEvent("mousedown", { button: 0 });
+      await page.locator(".menu-item", { hasText: "Keyboard Shortcuts" }).click();
+      const dialog = page.locator(".shortcuts-window");
+      await dialog.locator(".shortcut-row", { hasText: "Cherry-pick it onto that branch" }).waitFor({ timeout: 5000 });
+      const box = await dialog.boundingBox();
+      expect(box.y >= 0 && box.y + box.height <= 560, `the window runs from ${box.y} to ${box.y + box.height}, past the 560px window`);
+      const body = dialog.locator(".shortcuts-body");
+      expect(await body.evaluate((element) => element.scrollHeight > element.clientHeight), "the list doesn't scroll inside the window");
+      // Each key a keycap of its own: Ctrl and K apart.
+      expect((await dialog.locator(".shortcut-row", { hasText: "Command palette" }).locator("kbd").count()) === 2, "the palette's keys aren't two keycaps");
+      await accessible("the keyboard shortcuts");
+      await page.keyboard.press("Escape");
+      await dialog.waitFor({ state: "detached", timeout: 5000 });
+    } finally {
+      await page.setViewportSize(size);
+    }
+  });
+
   await step("works the menus from the keyboard", async () => {
     await page.locator("body").press("F10");
     const focused = () => page.evaluate(() => document.activeElement?.textContent?.trim() ?? "");

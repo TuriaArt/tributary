@@ -288,7 +288,7 @@ The branch can be switched from the top, next to **Shelves** and **Local history
   ![A tour stop: the window dimmed but for Fetch, Pull and Push, which glow, with a card beside them explaining what each does](images/tour.png)
 
 - **What's new:** after an update, Tributary shows what's new in the version you got (and the ones you skipped), one thing at a time; it's in the Help menu, to see again.
-- **Command palette:** <kbd>⌘</kbd>/<kbd>Ctrl</kbd> + <kbd>K</kbd> lists the commands and branches, so you can check out, merge, highlight or run almost anything by typing a few letters. Press <kbd>?</kbd> to see all keyboard shortcuts.
+- **Command palette:** <kbd>⌘</kbd>/<kbd>Ctrl</kbd> + <kbd>K</kbd> lists the commands and branches, so you can check out, merge, highlight or run almost anything by typing a few letters. Press <kbd>?</kbd> (or Help → Keyboard Shortcuts) to see all keyboard shortcuts, in groups, each key a keycap of its own, in a window that fits yours: its list scrolls when the window is short.
 
 <sub>[↑ Contents](#contents)</sub>
 
