@@ -105,7 +105,23 @@ export function Sidebar(props: Props) {
     isOpen: (key) => filtering || collapsed[key] === false,
     toggle: (key) => setCollapsed((current) => ({ ...current, [key]: current[key] === false })),
   };
-  const handlers: RefHandlers = props;
+  // A lane lit from one of these labels goes out with the sidebar (the strip's panel closed
+  // with Esc, or the window made narrow): no pointer leaves the label then.
+  const litHere = useRef(false);
+  const { onLaneHover } = props;
+  useEffect(
+    () => () => {
+      if (litHere.current) onLaneHover(null);
+    },
+    [onLaneHover],
+  );
+  const handlers: RefHandlers = {
+    ...props,
+    onLaneHover: (label) => {
+      litHere.current = label !== null;
+      onLaneHover(label);
+    },
+  };
   const branchIcon = <BranchIcon size={13} />;
   const item = (entry: RefEntry, label: string, icon: ReactNode, depth = 0, key = `${entry.kind}:${entry.name}`) => (
     <RefItem

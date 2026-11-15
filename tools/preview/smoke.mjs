@@ -1510,6 +1510,11 @@ try {
     const total = Number((await headline.textContent()).match(/of (\d+)/)[1]);
     expect((await page.locator(".details .check-pips > span").count()) === total, `not a pip for each of the ${total} checks`);
     expect((await page.locator(".details .mentioned-issue", { hasText: "#14" }).count()) === 0, "the pull request is listed with the issues too");
+    // With no label under the pointer, no lane is lit: the graph's nodes are at full strength.
+    await page.waitForFunction(() => !document.querySelector(".commit-list.lane-lit"), null, { timeout: 2000 }).catch(async () => {
+      const under = await page.evaluate(() => [...document.querySelectorAll(":hover")].map((element) => element.className).filter(Boolean).slice(-2).join(" > "));
+      throw new Error(`a lane is lit with the pointer on ${under}`);
+    });
     await accessible("an open pull request in a commit's details");
     await card.getByRole("button", { name: "Show" }).click();
     const view = page.locator(".request-view");
@@ -1720,8 +1725,15 @@ try {
       await over.locator('[data-tour="section-tags"] .sidebar-heading[aria-expanded="true"]').waitFor({ timeout: 5000 });
       await fits("the sidebar over the list");
       await accessible("the sidebar's strip, open at Tags");
+      // A tag's lane lights up from its label there too, and goes out with the sidebar when
+      // Esc closes it under the pointer.
+      await over.locator('[data-tour="section-tags"] .sidebar-item').first().hover();
+      await page.locator(".commit-list.lane-lit").waitFor({ timeout: 5000 });
       await page.keyboard.press("Escape");
       await over.waitFor({ state: "detached", timeout: 5000 });
+      await page.waitForFunction(() => !document.querySelector(".commit-list.lane-lit"), null, { timeout: 2000 }).catch(() => {
+        throw new Error("a tag's lane stayed lit after its label went with the sidebar");
+      });
       expect(await tagsIcon.evaluate((element) => element === document.activeElement), "the focus didn't go back to the strip's Tags icon");
       for (const label of ["Go to Commit", "New Branch", "New Tag", "New Worktree", "Stash Changes", "Prune Branches", "Restore Branch", "Recover Commits", "Repository Settings", "Shelves", "Local History", "What Makes It Big", "Check Project Setup", "Clean Up Git LFS Files", "Force Push", "Clone Repository", "Tours", "Third-Party Licences", "Why Is a File Ignored", "Keyboard Shortcuts"]) {
         if (!(await command(label))) continue;
