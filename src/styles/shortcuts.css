@@ -3,8 +3,8 @@
 .shortcuts-window {
   display: flex;
   flex-direction: column;
-  width: min(920px, 100%);
-  max-height: 100%;
+  width: min(780px, 100%);
+  height: min(640px, 100%);
 }
 
 .shortcuts-window .dialog-buttons:empty {
@@ -74,12 +74,61 @@
   font-size: var(--type-base);
 }
 
-/* Two columns of groups, a row each: what it does, its keys at the end. */
+/* A search, the groups down the side, and the list beside them, a row each: what it does,
+   its keys at the end. */
+.shortcuts-find {
+  flex: none;
+  margin: var(--space-6) 0 var(--space-14);
+  font-family: inherit;
+}
+
+.shortcuts-split {
+  display: grid;
+  flex: 1 1 auto;
+  grid-template-columns: 168px minmax(0, 1fr);
+  gap: var(--space-20);
+  min-height: 0;
+}
+
+.shortcuts-nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.shortcuts-nav button {
+  display: flex;
+  align-items: center;
+  /* Odd, for words at --type-sm: see --cap-pixels. */
+  height: 29px;
+  padding: 0 var(--space-10);
+  border: none;
+  border-radius: var(--radius-md);
+  background: none;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: var(--type-sm);
+  text-align: left;
+}
+
+.shortcuts-nav button:hover {
+  background: var(--bg-hover);
+}
+
+.shortcuts-nav button.on {
+  background: var(--bg-selected);
+  color: var(--text);
+}
+
 .shortcuts-window .shortcuts-body {
-  columns: 2 360px;
-  column-gap: var(--space-40);
-  margin-top: var(--space-8);
   padding-right: var(--space-4);
+}
+
+.shortcuts-none {
+  margin: var(--space-8) 0;
+  color: var(--text-muted);
 }
 
 .shortcuts-group {

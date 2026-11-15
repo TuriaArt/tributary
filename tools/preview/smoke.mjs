@@ -1596,7 +1596,7 @@ try {
     await dismissToast();
   });
 
-  await step("lists the keyboard shortcuts in a window that fits a short one, scrolling inside it", async () => {
+  await step("lists the keyboard shortcuts in groups, finds one, and fits a short window", async () => {
     const size = page.viewportSize();
     // Shorter than the list: it used to run past the window's top and bottom.
     await page.setViewportSize({ width: 1100, height: 560 });
@@ -1604,14 +1604,23 @@ try {
       await page.locator(".menu-bar-item", { hasText: "Help" }).dispatchEvent("mousedown", { button: 0 });
       await page.locator(".menu-item", { hasText: "Keyboard Shortcuts" }).click();
       const dialog = page.locator(".shortcuts-window");
-      await dialog.locator(".shortcut-row", { hasText: "Cherry-pick it onto that branch" }).waitFor({ timeout: 5000 });
+      const rows = dialog.locator(".shortcut-row");
+      await rows.filter({ hasText: "Cherry-pick it onto that branch" }).waitFor({ timeout: 5000 });
       const box = await dialog.boundingBox();
       expect(box.y >= 0 && box.y + box.height <= 560, `the window runs from ${box.y} to ${box.y + box.height}, past the 560px window`);
-      const body = dialog.locator(".shortcuts-body");
-      expect(await body.evaluate((element) => element.scrollHeight > element.clientHeight), "the list doesn't scroll inside the window");
+      expect(await dialog.locator(".shortcuts-body").evaluate((element) => element.scrollHeight > element.clientHeight), "the list doesn't scroll inside the window");
       // Each key a keycap of its own: Ctrl and K apart.
-      expect((await dialog.locator(".shortcut-row", { hasText: "Command palette" }).locator("kbd").count()) === 2, "the palette's keys aren't two keycaps");
+      expect((await rows.filter({ hasText: "Command palette" }).locator("kbd").count()) === 2, "the palette's keys aren't two keycaps");
       await accessible("the keyboard shortcuts");
+      // Typing finds them in every group: the search box has the keyboard from the start.
+      await page.keyboard.type("cherry");
+      await page.waitForFunction(() => document.querySelectorAll(".shortcuts-window .shortcut-row").length === 1, null, { timeout: 5000 });
+      expect((await rows.first().textContent()).includes("Cherry-pick"), "searching for cherry didn't find the cherry-pick");
+      await dialog.locator(".shortcuts-find").fill("");
+      // A group on its own, then all again.
+      await dialog.locator(".shortcuts-nav button", { hasText: "Tabs" }).click();
+      await page.waitForFunction(() => [...document.querySelectorAll(".shortcuts-window .shortcuts-group h3")].map((h) => h.textContent).join() === "Tabs", null, { timeout: 5000 });
+      await dialog.locator(".shortcuts-nav button", { hasText: "All" }).click();
       await page.keyboard.press("Escape");
       await dialog.waitFor({ state: "detached", timeout: 5000 });
     } finally {

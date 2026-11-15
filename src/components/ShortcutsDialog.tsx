@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { isMac } from "../lib/platform";
 import { Dialog } from "./Dialog";
 
@@ -111,26 +112,58 @@ function KeyCaps({ shortcut }: { shortcut: Shortcut }) {
   );
 }
 
+/** Whether a shortcut has every word typed, in what it does, what it's done on, or its keys. */
+function matches(shortcut: Shortcut, words: string[]): boolean {
+  const text = `${shortcut.what} ${shortcut.on ?? ""} ${shortcut.keys.flat().join(" ")}`.toLowerCase();
+  return words.every((word) => text.includes(word));
+}
+
 /**
- * The keyboard shortcuts, in groups, each with its keys as keycaps: two columns of a wide
- * window that's never taller than the app's, the list scrolling inside it when it's taller.
+ * The keyboard shortcuts, in groups, each with its keys as keycaps. A search at the top
+ * narrows them to what has the words typed, in every group; the groups down the side show
+ * one at a time, or all. The window is never taller than the app's: its list scrolls inside.
  */
 export function ShortcutsDialog({ onClose }: { onClose: () => void }) {
+  const [query, setQuery] = useState("");
+  const [only, setOnly] = useState<string | null>(null);
+  const words = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  // Typing searches every group, whichever is chosen.
+  const shown = GROUPS.map((group) => ({ ...group, items: group.items.filter((shortcut) => matches(shortcut, words)) })).filter(
+    (group) => group.items.length > 0 && (words.length > 0 || !only || group.name === only),
+  );
   return (
     <Dialog title="Keyboard shortcuts" className="shortcuts-window" closable onCancel={onClose} buttons={null}>
-      {/* Focusable, so the list can be scrolled from the keyboard when it's taller than the window. */}
-      <div className="shortcuts-body" tabIndex={0} role="region" aria-label="The shortcuts">
-        {GROUPS.map((group) => (
-          <section key={group.name} className="shortcuts-group">
-            <h3>{group.name}</h3>
-            {group.items.map((shortcut) => (
-              <div key={shortcut.what} className="shortcut-row">
-                <span className="shortcut-what">{shortcut.what}</span>
-                <KeyCaps shortcut={shortcut} />
-              </div>
-            ))}
-          </section>
-        ))}
+      <input
+        className="text-input shortcuts-find"
+        placeholder="Find a shortcut, like “tab” or “Ctrl+G”"
+        value={query}
+        onChange={(event) => setQuery(event.target.value)}
+        autoFocus
+        aria-label="Find a shortcut"
+      />
+      <div className="shortcuts-split">
+        <nav className="shortcuts-nav" aria-label="Groups of shortcuts">
+          {[null, ...GROUPS.map((group) => group.name)].map((name) => (
+            <button key={name ?? "all"} className={!words.length && only === name ? "on" : undefined} aria-pressed={!words.length && only === name} onClick={() => setOnly(name)}>
+              <span className="button-label">{name ?? "All"}</span>
+            </button>
+          ))}
+        </nav>
+        {/* Focusable, so the list can be scrolled from the keyboard when it's taller than the window. */}
+        <div className="shortcuts-body" tabIndex={0} role="region" aria-label="The shortcuts">
+          {shown.map((group) => (
+            <section key={group.name} className="shortcuts-group">
+              <h3>{group.name}</h3>
+              {group.items.map((shortcut) => (
+                <div key={shortcut.what} className="shortcut-row">
+                  <span className="shortcut-what">{shortcut.what}</span>
+                  <KeyCaps shortcut={shortcut} />
+                </div>
+              ))}
+            </section>
+          ))}
+          {shown.length === 0 && <p className="shortcuts-none">No shortcut has “{query.trim()}”.</p>}
+        </div>
       </div>
     </Dialog>
   );
