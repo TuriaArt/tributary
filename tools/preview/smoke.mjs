@@ -21,6 +21,7 @@ import { describeOffCentre, moving, offCentre as offInPixels, probe, restore } f
 import { decodePng } from "../e2e/png.mjs";
 import { startLockServer } from "./lfs-locks.mjs";
 import { startPreview } from "./server.mjs";
+import { crowded } from "./fits.mjs";
 
 const browserAt = process.argv.indexOf("--browser");
 const browserName = browserAt > 0 ? process.argv[browserAt + 1] : "chromium";
@@ -1661,6 +1662,87 @@ try {
     await page.keyboard.press("Escape");
     await page.locator(".context-menu").waitFor({ state: "detached" });
     expect(first && second && first !== second && nextMenu !== second, `focus went ${first} → ${second} → ${nextMenu}`);
+  });
+
+  await step("fits the smallest window: every window a command opens, Settings, About, the View panel and a long menu", async () => {
+    // 900 by 560, the smallest the window can be (tauri.conf.json), with the sidebar and the
+    // details open: no window inside it runs past its edges out of reach, and no words sit on
+    // other words or are cut off without an ellipsis (fits.mjs).
+    const size = page.viewportSize();
+    await page.setViewportSize({ width: 900, height: 560 });
+    const fits = async (where) => {
+      await page.waitForFunction(() => document.getAnimations().every((animation) => animation.playState !== "running" || animation.effect?.getComputedTiming().iterations === Infinity), null, { timeout: 5000 });
+      const found = await page.evaluate(`(${crowded})()`);
+      expect(found.length === 0, `${where}, in the smallest window: ${found.slice(0, 4).join("; ")}`);
+    };
+    const open = ".dialog-backdrop, .context-menu, .view-panel";
+    const closeAll = async () => {
+      for (let tries = 0; tries < 4 && (await page.locator(open).count()) > 0; tries++) await page.keyboard.press("Escape");
+      await page.locator(open).first().waitFor({ state: "detached", timeout: 5000 });
+    };
+    const palette = page.getByRole("dialog", { name: "Commands" });
+    const command = async (label) => {
+      await page.keyboard.press("Control+k");
+      await palette.locator("input").fill(label);
+      const first = palette.locator("li").first();
+      await first.waitFor({ timeout: 5000 });
+      // One this repository doesn't offer just now is left out.
+      if (!((await first.textContent()) ?? "").startsWith(label)) {
+        await page.keyboard.press("Escape");
+        return false;
+      }
+      await page.keyboard.press("Enter");
+      await palette.waitFor({ state: "detached", timeout: 5000 });
+      await page.waitForTimeout(300);
+      return true;
+    };
+    try {
+      await closeAll();
+      await fits("the repository");
+      for (const label of ["Go to Commit", "New Branch", "New Tag", "New Worktree", "Stash Changes", "Prune Branches", "Restore Branch", "Recover Commits", "Repository Settings", "Shelves", "Local History", "What Makes It Big", "Check Project Setup", "Clean Up Git LFS Files", "Force Push", "Clone Repository", "Tours", "Third-Party Licences", "Why Is a File Ignored", "Keyboard Shortcuts"]) {
+        if (!(await command(label))) continue;
+        await fits(label);
+        await closeAll();
+      }
+      // Settings, section by section.
+      await page.keyboard.press("Control+,");
+      const sections = page.locator(".settings-nav [role=tab]");
+      await sections.first().waitFor({ timeout: 5000 });
+      for (let index = 0; index < (await sections.count()); index++) {
+        await sections.nth(index).click();
+        await fits(`Settings → ${((await sections.nth(index).textContent()) ?? "").trim()}`);
+      }
+      await closeAll();
+      // About is taller than the window: it scrolls, from its top down to its buttons.
+      expect(await command("About Tributary"), "About Tributary isn't in the command palette");
+      await fits("About");
+      const about = page.locator(".about-window");
+      const backdrop = page.locator(".dialog-backdrop");
+      await backdrop.evaluate((element) => element.scrollTo(0, 0));
+      expect((await about.boundingBox()).y >= 0, "About's top is out of reach");
+      await backdrop.evaluate((element) => element.scrollTo(0, element.scrollHeight));
+      const buttons = await about.locator(".dialog-buttons").boundingBox();
+      expect(buttons.y + buttons.height <= 560, "About's buttons are out of reach");
+      await closeAll();
+      // The View panel ends inside the window, and scrolls to the rest.
+      await page.keyboard.press("Control+Shift+O");
+      const panel = page.locator(".view-panel");
+      await panel.waitFor({ timeout: 5000 });
+      await fits("the View panel");
+      expect(await panel.evaluate((element) => element.scrollHeight > element.clientHeight), "the View panel doesn't scroll in the smallest window");
+      await closeAll();
+      // The menu bar's View menu, taller than the window: its last item is in reach.
+      await page.locator("body").press("F10");
+      await page.locator(".context-menu").waitFor({ timeout: 5000 });
+      await page.keyboard.press("ArrowRight");
+      await fits("the View menu");
+      await page.keyboard.press("End");
+      const last = await page.evaluate(() => document.activeElement?.getBoundingClientRect().bottom ?? 0);
+      expect(last > 0 && last <= 560, `the View menu's last item ends ${Math.round(last)}px down, below the window`);
+      await closeAll();
+    } finally {
+      await page.setViewportSize(size);
+    }
   });
 
   await step("signs in to GitHub with a token", async () => {
