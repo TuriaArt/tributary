@@ -958,6 +958,39 @@ try {
     await row("Add a tavern chair").waitFor({ timeout: 10_000 });
   });
 
+  await step("says what arrived since you were last here, without moving the list", async () => {
+    const tab = (name) => page.locator(".tab", { hasText: name });
+    // Away from the studio, and as if its main had been 6 commits back then, two days ago.
+    await tab(/^notebook$/).dispatchEvent("mousedown", { button: 0 });
+    await row("Export notes as Markdown").waitFor({ timeout: 10_000 });
+    const git = (...args) => execFileSync("git", ["-C", demos.studio, ...args], { encoding: "utf8" }).trim();
+    const was = git("rev-parse", "origin/main~6");
+    // Your own commits (Maya Chen's, in the demos) aren't counted.
+    const others = git("log", "--format=%ae", `${was}..origin/main`).split("\n").filter((email) => email && email !== "maya@example.com").length;
+    await page.evaluate(([path, was]) => localStorage.setItem(`tributary.seen.${path}`, JSON.stringify({ at: Date.now() - 2 * 86_400_000, tips: { "origin/main": was } })), [demos.studio, was]);
+    await tab("studio").dispatchEvent("mousedown", { button: 0 });
+    await row("Add a tavern chair").waitFor({ timeout: 10_000 });
+    const banner = page.locator(".since-banner");
+    await banner.waitFor({ timeout: 10_000 });
+    const said = (await banner.innerText()).replace(/\s+/g, " ").trim();
+    expect(new RegExp(`^Since \\w+: ${others} new commits on main from \\w+`).test(said), `it said "${said}" (${others} new commits by others)`);
+    // Nothing moved: the list is at its top, with the newest commits.
+    expect((await page.locator(".list-scroller").evaluate((list) => list.scrollTop)) === 0, "the list was scrolled");
+    await accessible("what arrived since you were last here");
+    // The count goes to where you left off.
+    await banner.getByRole("button", { name: `${others} new commits` }).click();
+    await page.locator(`#commit-${was}.selected`).waitFor({ timeout: 10_000 });
+    // Dismissed, it's gone, and coming back finds nothing new.
+    await banner.getByRole("button", { name: "Dismiss" }).click();
+    await banner.waitFor({ state: "detached", timeout: 5000 });
+    await tab(/^notebook$/).dispatchEvent("mousedown", { button: 0 });
+    await row("Export notes as Markdown").waitFor({ timeout: 10_000 });
+    await tab("studio").dispatchEvent("mousedown", { button: 0 });
+    await row("Add a tavern chair").waitFor({ timeout: 10_000 });
+    await page.waitForTimeout(800);
+    expect((await banner.count()) === 0, "it said what arrived again, with nothing new since");
+  });
+
   await step("checks the spelling of commit messages, with the webview's menu for suggestions", async () => {
     await page.locator(".tab", { hasText: /^notebook$/ }).dispatchEvent("mousedown", { button: 0 });
     await row("Export notes as Markdown").waitFor({ timeout: 10_000 });

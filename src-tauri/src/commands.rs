@@ -495,6 +495,16 @@ pub async fn publish_release(
     crate::requests::publish_release(&PathBuf::from(path), tag, title, notes).await
 }
 
+/// What arrived on the remote branches you follow since you last had the repository open.
+#[tauri::command]
+pub async fn since_then(
+    path: String,
+    seen: Vec<crate::since::SeenTip>,
+    paths: Vec<String>,
+) -> Result<Vec<crate::since::SinceThen>> {
+    blocking(move || crate::since::since_then(&PathBuf::from(path), seen, paths)).await
+}
+
 /// Local branches built on other unmerged branches, and those whose base was rewritten.
 #[tauri::command]
 pub async fn branch_stacks(path: String) -> Result<Vec<actions::Stacked>> {

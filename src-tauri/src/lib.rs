@@ -28,6 +28,7 @@ pub mod repo;
 pub mod requests;
 pub mod reviews;
 pub mod settings_repo;
+pub mod since;
 mod spelling;
 pub mod textures;
 pub mod unreal;
@@ -124,6 +125,7 @@ pub fn run() {
             commands::rerun_failed_checks,
             commands::check_log,
             commands::rerun_job,
+            commands::since_then,
             commands::save_settings_file,
             commands::read_settings_file,
             commands::export_settings_to_repository,
