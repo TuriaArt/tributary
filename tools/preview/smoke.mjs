@@ -1463,13 +1463,18 @@ try {
   });
 
   await step("shows an open pull request from its branch's commit", async () => {
-    // The commit at the tip of fix/door: its pull request, open, with Show beside it.
+    // The commit at the tip of fix/door: its pull request's card, open, with who opened it
+    // and Show, and its checks' card under it, built the same way.
     await page.locator(".commit-row", { has: page.locator(".pr-badge", { hasText: "#14" }) }).first().click();
-    const mention = page.locator(".details .mentioned-issue", { hasText: "#14" });
-    await mention.locator(".mentioned-issue-status", { hasText: "Open" }).waitFor({ timeout: 5000 });
-    await mention.locator(".mentioned-issue-title", { hasText: "Make the door creak" }).waitFor({ timeout: 5000 });
+    const card = page.locator(".details .commit-requests .details-card", { hasText: "#14" });
+    await card.locator(".mentioned-issue-status", { hasText: "Open" }).waitFor({ timeout: 5000 });
+    await card.locator(".details-card-title", { hasText: "Make the door creak" }).waitFor({ timeout: 5000 });
+    await card.locator(".details-card-sub", { hasText: "by theo-park" }).waitFor({ timeout: 5000 });
+    await page.locator(".details .commit-requests h3", { hasText: "Pull request" }).waitFor({ timeout: 5000 });
+    await page.locator(".details .commit-checks .details-card-title", { hasText: /^\d+ of \d+ checks failed$/ }).waitFor({ timeout: 5000 });
+    expect((await page.locator(".details .mentioned-issue", { hasText: "#14" }).count()) === 0, "the pull request is listed with the issues too");
     await accessible("an open pull request in a commit's details");
-    await mention.getByRole("button", { name: "Show" }).click();
+    await card.getByRole("button", { name: "Show" }).click();
     const view = page.locator(".request-view");
     await view.locator(".request-merge", { hasText: "changes were asked for" }).waitFor({ timeout: 10_000 });
     await page.keyboard.press("Escape");
