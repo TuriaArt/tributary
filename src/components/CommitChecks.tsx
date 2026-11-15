@@ -4,8 +4,8 @@ import { CiStatesContext } from "../lib/ciStates";
 import { anyRunning, checkName, checkTime } from "../lib/pullRequests";
 import { useNow } from "../lib/useNow";
 import { openInBrowser } from "../lib/weblinks";
-import { STATE_WORDS, type RunState } from "../lib/runGraph";
-import { DetailsCard, DetailsCardButton } from "./DetailsCard";
+import { checksHeadline, checksVerdict } from "../lib/checkSummary";
+import { SectionButton, SiteChip } from "./DetailsSite";
 import { SlidingText } from "./SlidingText";
 import { ExternalLinkIcon, WorkflowIcon } from "./Icons";
 import { RunStateIcon } from "./RunStateIcon";
@@ -72,30 +72,11 @@ export function useCommitChecks(repoPath: string, id: string, notify: ((text: st
   return { id, checks, sorted, counts, failed: counts.get("failure") ?? 0, notable, now, busy, rerun };
 }
 
-/** How the checks went, overall: failed if any did, running while any are, then passed. */
-export function verdict(checks: CommitChecksShown): RunState {
-  if (checks.failed > 0) return "failure";
-  if (checks.counts.has("pending")) return "running";
-  if (checks.counts.has("success")) return "success";
-  return checks.counts.has("cancelled") ? "cancelled" : "skipped";
-}
-
-/** "All 22 checks passed", "1 of 7 checks failed", "2 of 7 jobs running". */
-export function headline(checks: CommitChecksShown): string {
-  const total = checks.sorted.length;
-  const jobs = checks.checks.site === "GitLab" ? "jobs" : "checks";
-  const state = verdict(checks);
-  if (state === "failure") return `${checks.failed} of ${total} ${jobs} failed`;
-  if (state === "running") return `${checks.counts.get("pending")} of ${total} ${jobs} running`;
-  if (state === "success") return total === 1 ? `The ${jobs.slice(0, -1)} passed` : `All ${total} ${jobs} passed`;
-  return `${total} ${jobs} ${STATE_WORDS[state]}`;
-}
-
 /**
- * A commit's CI in its details (GitHub checks, or its latest GitLab pipeline's jobs), as a
- * card, as its pull request is: how they went, how many are in each state, in words and as a
- * bar, and Open, which shows each run as a graph. Under them, the failed and running ones
- * (all of them when asked), and Re-run failed.
+ * A commit's CI in its details (GitHub checks, or its latest GitLab pipeline's jobs), built
+ * as its pull request is: how they went, with Open, which shows each run as a graph; under
+ * that, how many are in each state, in words and as a bar, the failed and running ones (all of
+ * them when asked), and Re-run failed.
  */
 export function CommitChecks({ shown: found, onShow }: { shown: CommitChecksShown | null; onShow?: () => void }) {
   const [all, setAll] = useState({ id: "", on: false });
@@ -106,53 +87,51 @@ export function CommitChecks({ shown: found, onShow }: { shown: CommitChecksShow
   const setShowAll = (on: boolean) => setAll({ id: found.id, on });
   const shown = showAll ? sorted : notable.slice(0, FIRST);
   const jobs = checks.site === "GitLab" ? "jobs" : "checks";
-  const state = verdict(found);
+  const state = checksVerdict(counts);
   const more = showAll || shown.length < sorted.length;
   const again = checks.canRerun && failed > 0;
 
   return (
-    <section className="details-section details-cards commit-checks">
+    <section className="details-section commit-checks">
       <div className="details-section-head">
         <h3>{checks.site === "GitLab" ? "Pipeline" : "Checks"}</h3>
-        <span className="details-section-note">{checks.site}</span>
+        <SiteChip site={checks.site} />
       </div>
-      <DetailsCard
-        className={`checks ${state}`}
-        icon={<RunStateIcon state={state} size={16} />}
-        title={headline(found)}
-        sub={<span className="details-card-sub-text">{[...counts].map(([what, n]) => `${n} ${WORDS[what]}`).join(", ")}</span>}
-        action={onShow && <DetailsCardButton onClick={onShow} icon={<WorkflowIcon size={12} />} label="Open" title="Open the checks, each run as a graph of its jobs" />}
-      >
-        {/* How they went, as a bar along the card: a length for each, in its colour. */}
-        <div className="details-card-bar" aria-hidden>
-          {[...counts].map(([what, n]) => (
-            <span key={what} className={what} style={{ flexGrow: n }} />
+      <div className={`site-item checks ${state}`}>
+        <span className="site-item-icon">
+          <RunStateIcon state={state} size={14} />
+        </span>
+        <span className="site-item-text commit-checks-headline">{checksHeadline(counts, checks.site === "GitLab")}</span>
+        {onShow && <SectionButton onClick={onShow} icon={<WorkflowIcon size={12} />} label="Open" title="Open the checks, each run as a graph of its jobs" />}
+        <span className="site-item-under commit-checks-counts">{[...counts].map(([what, n]) => `${n} ${WORDS[what]}`).join(", ")}</span>
+      </div>
+      {/* A pip for each check, in its colour: failed ones first, then running, then the rest. */}
+      <div className="check-pips" aria-hidden>
+        {sorted.map((check, index) => (
+          <span key={`${check.name}-${index}`} className={stateOf(check)} title={`${checkName(check.name)}: ${WORDS[stateOf(check)]}`} />
+        ))}
+      </div>
+      {shown.length > 0 && (
+        <ul className="commit-checks-list">
+          {shown.map((check, index) => (
+            <CheckLine key={`${check.name}-${index}`} check={check} time={checkTime(check, now)} />
           ))}
+        </ul>
+      )}
+      {(more || again) && (
+        <div className="commit-checks-links">
+          {more && (
+            <Button kind="link" onClick={() => setShowAll(!showAll)}>
+              {showAll ? "Show fewer" : `Show all ${sorted.length} ${jobs}`}
+            </Button>
+          )}
+          {again && (
+            <Button kind="link" disabled={busy} onClick={rerun}>
+              {busy ? "Asking…" : "Re-run failed"}
+            </Button>
+          )}
         </div>
-        {(shown.length > 0 || more || again) && (
-          <div className="details-card-more">
-            {shown.length > 0 && (
-              <ul className="commit-checks-list">
-                {shown.map((check, index) => (
-                  <CheckLine key={`${check.name}-${index}`} check={check} time={checkTime(check, now)} />
-                ))}
-              </ul>
-            )}
-            <div className="details-card-links">
-              {more && (
-                <Button kind="link" onClick={() => setShowAll(!showAll)}>
-                  {showAll ? "Show fewer" : `Show all ${sorted.length} ${jobs}`}
-                </Button>
-              )}
-              {again && (
-                <Button kind="link" disabled={busy} onClick={rerun}>
-                  {busy ? "Asking…" : "Re-run failed"}
-                </Button>
-              )}
-            </div>
-          </div>
-        )}
-      </DetailsCard>
+      )}
     </section>
   );
 }
