@@ -2324,6 +2324,17 @@ export type SearchResult = {
   truncated: boolean;
 };
 
+/**
+ * Where a remote branch pointed when you last had the repository open.
+ */
+export type SeenTip = {
+  /**
+   * Like "origin/main".
+   */
+  branch: string;
+  commit: string;
+};
+
 export type SetupCheck = {
   /**
    * Stable, for the frontend ("ignore", "lfs", …).
@@ -2443,6 +2454,58 @@ export type SigningSettings = {
    * The keys found: GPG's secret keys, and SSH public keys in ~/.ssh.
    */
   keys: Array<SigningKey>;
+};
+
+export type SinceChangedFile = { path: string; commit: string; author: string };
+
+export type SinceMerged = {
+  /**
+   * "#" for a GitHub pull request, "!" for a GitLab merge request.
+   */
+  sign: string;
+  number: number;
+  title: string;
+  /**
+   * The commit that merged it.
+   */
+  commit: string;
+};
+
+export type SincePerson = { name: string; commits: number };
+
+/**
+ * What arrived on a remote branch since you saw it.
+ */
+export type SinceThen = {
+  /**
+   * Like "origin/main".
+   */
+  branch: string;
+  /**
+   * Where it pointed then: where you left off.
+   */
+  was: string;
+  /**
+   * Where it points now.
+   */
+  tip: string;
+  /**
+   * How many commits it has that it didn't then, not counting yours.
+   */
+  commits: number;
+  /**
+   * Who wrote them, most commits first (the first few), and how many people did.
+   */
+  people: Array<SincePerson>;
+  peopleCount: number;
+  /**
+   * The pull (or merge) requests merged into it, newest first.
+   */
+  merged: Array<SinceMerged>;
+  /**
+   * Which of the files asked about someone else changed, and in which commit (its newest).
+   */
+  changed: Array<SinceChangedFile>;
 };
 
 export type SizeGroup = { name: string; diskBytes: number; versions: number };

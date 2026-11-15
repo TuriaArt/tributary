@@ -61,6 +61,8 @@ interface Props {
   onPillFocus: (pill: RefPill, commit: CommitRow) => void;
   /** While a branch or author is highlighted: the commits that stay bright. Other rows fade. */
   focusIds: Set<string> | null;
+  /** Where you left off when you were last here: a mark beside the scrollbar (useSinceLastHere). */
+  leftOffId?: string | null;
   /** Show a commit's preview when the pointer rests on it. */
   previews: boolean;
   loadDetails: (id: string) => Promise<CommitDetails>;
@@ -186,7 +188,7 @@ export function CommitList(props: Props) {
   useGraphCanvas(canvas, { commits, slots, first, last, width: graphWidth, rowHeight, headId: headCommit, selectedId, focusIds: brightIds, colors, curves, laneWidth, avatars, litLanes });
   const marked = useMemo(() => selectedIds ?? new Set(selectedId ? [selectedId] : []), [selectedIds, selectedId]);
   // The marks beside the scrollbar, and the card for those the pointer is on.
-  const { markAt, setMarkAt, near, tipMarks, tipStrip, body } = useMarkStrip(markerCanvas, { commits, slotOf, indexById, rowHeight, contentHeight, viewport, matchIds, headId: headCommit, marked, colors, tipIds });
+  const { markAt, setMarkAt, near, tipMarks, tipStrip, body } = useMarkStrip(markerCanvas, { commits, slotOf, indexById, rowHeight, contentHeight, viewport, matchIds, headId: headCommit, marked, leftOffId: props.leftOffId, colors, tipIds });
   const { arrival, pickedHere } = useRevealSelected(scroller, selectedId, selectedIndex, slotOf, rowHeight);
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {

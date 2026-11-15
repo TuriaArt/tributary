@@ -62,6 +62,7 @@ import type { Selection } from "./useSelection";
 import type { ActivityLog } from "./useWindowEvents";
 import { ThemeContext } from "./useAppearance";
 import { useGoToCommit } from "./useGoToCommit";
+import { useSinceLastHere } from "./useSinceLastHere";
 import { ViewPanel } from "../components/ViewPanel";
 
 const REMOTE_ACTIONS: Record<RemoteAction, Action> = {
@@ -264,6 +265,8 @@ export function RepositoryView(props: Props) {
   });
 
   const myLocks = lfs.locks?.locks.filter((lock) => lock.mine) ?? [];
+  // What arrived since you were last here, said in a banner and marked beside the scrollbar.
+  const sinceHere = useSinceLastHere(snapshot, myLocks.map((lock) => lock.path));
   const notLoaded = () => props.notify({ text: "That commit isn't loaded: load more commits, or fetch" });
   // Go to Commit, and links to commits that aren't loaded yet (a parent, a commit a message
   // mentions): older history loads until they are.
@@ -437,6 +440,9 @@ export function RepositoryView(props: Props) {
       )}
       <RepositoryBanners
         onCommitted={() => props.draft.setDraft(EMPTY_DRAFT)}
+        since={sinceHere.since}
+        goTo={goTo}
+        dismissSince={sinceHere.dismiss}
         snapshot={snapshot}
         repo={repo}
         actions={actions}
@@ -508,6 +514,7 @@ export function RepositoryView(props: Props) {
               onSelect={select}
               matchIds={search.matchIds}
               focusIds={highlight.focusIds}
+              leftOffId={sinceHere.since?.branches[0]?.was ?? null}
               dense={preferences.dense}
               columnWidths={preferences.columnWidths}
               onColumnWidths={preferences.setColumnWidths}
