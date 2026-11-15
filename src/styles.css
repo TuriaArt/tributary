@@ -18,6 +18,7 @@
 @import "./styles/sidebar.css";
 @import "./styles/commit-box-and-tabs.css";
 @import "./styles/bars-and-palette.css";
+@import "./styles/shortcuts.css";
 @import "./styles/list-extras-and-status-bar.css";
 @import "./styles/mark-hover.css";
 @import "./styles/rebase-and-dialogs.css";

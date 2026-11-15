@@ -465,8 +465,7 @@ body.dragging-commit * {
   font-size: var(--type-sm);
 }
 
-.palette-item kbd,
-.shortcuts kbd {
+.palette-item kbd {
   display: inline-flex;
   align-items: center;
   height: 18px;
@@ -483,25 +482,6 @@ body.dragging-commit * {
 .palette-empty {
   padding: var(--space-14) var(--space-10);
   color: var(--text-muted);
-}
-
-/* Shortcut list */
-
-.shortcuts {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.shortcuts td {
-  padding: var(--space-6) 0;
-  color: var(--text-secondary);
-  vertical-align: top;
-}
-
-.shortcuts td:first-child {
-  width: 1%;
-  padding-right: var(--space-16);
-  white-space: nowrap;
 }
 
 /* Hovering the progress bar during a Git LFS transfer: its speed, and its files. */
