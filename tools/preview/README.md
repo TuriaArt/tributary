@@ -53,7 +53,9 @@ Records each new thing in a version working, for What's New and the release page
 scene in `clips/v0.6.0.mjs` is played on a fresh demo repository, with a pointer drawn where
 the mouse is, and saved as an animated WebP in `docs/release-notes/v0.6.0/`. A scene says
 which part of the window to show (16:10, like 720 by 450) and what happens in it, and ends
-where it started, as they loop. `-- v0.6.0 --only <name>` records just that one. Put each
+where it started, as they loop: undone, the pointer back where it was. What can't be undone
+on screen, like a push, passes `{ fadeBack: true }` to `record`, and its end fades back to
+its start (`clips/v0.9.0.mjs`'s Sync does). `-- v0.6.0 --only <name>` records just that one. Put each
 under its item in the notes, as `![what it shows](v0.6.0/<name>.webp)` on its own indented
 line; `src/lib/whatsNew.test.ts` fails if a new thing has none, or one is over 400 KB. See
 `clips/v0.5.0.mjs` for the first ones.
