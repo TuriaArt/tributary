@@ -65,7 +65,10 @@ export default {
     // so its details show its pull request and checks.
     await page.getByRole("button", { name: "Toggle the branches sidebar" }).click();
     const head = page.locator(".commit-row", { has: page.locator(".ref-pill.current") }).first();
-    await head.locator(".cell.description").click();
+    // Clicked where it is: Playwright's own click scrolls it into view first, which here put
+    // the list a few pixels down, the top commit half under the headings.
+    const box = await head.locator(".cell.description").boundingBox();
+    await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
     await page.locator(".details .commit-checks .check-pips").waitFor({ timeout: 10_000 });
     await page.mouse.move(page.pointerAt.x, page.pointerAt.y);
     await pause(page, 600);
