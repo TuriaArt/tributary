@@ -127,6 +127,17 @@ async function recover() {
   }
 }
 /**
+ * Back to `size` after a narrower window, once the full sidebar is back from its strip (a
+ * narrow window has one) and has finished coming in: a click while it slides in can land
+ * on another row than meant, or rest on a lane and dim the others.
+ */
+async function restoreSize(size) {
+  await page.setViewportSize(size);
+  await page.waitForFunction(() => !document.querySelector(".sidebar-strip"), null, { timeout: 5000 });
+  await page.waitForFunction(() => document.getAnimations().every((animation) => animation.playState !== "running" || animation.effect?.getComputedTiming().iterations === Infinity), null, { timeout: 5000 });
+}
+
+/**
  * What's on screen meets WCAG 2.1's level A and AA criteria that can be checked automatically.
  * Other branches' labels in the graph are left out of the contrast check: they're faded on
  * purpose until their row is pointed at or selected.
@@ -1116,7 +1127,7 @@ try {
     try {
       await until(true, "notebook's name isn't cut short in a narrow window", '.tabs > .tab.active[data-clipped]');
     } finally {
-      await page.setViewportSize(size);
+      await restoreSize(size);
     }
     await until(false, "a name is still cut short at full width again");
     await tabs.filter({ hasText: "studio" }).dispatchEvent("mousedown", { button: 0 });
@@ -1469,7 +1480,7 @@ try {
         return streams && verdict && name && (verdict.top >= streams.bottom || verdict.left >= streams.right) && name.width > 40;
       }, null, { timeout: 5000 });
     } finally {
-      await page.setViewportSize(size);
+      await restoreSize(size);
     }
     // The description and comments are Markdown, shown as such.
     await view.locator(".request-comment-text").first().waitFor({ timeout: 5000 });
@@ -1645,7 +1656,7 @@ try {
       await page.keyboard.press("Escape");
       await dialog.waitFor({ state: "detached", timeout: 5000 });
     } finally {
-      await page.setViewportSize(size);
+      await restoreSize(size);
     }
   });
 
@@ -1754,7 +1765,7 @@ try {
       expect(last > 0 && last <= 560, `the View menu's last item ends ${Math.round(last)}px down, below the window`);
       await closeAll();
     } finally {
-      await page.setViewportSize(size);
+      await restoreSize(size);
     }
   });
 
