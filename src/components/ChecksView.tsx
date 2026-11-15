@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { commitRuns, rerunFailedChecks, type CommitRow, type CommitRuns, type Job, type JobGroup, type Run } from "../api";
+import { commitRuns, rerunFailedChecks, type CommitRuns, type Job, type JobGroup, type Run } from "../api";
 import { shortId } from "../lib/format";
 import { checkName, checkTime } from "../lib/pullRequests";
 import { anyGoing, countStates, elapsed, groupState, jobState, jobTime, memberName, runColumns, runState, STATE_WORDS, stepProgress, type RunState } from "../lib/runGraph";
@@ -9,9 +9,15 @@ import { Loader } from "./Loader";
 import { RunStateIcon as StateIcon } from "./RunStateIcon";
 import { Button } from "./ui/Button";
 
+/** The commit whose checks are shown: a row of the list, or a pull request's latest commit. */
+export interface ChecksOf {
+  id: string;
+  summary: string;
+}
+
 interface Props {
   repoPath: string;
-  commit: CommitRow;
+  commit: ChecksOf;
   onClose: () => void;
   openUrl: (url: string) => void;
   /** Says how asking for a re-run went. */

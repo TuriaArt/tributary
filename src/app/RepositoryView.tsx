@@ -19,6 +19,7 @@ import { RepoSettingsDialog } from "../components/RepoSettingsDialog";
 import { ComparePanel } from "../components/ComparePanel";
 import { useFileViews } from "./useFileViews";
 import { EMPTY_DRAFT } from "../components/worktree/CommitBox";
+import type { ChecksOf } from "../components/ChecksView";
 import { ListOverlays, type RewriteShown } from "./ListOverlays";
 import { useStacks } from "./useStacks";
 import { useRepositoryMenus } from "./useRepositoryMenus";
@@ -154,7 +155,7 @@ export function RepositoryView(props: Props) {
   /** A branch whose rewrite is shown over the list (what changed when it was force-pushed). */
   const [rewrite, setRewrite] = useState<RewriteShown | null>(null);
   /** A commit whose checks are shown over the list, each run as a graph. */
-  const [checksOf, setChecksOf] = useState<CommitRow | null>(null);
+  const [checksOf, setChecksOf] = useState<ChecksOf | null>(null);
   const shownIn = useRef(snapshot.path);
   if (shownIn.current !== snapshot.path) {
     shownIn.current = snapshot.path;
@@ -535,6 +536,7 @@ export function RepositoryView(props: Props) {
               onShowRewrite={setRewrite}
               onCloseRewrite={() => setRewrite(null)}
               checksOf={checksOf}
+              onShowChecks={setChecksOf}
               onCloseChecks={() => setChecksOf(null)}
             />
           </div>

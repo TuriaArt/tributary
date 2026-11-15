@@ -1,4 +1,6 @@
-// A commit's checks summed up in words, for its details (CommitChecks).
+// A commit's checks summed up in words, for its details and a pull request's (CommitChecks).
+import type { RequestCheck } from "../api";
+import { checkName, formatElapsed } from "./pullRequests";
 import { STATE_WORDS, type RunState } from "./runGraph";
 
 /** A check's state as the details count it: skipped ones have none. */
@@ -28,4 +30,28 @@ export function checksHeadline(counts: Map<CountedState, number>, gitlab: boolea
     return total === 1 ? `The ${jobs.slice(0, -1)} passed` : `All ${total} ${jobs} passed`;
   }
   return total === 1 ? `The ${jobs.slice(0, -1)} was ${STATE_WORDS[state]}` : `All ${total} ${jobs} ${STATE_WORDS[state]}`;
+}
+
+/**
+ * The title over a pull request's checks, whose river already counts them in its caption: it
+ * names what needs looking at instead. Which failed ("Audio loudness failed", "Audio loudness
+ * and 2 more failed"), else which are still running, else which were cancelled; once they've
+ * passed, how long they took ("Passed in 5m 9s"). Null when it has nothing to name, like when
+ * every check was skipped or the site gave no times, for the counted headline to stand in.
+ */
+export function checksTitle(checks: RequestCheck[]): string | null {
+  const named = (state: RequestCheck["state"]) => checks.filter((check) => check.state === state).map((check) => checkName(check.name));
+  const list = (names: string[]) => (names.length === 1 ? names[0] : names.length === 2 ? `${names[0]} and ${names[1]}` : `${names[0]} and ${names.length - 1} more`);
+  const failed = named("failure");
+  if (failed.length > 0) return `${list(failed)} failed`;
+  const running = named("pending");
+  if (running.length > 0) return `${list(running)} ${running.length === 1 ? "is" : "are"} still running`;
+  const passed = checks.filter((check) => check.state === "success");
+  const cancelled = named("cancelled");
+  if (passed.length === 0) return cancelled.length > 0 ? `${list(cancelled)} ${cancelled.length === 1 ? "was" : "were"} cancelled` : null;
+  // From the first to start to the last to finish (cancelled ones were most likely replaced by these).
+  const starts = passed.map((check) => Date.parse(check.startedAt ?? "")).filter((time) => !Number.isNaN(time));
+  const ends = passed.map((check) => Date.parse(check.finishedAt ?? "")).filter((time) => !Number.isNaN(time));
+  if (starts.length === 0 || ends.length === 0) return null;
+  return `Passed in ${formatElapsed(Math.max(...ends) - Math.min(...starts))}`;
 }
