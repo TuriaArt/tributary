@@ -70,8 +70,11 @@ Builds fresh demo repositories and clicks through the main parts of the app in C
 opening a repository, selecting and searching commits, checking out a branch (and
 stashing changes in the way), undo, fetching, tabs, Git LFS locks, the big-file warning,
 pull request badges, cloning without Git LFS files and downloading them, worktrees,
-keyboard menus, GitHub sign-in (faked) and diagnostics. Add `-- --screenshots <folder>` to keep a screenshot of each
-step. On the main screens, in both themes, it also checks with axe-core that what's shown meets WCAG 2.1's level A
+keyboard menus, GitHub sign-in (faked) and diagnostics. In the smallest window the app
+allows, 900 by 560, it opens every window a command opens, each section of Settings, About,
+the View panel and a long menu, and fails on one that runs past the window out of reach, or
+whose words sit on other words or are cut off without an ellipsis (`fits.mjs`). Add
+`-- --screenshots <folder>` to keep a screenshot of each step. On the main screens, in both themes, it also checks with axe-core that what's shown meets WCAG 2.1's level A
 and AA criteria that can be checked automatically: names for controls, a structure screen readers can follow, and
 text that contrasts enough with what's behind it. It needs Playwright with Chromium, and axe-core:
 
