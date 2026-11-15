@@ -1407,6 +1407,28 @@ try {
     await dismissToast();
   });
 
+  await step("says why a check failed, and runs its job again", async () => {
+    // The failed check's row says Why?, and opens a window with its job's steps, the failed
+    // one marked, and the end of its log, scrolled to its end, the errors marked.
+    const row = page.locator(".details .commit-check.failure .commit-check-row");
+    await row.locator(".check-why-chip", { hasText: "Why?" }).waitFor({ timeout: 5000 });
+    await row.click();
+    const why = page.locator(".dialog.check-why");
+    await why.getByRole("heading", { name: "Audio loudness failed" }).waitFor({ timeout: 5000 });
+    await why.locator(".check-why-line.error", { hasText: "2 files are louder than -14 LUFS" }).waitFor({ timeout: 5000 });
+    await why.locator(".check-why-said", { hasText: /^Checks, on push to main · at step 4 of 5$/ }).waitFor({ timeout: 5000 });
+    expect((await why.locator(".check-why-steps li.failed-here").textContent()) === "Check loudness", "the failed step isn't the one marked");
+    const log = why.locator(".check-why-log");
+    expect(await log.evaluate((element) => element.scrollTop + element.clientHeight >= element.scrollHeight - 1), "the log doesn't start at its end");
+    expect((await page.evaluate(() => window.__PREVIEW__.askedLogs)).at(-1).endsWith("/actions/runs/32"), "it didn't ask for the check's log");
+    await accessible("why a check failed");
+    await why.getByRole("button", { name: "Re-run job" }).click();
+    await page.locator(".toast", { hasText: "Running the job again: Audio loudness" }).waitFor({ timeout: 5000 });
+    await why.waitFor({ state: "detached", timeout: 5000 });
+    expect((await page.evaluate(() => window.__PREVIEW__.reranJobs)).at(-1).endsWith("/actions/runs/32"), "it didn't run the check's job again");
+    await dismissToast();
+  });
+
   await step("shows a commit's checks as a graph of each run, and opens a job's page", async () => {
     await page.evaluate((runs) => Object.assign(window.__PREVIEW__, { commitRuns: runs }), studioCommitRuns());
     const current = page.locator(".commit-row", { has: page.locator(".ref-pill.current") }).first();
@@ -1431,9 +1453,17 @@ try {
     expect(await graph.evaluate((element) => element.scrollLeft > 0), "the arrow didn't scroll the graph");
     await view.locator(".checks-count.failure", { hasText: "1 failed" }).waitFor({ timeout: 5000 });
     await accessible("a commit's checks as graphs");
-    // A job opens its page.
+    // A failed job says why, with its page a click away; a job that passed opens its page.
     await view.locator(".run-card-job", { hasText: "Audio loudness" }).click();
+    const why = page.locator(".dialog.check-why");
+    await why.locator(".check-why-said", { hasText: /^Asset checks, on push to main · after 2m 0s · at step 4 of 5$/ }).waitFor({ timeout: 5000 });
+    await why.getByRole("button", { name: "Open on GitHub" }).click();
     expect((await page.evaluate(() => window.__PREVIEW__.opened)).some((url) => url.endsWith("/42/job/7")), "the job's page didn't open");
+    await page.keyboard.press("Escape");
+    await why.waitFor({ state: "detached", timeout: 5000 });
+    expect(await view.isVisible(), "Esc closed the checks under the window too");
+    await view.locator(".run-card-job", { hasText: "Texture sizes" }).click();
+    expect((await page.evaluate(() => window.__PREVIEW__.opened)).some((url) => url.endsWith("/42/job/6")), "a job's page didn't open");
     await page.keyboard.press("Escape");
     await view.waitFor({ state: "detached", timeout: 5000 });
     // The commit's menu opens them too.
@@ -1485,9 +1515,13 @@ try {
     // The description and comments are Markdown, shown as such.
     await view.locator(".request-comment-text").first().waitFor({ timeout: 5000 });
     await accessible("a pull request");
-    // A check's name opens its page.
+    // A failed check's name says why it failed, with its page a click away.
     await view.locator(".request-check", { hasText: "Audio loudness" }).getByRole("button").click();
+    const why = page.locator(".dialog.check-why");
+    await why.getByRole("button", { name: "Open on GitHub" }).click();
     expect((await page.evaluate(() => window.__PREVIEW__.opened)).some((url) => url.endsWith("/actions/runs/7")), "the check's page didn't open");
+    await page.keyboard.press("Escape");
+    await why.waitFor({ state: "detached", timeout: 5000 });
     await page.keyboard.press("Escape");
     await view.waitFor({ state: "detached", timeout: 5000 });
     expect((await selected()) === before, `pressing the badge selected ${await selected()}, not ${before}`);
