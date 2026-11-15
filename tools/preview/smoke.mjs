@@ -1452,11 +1452,10 @@ try {
     await view.locator(".request-merge", { hasText: "changes were asked for" }).waitFor({ timeout: 10_000 });
     await view.locator(".request-check.failure", { hasText: "Audio loudness" }).waitFor({ timeout: 5000 });
     await view.locator(".request-status-said", { hasText: "diego-ramos asked for changes" }).waitFor({ timeout: 5000 });
-    // The river under the checks' summary counts them and shows each, so the summary's title
-    // names what failed instead, and it has no pips.
-    await view.locator(".request-status .commit-checks-headline", { hasText: /^Audio loudness failed$/ }).waitFor({ timeout: 5000 });
-    await view.locator(".tributaries-line", { hasText: /checks failed/ }).waitFor({ timeout: 5000 });
-    expect((await view.locator(".request-status .check-pips").count()) === 0, "the pull request's checks have pips as well as the river");
+    // How they went is said beside the river: what failed first, then the rest of the counts.
+    await view.locator(".tributaries-title", { hasText: /^Audio loudness failed$/ }).waitFor({ timeout: 5000 });
+    await view.locator(".tributaries-line", { hasText: /^1 of 6 checks failed, 2 still running, 1 skipped$/ }).waitFor({ timeout: 5000 });
+    expect((await view.locator(".request-status .site-checks").count()) === 0, "the pull request's checks say how they went above the river as well as beside it");
     // In the smallest window, with the sidebar and details open, the river's verdict goes under
     // its streams instead of over them, and the checks under it keep their names (without bars).
     const size = page.viewportSize();
