@@ -202,14 +202,13 @@
   visibility: hidden;
 }
 
-/* At the tab's end, over the end of the name in a tab that isn't open. Its X lines up with the
-   middle of the name's small letters (most names are lowercase), 2px below the middle of the
-   capitals, where the name's box is centred (see .tab-name): 4px from the top, not 0, puts it
-   there in the room left with the 1px below. Measured in screenshots at 100% to 200%, its ink
-   is within half a screen pixel of the letters' middle. */
+/* At the tab's end, over the end of the name in a tab that isn't open. Its X is level with the
+   middle of the name as it reads, between its small letters' middle and its tall letters'
+   (a name like "tributary"), and with the + beside the tabs: 2px from the top, with the 1px
+   below. 4px, on the small letters' middle alone, looked low beside the name. */
 .tab-close {
   position: absolute;
-  top: 4px;
+  top: 2px;
   right: var(--space-6);
   bottom: 1px;
   z-index: 1;
