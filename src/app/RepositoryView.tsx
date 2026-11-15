@@ -492,6 +492,7 @@ export function RepositoryView(props: Props) {
               onContextMenu={(commit, x, y) =>
                 menu.show(x, y, selection.multi && selectedIds?.has(commit.id) ? selectionMenu(ctx, selectedCommits) : commitMenu(ctx, commit))
               }
+              onShowChecks={setChecksOf}
               onPillActivate={(pill, commit) => checkout({ pill, commit })}
               onPillContextMenu={(pill, commit, x, y) => menu.show(x, y, pillMenu(ctx, pill, commit))}
               onMorePills={(pills, commit, x, y) =>

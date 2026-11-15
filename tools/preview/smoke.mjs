@@ -1430,6 +1430,14 @@ try {
     await view.locator(".run-card", { hasText: "Asset checks" }).waitFor({ timeout: 10_000 });
     await page.keyboard.press("Escape");
     await view.waitFor({ state: "detached", timeout: 5000 });
+    // And its CI dot in the list, which selects the commit too: here, one further down.
+    const older = page.locator(".commit-row", { has: page.locator(".graph-ci") }).nth(3);
+    await older.locator(".graph-ci").click();
+    await view.locator(".run-card", { hasText: "Asset checks" }).waitFor({ timeout: 10_000 });
+    expect(await older.evaluate((row) => row.classList.contains("selected")), "clicking the dot didn't select its commit");
+    await page.keyboard.press("Escape");
+    await view.waitFor({ state: "detached", timeout: 5000 });
+    await current.click();
   });
 
   await step("shows a pull request's reviews and checks", async () => {

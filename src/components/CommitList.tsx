@@ -50,6 +50,8 @@ interface Props {
   onViewMenu: () => void;
   /** Right-click on a row, at window coordinates (x, y). */
   onContextMenu: (commit: CommitRow, x: number, y: number) => void;
+  /** A click on a commit's CI dot. */
+  onShowChecks: (commit: CommitRow) => void;
   /** Double-click on a branch label. */
   onPillActivate: (pill: RefPill, commit: CommitRow) => void;
   onPillContextMenu: (pill: RefPill, commit: CommitRow, x: number, y: number) => void;
@@ -230,6 +232,10 @@ export function CommitList(props: Props) {
       previewTimer.current = window.setTimeout(() => setPreview({ commit, x, y }), PREVIEW_DELAY);
     },
     onLeave: hidePreview,
+    onShowChecks: (commit) => {
+      hidePreview();
+      props.onShowChecks(commit);
+    },
   };
   const rows = [];
   for (let slotIndex = first; slotIndex < last; slotIndex++) {
