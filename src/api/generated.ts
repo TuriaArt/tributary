@@ -348,6 +348,36 @@ export type BranchVersion = {
 };
 
 /**
+ * A failed check's job: its steps, and the end of the log of the one that failed.
+ */
+export type CheckLog = {
+  /**
+   * The job's steps, in order (a GitLab job's sections).
+   */
+  steps: Array<LogStep>;
+  /**
+   * The step the lines are from: the one that failed.
+   */
+  step: string | null;
+  /**
+   * The end of that step's log (the job's, when the step's can't be told apart).
+   */
+  lines: Array<LogLine>;
+  /**
+   * Lines before these were left out.
+   */
+  cut: boolean;
+  /**
+   * Why there's no log, when there isn't one: to sign in, or that it's on another site.
+   */
+  missing: string | null;
+  /**
+   * The job can be run again from here (signed in).
+   */
+  canRerun: boolean;
+};
+
+/**
  * How a pull request's checks (GitHub Actions and others) went.
  */
 export type CheckState =
@@ -1236,6 +1266,26 @@ export type LogEntry = {
    * Run by Tributary on its own, like the fetch every few minutes.
    */
   background: boolean;
+};
+
+/**
+ * A line of a log, without its colours, and what kind of line it is.
+ */
+export type LogLine = { text: string; kind: LogLineKind };
+
+export type LogLineKind = "plain" | "command" | "error" | "warning";
+
+/**
+ * A step of a job.
+ */
+export type LogStep = {
+  name: string;
+  /**
+   * None when it was skipped.
+   */
+  state: CheckState | null;
+  startedAt: string | null;
+  finishedAt: string | null;
 };
 
 /**
