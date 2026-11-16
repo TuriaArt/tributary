@@ -1,5 +1,5 @@
 // Cleaning up branches, and putting them back: prune candidates, backups and lost commits.
-import { invoke } from "@tauri-apps/api/core";
+import { invoke } from "./invoke";
 import type {
   Backup,
   BackupEvent,

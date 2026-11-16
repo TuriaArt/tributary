@@ -1,5 +1,5 @@
 // Git LFS: file locks, big files, local copies, and whether it works here.
-import { invoke } from "@tauri-apps/api/core";
+import { invoke } from "./invoke";
 import type { FileChecks, LargeFile, LfsFolder, LfsHealth, LfsSettings, LfsStorage, Lock, Locks, MetaProblem, NameProblem } from "./generated";
 export type { FileChecks, LargeFile, LfsFolder, LfsHealth, LfsSettings, LfsStorage, Lock, Locks, MetaProblem, NameProblem };
 

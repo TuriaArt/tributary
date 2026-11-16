@@ -1,5 +1,5 @@
 // What Copy Diagnostics shows.
-import { invoke } from "@tauri-apps/api/core";
+import { invoke } from "./invoke";
 import type { Diagnostics, ThirdPartyNotices } from "./generated";
 export type { Diagnostics, ThirdPartyNotices };
 

@@ -93,7 +93,7 @@ pub use prune::{
 };
 pub use releases::{ReleaseItem, ReleaseNotes, release_notes};
 use remote::Force;
-pub use remote::{REWRITTEN, UnseenCommit, UnseenCommits, unseen_commits};
+pub use remote::{UnseenCommit, UnseenCommits, unseen_commits};
 pub use remote_settings::{RemoteInfo, remotes};
 pub use rewrites::{BranchVersion, CommitPair, PairStatus, RangeDiff, branch_versions, range_diff};
 pub use search::{SearchMode, SearchResult, search_commits};

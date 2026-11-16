@@ -2216,7 +2216,7 @@ try {
     await card.waitFor({ state: "detached", timeout: 5000 });
   });
 
-  await step("syncs a branch with commits on both sides, and force pushes it when it was rewritten", async () => {
+  await step("syncs a branch with commits on both sides, force pushes it when it was rewritten, and pushes past a hook that fails", async () => {
     const was = (await page.locator('.tabs > .tab[aria-selected="true"]').textContent()).trim();
     await page.locator(".tab", { hasText: /^notebook$/ }).dispatchEvent("mousedown", { button: 0 });
     await row("Export notes as Markdown").waitFor({ timeout: 10_000 });
@@ -2312,6 +2312,22 @@ try {
     expect(git("ls-remote", "origin", "refs/heads/main").startsWith(git("rev-parse", "main")), "main wasn't force pushed over the teammate's commit");
     expect(!(await stopped.isVisible()), "the error stayed after the force push");
     await dismissToast();
+    // A pre-push hook that fails stops a push: the banner says which hook, shows what it
+    // printed, and pushes without it when asked.
+    writeFileSync(hook, "#!/bin/sh\necho 'Found 2 problems in TEAM.md' >&2\nexit 1\n");
+    chmodSync(hook, 0o755);
+    const sam = { ...process.env, GIT_AUTHOR_NAME: "Sam Okafor", GIT_AUTHOR_EMAIL: "sam@example.com", GIT_COMMITTER_NAME: "Sam Okafor", GIT_COMMITTER_EMAIL: "sam@example.com" };
+    execFileSync("git", ["-C", demos.notebook, "commit", "-q", "--allow-empty", "-m", "Tidy the team notes"], { env: sam });
+    await page.keyboard.press("F5");
+    await sync.filter({ hasText: "Push" }).click({ timeout: 15_000 });
+    const hooked = page.locator(".hook-failure", { hasText: "The pre-push hook stopped the push" });
+    await hooked.locator(".hook-output", { hasText: "Found 2 problems in TEAM.md" }).waitFor({ timeout: 20_000 });
+    expect(!git("ls-remote", "origin", "refs/heads/main").startsWith(git("rev-parse", "main")), "the hook didn't stop the push");
+    await hooked.getByRole("button", { name: "Push anyway (skip hooks)" }).click();
+    await page.locator(".toast", { hasText: "Pushed main to origin" }).waitFor({ timeout: 20_000 });
+    expect(git("ls-remote", "origin", "refs/heads/main").startsWith(git("rev-parse", "main")), "main wasn't pushed without the hook");
+    await dismissToast();
+    rmSync(hook);
     // Back as it was before the amend, for the steps after this one (the working files as they are).
     git("push", "-q", "--force", "origin", `${theirTip}:main`);
     git("reset", "-q", "--soft", pushed);

@@ -5,7 +5,7 @@
 //! {"id": 1, "command": "open_repository", "args": {"path": "/some/repo"}}
 //! ```
 //!
-//! and writes one line of JSON per reply, `{"id": 1, "ok": …}` or `{"id": 1, "err": "…"}`,
+//! and writes one line of JSON per reply, `{"id": 1, "ok": …}` or `{"id": 1, "err": {"message": "…", "kind": …}}`,
 //! and per event, `{"event": "activity", "payload": …}`. The commands and their arguments
 //! are the ones the frontend sends to the app (see `src/commands.rs`). Each request runs
 //! on its own thread, so a slow fetch doesn't hold up the rest.
@@ -58,7 +58,8 @@ fn respond(line: &str) {
     let reply = match serde_json::from_str::<Request>(line) {
         Ok(request) => match handle(&request.command, &request.args) {
             Ok(value) => json!({ "id": request.id, "ok": value }),
-            Err(error) => json!({ "id": request.id, "err": error.to_string() }),
+            // As the app's commands give it: its message, and its kind when that's known.
+            Err(error) => json!({ "id": request.id, "err": error }),
         },
         Err(error) => json!({ "id": null, "err": format!("That isn't a request: {error}") }),
     };

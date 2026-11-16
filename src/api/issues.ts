@@ -1,5 +1,5 @@
 // Issue trackers: GitHub or GitLab issues, Jira or Linear.
-import { invoke } from "@tauri-apps/api/core";
+import { invoke } from "./invoke";
 import type { Issue, Tracker, TrackerKind, TrackerStatus } from "./generated";
 export type { Issue, Tracker, TrackerKind, TrackerStatus };
 

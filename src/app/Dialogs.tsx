@@ -474,7 +474,7 @@ export function RepositoryDialogs(props: Props) {
         danger
         action={{ kind: "removeWorktree", path: dialog.worktree.path }}
         retryFor={(error) =>
-          error.includes("uncommitted changes")
+          error.kind?.kind === "worktreeChanged"
             ? { label: "Remove anyway", action: { kind: "removeWorktree", path: dialog.worktree.path, force: true } }
             : null
         }

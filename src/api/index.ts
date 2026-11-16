@@ -18,3 +18,4 @@ export * from "./shelves";
 export * from "./submodules";
 export * from "./engines";
 export * from "./window";
+export { AppError, asAppError, errorKind, type ErrorKind } from "./invoke";

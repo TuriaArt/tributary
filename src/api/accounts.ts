@@ -1,6 +1,6 @@
 // Your repositories on GitHub and GitLab, and signing in to GitLab (GitHub's sign-in is in
 // ./github). Tokens are git's: its credential helper keeps them, never Tributary.
-import { invoke } from "@tauri-apps/api/core";
+import { invoke } from "./invoke";
 import type { AccountRepo, GitLabAccount, GitLabStatus } from "./generated";
 export type { AccountRepo, GitLabAccount, GitLabStatus };
 

@@ -1,6 +1,6 @@
 // Game engines: what Unreal's actors saved in their own files (World Partition) are, and
 // Unity's Smart Merge for scenes and prefabs.
-import { invoke } from "@tauri-apps/api/core";
+import { invoke } from "./invoke";
 import type { ActorName, UnitySetup } from "./generated";
 export type { ActorName, UnitySetup };
 
