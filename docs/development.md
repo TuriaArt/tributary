@@ -209,7 +209,7 @@ npm run notices
 | `src-tauri/src/graph.rs` | Gives each commit a lane and works out the lines to draw in each row |
 | `src-tauri/src/actions/` | Runs git for everything that changes the repository, one module per area (branches, history, stashes, conflicts, Git LFS, worktrees, backups, …) |
 | `src-tauri/src/git/` | Runs the user's git: progress and cancel, Git LFS progress, the activity log, credentials |
-| `src-tauri/src/commands.rs` | The commands the frontend calls |
+| `src-tauri/src/commands/` | The commands the frontend calls. `list.rs` lists each one once, with its arguments and result: the app's handler, the preview's backend and the TypeScript types of every call (`Commands` in `src/api/generated.ts`, which `invoke` in `src/api/invoke.ts` checks calls against) are made from it. A new command goes in `mod.rs` and in the list; the tests say what's missing |
 | `src-tauri/src/error/` | The error every command can return: its message, and the kind of failure it is when the app knows (a rejected push, a hook that stopped a commit, changes in the way, …), said where the app makes it or recognised from git's message (`kind.rs`). The frontend explains a failure and offers its fix from the kind, never from the message's words (`src/lib/explainError.ts`); a command's failure reaches it as an `AppError` (`src/api/invoke.ts`) |
 | `src-tauri/src/bindings.rs` | Makes `src/api/generated.ts`, the TypeScript types of what the commands take and give back, from the Rust ones (a test) |
 | `src-tauri/src/github/` | Open pull requests and their checks, opening one and reading one in full; signing in |
@@ -228,7 +228,7 @@ npm run notices
 | `src-tauri/src/links.rs` | Turns remote addresses into web pages (GitHub, GitLab, …) |
 | `src-tauri/src/updates.rs` | Finds, downloads and installs new versions from the GitHub releases |
 | `src-tauri/tests/` | Integration tests, one file per area, on throwaway repositories |
-| `src-tauri/examples/headless.rs` | The app's commands without a window, for the browser preview |
+| `src-tauri/examples/headless.rs` | The app's commands without a window, for the browser preview: the same functions, from the command list, except the few that need the app itself (its window, its events, the files it's installed with), which have their own versions here or a fake in `tools/preview/shim.js` |
 | `src/App.tsx` | Connects the parts: the tabs, the open repository or the start screen, and what opens over them |
 | `src/app/` | The app's state, in hooks (the open repository, tabs, selection, search, highlighting, actions, per-repository settings, …), and its screens, menus, command palette and dialogs |
 | `src/api/` | The commands the frontend calls, one file per area; the shapes of what they take and give back are in `generated.ts`, made from the Rust types (see [Test](#test)) |

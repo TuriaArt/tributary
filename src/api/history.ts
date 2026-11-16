@@ -4,10 +4,10 @@ export type { Snapshot, SnapshotFile };
 
 /** Snapshot the uncommitted changes (files up to `maxBytes`), forgetting those older than `keepDays`. */
 export function takeSnapshot(path: string, maxBytes: number, keepDays: number): Promise<Snapshot | null> {
-  return invoke<Snapshot | null>("take_snapshot", { path, maxBytes, keepDays });
+  return invoke("take_snapshot", { path, maxBytes, keepDays });
 }
 
 /** The snapshots there are, newest first. */
 export function localHistory(path: string): Promise<Snapshot[]> {
-  return invoke<Snapshot[]>("local_history", { path });
+  return invoke("local_history", { path });
 }

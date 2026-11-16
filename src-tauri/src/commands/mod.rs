@@ -1,6 +1,13 @@
 //! The commands the frontend calls. Each one is a thin wrapper: it runs the work on a
 //! blocking thread (reading a repository or running git can take a while), and reports
-//! progress and activity as events.
+//! progress and activity as events. Each is in the command list too (`list.rs`), which the
+//! app's handler, the preview and the TypeScript types are made from.
+
+mod list;
+
+pub use list::{APP_ONLY, camel, dispatch, handler};
+#[cfg(test)]
+pub(crate) use list::{signatures, visit_types};
 
 use std::path::PathBuf;
 use ts_rs::TS;

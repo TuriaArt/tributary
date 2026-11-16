@@ -8,16 +8,16 @@ export type { Action, CloneOptions, LineMode, LogEntry, Outcome, Progress, Rebas
 
 /** Stop the fetch, pull or push running in the repository at `path`, or without one, everything (a clone). */
 export function cancelAction(path?: string): Promise<boolean> {
-  return invoke<boolean>("cancel_action", { path: path ?? null });
+  return invoke("cancel_action", { path: path ?? null });
 }
 
 /** Watch the open repository for changes made outside the app (one at a time). */
 export function watchRepository(path: string): Promise<void> {
-  return invoke<void>("watch_repository", { path });
+  return invoke("watch_repository", { path });
 }
 
 export function stopWatching(): Promise<void> {
-  return invoke<void>("stop_watching");
+  return invoke("stop_watching");
 }
 
 /** Calls `handler` with a repository's path when its files change outside the app. */
@@ -43,22 +43,22 @@ export async function runAction(path: string, action: Action): Promise<string> {
 
 /** Like `runAction`, with everything the action reported. */
 export function runActionFor(path: string, action: Action): Promise<Outcome> {
-  return invoke<Outcome>("run_action", { path, action });
+  return invoke("run_action", { path, action });
 }
 
 /** Clone `url` into a new folder `name` inside `parent`; resolves to the new folder. */
 export function cloneRepository(url: string, parent: string, name: string, options: CloneOptions = {}): Promise<string> {
-  return invoke<string>("clone_repository", { url, parent, name, options });
+  return invoke("clone_repository", { url, parent, name, options });
 }
 
 /** Create a repository in an existing folder. */
 export function initRepository(path: string): Promise<string> {
-  return invoke<string>("init_repository", { path });
+  return invoke("init_repository", { path });
 }
 
 /** The git commands Tributary ran recently, oldest first. */
 export function activityLog(): Promise<LogEntry[]> {
-  return invoke<LogEntry[]>("activity_log");
+  return invoke("activity_log");
 }
 
 /** Calls `handler` for every git command Tributary runs from now on. */

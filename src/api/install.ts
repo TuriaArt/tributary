@@ -5,15 +5,15 @@ export type { GitInstall };
 
 /** Where git is (found once, then remembered). */
 export function gitInstall(): Promise<GitInstall> {
-  return invoke<GitInstall>("git_install");
+  return invoke("git_install");
 }
 
 /** Look for git again, after installing it. */
 export function lookForGit(): Promise<GitInstall> {
-  return invoke<GitInstall>("look_for_git");
+  return invoke("look_for_git");
 }
 
 /** Open Apple's installer for the Command Line Tools (macOS). */
 export function installCommandLineTools(): Promise<void> {
-  return invoke<void>("install_command_line_tools");
+  return invoke("install_command_line_tools");
 }

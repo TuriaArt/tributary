@@ -1,7 +1,21 @@
-// Calling the backend: Tauri's invoke, with what a failed command gives back as an AppError.
+// Calling the backend: Tauri's invoke, checked against the command list (each command's
+// arguments and result, `Commands` in generated.ts), with a failure as an AppError.
 import { invoke as tauriInvoke, type InvokeArgs, type InvokeOptions } from "@tauri-apps/api/core";
-import type { ErrorKind, Failure } from "./generated";
-export type { ErrorKind, Failure };
+import type { Commands, ErrorKind, Failure } from "./generated";
+export type { Commands, ErrorKind, Failure };
+
+/** A command's name. */
+export type Command = keyof Commands;
+/** What `command` takes, as the frontend sends it. */
+export type ArgsOf<C extends Command> = Commands[C]["args"];
+/** What `command` gives back. */
+export type ResultOf<C extends Command> = Commands[C]["returns"];
+/** The arguments to pass: none at all for a command that takes none, or only optional ones. */
+type Call<C extends Command> = [ArgsOf<C>] extends [Record<string, never>]
+  ? [args?: ArgsOf<C>, options?: InvokeOptions]
+  : Partial<ArgsOf<C>> extends ArgsOf<C>
+    ? [args?: ArgsOf<C>, options?: InvokeOptions]
+    : [args: ArgsOf<C>, options?: InvokeOptions];
 
 /**
  * A command that failed: its message, worded for the person using the app, and the kind of
@@ -40,9 +54,9 @@ export function errorKind(error: unknown): ErrorKind | null {
 }
 
 /** Run a backend command; a failure rejects with an AppError. */
-export async function invoke<T>(command: string, args?: InvokeArgs, options?: InvokeOptions): Promise<T> {
+export async function invoke<C extends Command>(command: C, ...[args, options]: Call<C>): Promise<ResultOf<C>> {
   try {
-    return await tauriInvoke<T>(command, args, options);
+    return await tauriInvoke<ResultOf<C>>(command, args as InvokeArgs | undefined, options);
   } catch (reason) {
     throw asAppError(reason);
   }
