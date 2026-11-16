@@ -2321,6 +2321,46 @@ try {
     await page.locator(".commit-row").first().waitFor({ timeout: 10_000 });
   });
 
+  await step("offers to go with another remote branch when a branch's own was renamed on the remote", async () => {
+    const was = (await page.locator('.tabs > .tab[aria-selected="true"]').textContent()).trim();
+    await page.locator(".tab", { hasText: /^notebook$/ }).dispatchEvent("mousedown", { button: 0 });
+    await row("Export notes as Markdown").waitFor({ timeout: 10_000 });
+    const git = (...args) => execFileSync("git", ["-C", demos.notebook, ...args], { encoding: "utf8" }).trim();
+    const remote = git("remote", "get-url", "origin");
+    const bare = (...args) => execFileSync("git", ["--git-dir", remote, ...args], { encoding: "utf8" }).trim();
+    // main is renamed to trunk on the remote, which makes it its main branch: pulling fails.
+    bare("branch", "-m", "main", "trunk");
+    bare("symbolic-ref", "HEAD", "refs/heads/trunk");
+    await page.locator(".toolbar .tool-button", { hasText: "Pull" }).first().click();
+    const banner = page.locator(".error-explained", { hasText: "origin has no branch called main any more" });
+    const use = banner.getByRole("button", { name: "Use origin/trunk" });
+    await use.waitFor({ timeout: 20_000 });
+    await banner.getByText("It's origin's main branch, and has everything origin/main had.").waitFor({ timeout: 5000 });
+    // Choose another…: origin's branches, the likely one first, with a box to rename main to match.
+    await banner.getByRole("button", { name: "Choose another…" }).click();
+    const dialog = page.locator(".dialog", { hasText: "Which branch on origin does main go with?" });
+    const first = dialog.locator(".merge-method").first();
+    await first.waitFor({ timeout: 10_000 });
+    expect((await first.textContent()).includes("origin/trunk") && (await first.textContent()).includes("origin's main branch"), "origin/trunk isn't first, as origin's main branch");
+    expect(await dialog.getByRole("checkbox", { name: /Also rename main to trunk/ }).isChecked(), "the box to rename main to match isn't ticked");
+    await dialog.getByRole("button", { name: "Cancel" }).click();
+    // The likely one, in one click: main goes with origin/trunk.
+    await use.click();
+    await page.locator(".toast", { hasText: "main now goes with origin/trunk" }).waitFor({ timeout: 20_000 });
+    expect(git("config", "branch.main.merge") === "refs/heads/trunk", "main doesn't go with origin/trunk");
+    expect(!(await banner.isVisible()), "the error stayed after it was fixed");
+    await dismissToast();
+    // Back as it was, for the steps after this one.
+    bare("branch", "-m", "trunk", "main");
+    bare("symbolic-ref", "HEAD", "refs/heads/main");
+    git("fetch", "-q", "--prune", "origin");
+    git("branch", "-q", "--set-upstream-to=origin/main", "main");
+    await page.keyboard.press("F5");
+    await page.locator(".tabs > .tab[data-path]").filter({ hasText: new RegExp(`^${was}$`) }).dispatchEvent("mousedown", { button: 0 });
+    await page.locator('.tabs > .tab[aria-selected="true"]', { hasText: was }).waitFor({ timeout: 10_000 });
+    await page.locator(".commit-row").first().waitFor({ timeout: 10_000 });
+  });
+
   await step("exports the settings to a git repository, and imports them back", async () => {
     const remote = join(folder, "settings.git");
     execFileSync("git", ["init", "--quiet", "--bare", remote]);
