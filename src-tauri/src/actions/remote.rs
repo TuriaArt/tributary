@@ -45,6 +45,17 @@ pub(super) fn pull(
     git: &Git,
     on_progress: &dyn Fn(Progress),
 ) -> Result<String> {
+    pull_with(repo, git, on_progress, false)
+}
+
+/// Pull the checked-out branch: with `rebase`, putting its own commits on top of what
+/// arrived, whatever git's settings say.
+fn pull_with(
+    repo: &gix::Repository,
+    git: &Git,
+    on_progress: &dyn Fn(Progress),
+    rebase: bool,
+) -> Result<String> {
     let branch = current_branch(repo)?;
     // `--no-edit`: never wait for a merge message in an editor nobody can see.
     let mut args = vec!["pull", "--no-edit", "--progress"];
@@ -58,7 +69,9 @@ pub(super) fn pull(
     ]
     .iter()
     .any(|key| config.string(key.as_str()).is_some());
-    if !has_preference {
+    if rebase {
+        args.push("--rebase");
+    } else if !has_preference {
         args.push("--no-rebase");
     }
     // git fills in each Git LFS file as it checks it out, and LFS downloads each then, one
@@ -204,7 +217,19 @@ pub(super) fn sync(
             )
             .into());
         }
-        pull(repo, git, on_progress)?;
+        // git set to only fast-forward (`pull.ff = only`), and nothing said about rebasing,
+        // refuses to pull a branch with commits of its own, which is what syncing is for.
+        // Rather than a merge commit, which that setting is there to avoid, its own commits
+        // go on top of what arrived: they're only here, so nobody else has them yet.
+        let config = repo.config_snapshot();
+        let ff_only = config
+            .string("pull.ff")
+            .is_some_and(|value| value == "only");
+        let says_rebase = config.string("pull.rebase").is_some()
+            || config
+                .string(format!("branch.{branch}.rebase").as_str())
+                .is_some();
+        pull_with(repo, git, on_progress, ff_only && !says_rebase)?;
     }
     let (ahead, _) = counts()?;
     if ahead > 0 {
