@@ -1,31 +1,26 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { unseenCommits, upstreamChoices, type Action, type CommitRow, type RepoSnapshot, type UnseenCommits, type UpstreamChoices } from "../api";
+import { unseenCommits, upstreamChoices, type Action, type CommitRow, type UnseenCommits, type UpstreamChoices } from "../api";
 import { ErrorBanner, type ErrorChoice } from "../components/ErrorBanner";
 import { byWhom, explainError, gitHeadline, type ErrorFix } from "../lib/explainError";
 import { relativeTime, shortId } from "../lib/format";
-import type { OpenDialog } from "../menus/context";
 import type { Running } from "./constants";
 import type { RepoError } from "./useRepository";
+import { useOpenRepository } from "./OpenRepository";
 
 interface Props {
   error: RepoError;
-  snapshot: RepoSnapshot;
   /** The checked-out commit's row, for a new branch from it. */
   head: CommitRow | undefined;
   running: Running;
-  act: (action: Action) => unknown;
-  openDialog: (dialog: OpenDialog) => void;
-  openWorktree: (path: string) => void;
-  goTo: (id: string) => void;
   onDismiss: () => void;
 }
 
-/** How an action shows its progress, when it runs again. */
 /**
  * The last error, in plain words when it's one git often gives, with what can be done about
  * it. A force push that stopped for someone else's commits lists them.
  */
-export function RepoErrorBanner({ error, snapshot, head, running, act, openDialog, openWorktree, goTo, onDismiss }: Props) {
+export function RepoErrorBanner({ error, head, running, onDismiss }: Props) {
+  const { snapshot, act, openDialog, openTab: openWorktree, goTo } = useOpenRepository();
   const branch = snapshot.headBranch ?? "HEAD";
   const upstream = snapshot.upstream?.name ?? null;
   // A safe force push stopped for commits someone else pushed: the push fetched them, to
