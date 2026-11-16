@@ -24,6 +24,10 @@ export interface RepoError {
   anyway?: Action;
   /** Loading the repository failed: the next load clears it. Others stay until dismissed. */
   fromLoad?: boolean;
+  /** What failed, to run again. */
+  action?: Action;
+  /** Where the checked-out branch's remote branch was before it ran: what had been seen of it. */
+  upstreamWas?: string | null;
 }
 
 /** What the rest of the app does when the open repository changes. */
