@@ -33,7 +33,6 @@ import { useSidebarStrip } from "./useSidebarStrip";
 import { StatusBar } from "../components/StatusBar";
 import type { ToastMessage } from "../components/Toast";
 import { Toolbar, type RemoteAction } from "../components/Toolbar";
-import { RUNNING_LABELS } from "./constants";
 import { DetailsPane } from "./DetailsPane";
 import { RepositoryDialogs } from "./Dialogs";
 import { fileMenuItems, lockMenuItems } from "./fileMenus";
@@ -126,7 +125,7 @@ interface Props {
 /** An open repository: the toolbar, the sidebar, the commit list and graph, the details, and the status bar. */
 export function RepositoryView(props: Props) {
   const { snapshot, repo, selection, search, highlight, actions, settings, preferences, counts, lfs, menu, openDialog } = props;
-  const { act, running } = actions;
+  const { act, running, runningLabel } = actions;
   const { select, byId, selectedIds, selectedCommits } = selection;
   const { sidebarOpen, setSidebarOpen, sidebarWidth, setSidebarWidth, detailsWidth, setDetailsWidth, activityOpen, setActivityOpen } = preferences;
   // In a narrow window, the sidebar is a strip of icons, and opens over the list from them.
@@ -426,8 +425,8 @@ export function RepositoryView(props: Props) {
           onSearch={search.search}
           onSearchStep={search.step}
           onSearchMode={search.setMode}
-          onRemote={(action) => act(REMOTE_ACTIONS[action], action)}
-          onPushMenu={(anchor) => menu.under(anchor, pushMenuItems(() => act({ kind: "push", force: false }, "push"), () => act({ kind: "sync" }, "sync"), openDialog))}
+          onRemote={(action) => act(REMOTE_ACTIONS[action])}
+          onPushMenu={(anchor) => menu.under(anchor, pushMenuItems(() => act({ kind: "push", force: false }), () => act({ kind: "sync" }), openDialog))}
           lastFetch={snapshot.lastFetched ? snapshot.lastFetched * 1000 : null}
           sidebarOpen={sidebarOpen}
           onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
@@ -599,7 +598,7 @@ export function RepositoryView(props: Props) {
           canUndo={(entry) => undoState(entry, snapshot)}
           onUndo={(entry) => {
             if (!entry.undo) return;
-            void act(entry.undo, "other", { confirmed: true }).then((done) => done && props.history.markUndone(snapshot.path, entry.id));
+            void act(entry.undo, { confirmed: true }).then((done) => done && props.history.markUndone(snapshot.path, entry.id));
           }}
           onClearHistory={() => props.history.clear(snapshot.path)}
         />
@@ -608,11 +607,11 @@ export function RepositoryView(props: Props) {
         snapshot={snapshot}
         ahead={counts.ahead}
         behind={counts.behind}
-        running={running && running !== "other" ? RUNNING_LABELS[running] : running === "other" ? "Working" : null}
+        running={running === null ? null : (runningLabel ?? "Working")}
         hiddenCount={settings.hiddenCount}
         soloing={settings.soloing}
         onShowAll={settings.showAllBranches}
-        onFetch={canFetch && canChange ? () => act({ kind: "fetch" }, "fetch") : null}
+        onFetch={canFetch && canChange ? () => act({ kind: "fetch" }) : null}
         activityOpen={activityOpen}
         activityFailed={Boolean(lastHere && !lastHere.success)}
         onToggleActivity={() => setActivityOpen(!activityOpen)}
@@ -693,7 +692,7 @@ export function RepositoryView(props: Props) {
         worktrees={props.worktrees}
         localBranches={[...counts.localBranches]}
         openWorktree={props.openTab}
-        push={() => act({ kind: "push", force: false }, "push")}
+        push={() => act({ kind: "push", force: false })}
         onRequestCreated={props.onRequestCreated}
         openSettings={(section) => props.openSettings(section)}
         signIn={() => {

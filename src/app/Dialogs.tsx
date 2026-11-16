@@ -31,7 +31,6 @@ import { TagDialog } from "../components/TagDialog";
 import { GoToCommitDialog } from "../components/GoToCommitDialog";
 import { baseName } from "../lib/paths";
 import { deleteAnyway, splitRemoteBranch, type OpenDialog } from "../menus";
-import type { Running } from "./constants";
 
 interface Props {
   dialog: OpenDialog;
@@ -44,7 +43,7 @@ interface Props {
   protectedBranches: string[];
   pins: string[];
   loadDetails: (id: string) => Promise<CommitDetails>;
-  run: (action: Action, kind?: Running, options?: { quiet?: boolean; confirmed?: boolean }) => unknown;
+  run: (action: Action, options?: { quiet?: boolean; confirmed?: boolean }) => unknown;
   select: (id: string) => void;
   /** Select a commit, loading older history first when it isn't loaded. */
   goTo: (id: string) => void;
@@ -185,7 +184,7 @@ export function RepositoryDialogs(props: Props) {
         paths={dialog.paths}
         head={snapshot.headCommit}
         canChange={!snapshot.bare}
-        run={async (action, kind) => Boolean(await run(action, kind))}
+        run={async (action) => Boolean(await run(action))}
         onClose={() => onClose()}
       />
     )}
@@ -193,7 +192,7 @@ export function RepositoryDialogs(props: Props) {
       <ProjectSetupDialog
         repoPath={snapshot.path}
         canChange={!snapshot.bare}
-        run={async (action) => run(action, "other", { quiet: true })}
+        run={async (action) => run(action, { quiet: true })}
         onOpenSize={() => open({ kind: "repoSize" })}
         onClose={() => onClose()}
       />
@@ -251,7 +250,7 @@ export function RepositoryDialogs(props: Props) {
         onCancel={() => onClose()}
         onRestore={(backup) => {
           onClose();
-          run({ kind: "restoreBackup", reference: backup.reference }, "other", { quiet: false });
+          run({ kind: "restoreBackup", reference: backup.reference }, { quiet: false });
         }}
       />
     )}
@@ -259,24 +258,12 @@ export function RepositoryDialogs(props: Props) {
       <ProtectedActionDialog
         branch={dialog.branch}
         title={`Rewrite ${dialog.branch}?`}
-        explanation={`${dialog.action.kind === "interactiveRebase" ? "This interactive rebase" : dialog.action.kind === "fixupInto" ? "Fixing up an earlier commit" : dialog.action.kind === "splitCommit" ? "Splitting a commit" : dialog.action.kind === "restack" ? "Moving it onto the new branch below" : dialog.action.kind === "migrateToLfs" ? "Moving files into Git LFS" : "Rebasing"} rewrites ${dialog.branch}'s history: its commits get new ids, so anyone who already has them will have to reconcile. Tributary keeps a backup of where it was.`}
-        confirmLabel={
-          dialog.action.kind === "interactiveRebase"
-            ? "Start rebase"
-            : dialog.action.kind === "fixupInto"
-              ? "Fix it up"
-              : dialog.action.kind === "splitCommit"
-                ? "Split it"
-                : dialog.action.kind === "restack"
-                  ? "Move it"
-                  : dialog.action.kind === "migrateToLfs"
-                    ? "Rewrite it"
-                    : `Rebase ${dialog.branch}`
-        }
+        explanation={`${dialog.rewrite.what} rewrites ${dialog.branch}'s history: its commits get new ids, so anyone who already has them will have to reconcile. Tributary keeps a backup of where it was.`}
+        confirmLabel={dialog.rewrite.confirm}
         onCancel={() => onClose()}
         onConfirm={() => {
           onClose();
-          run(dialog.action, "other", { confirmed: true });
+          run(dialog.action, { confirmed: true });
         }}
       />
     )}
@@ -301,7 +288,7 @@ export function RepositoryDialogs(props: Props) {
         onCancel={() => onClose()}
         onPush={(overwrite) => {
           onClose();
-          run({ kind: "push", force: true, overwrite }, "push");
+          run({ kind: "push", force: true, overwrite });
         }}
       />
     )}

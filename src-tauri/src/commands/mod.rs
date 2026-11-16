@@ -1027,6 +1027,13 @@ pub async fn diagnostics(path: Option<String>) -> Result<diagnostics::Diagnostic
     .await
 }
 
+/// What `action` is like: how it shows while it runs, whether it can be stopped or run again
+/// with changes put aside, and whether it rewrites history.
+#[tauri::command]
+pub fn action_info(action: Action) -> actions::ActionInfo {
+    action.info()
+}
+
 /// Stop the fetch, pull or push running in the repository at `path`, or without a path,
 /// everything that is running (a clone).
 #[tauri::command]

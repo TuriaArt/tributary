@@ -24,7 +24,7 @@ const MAX_TEXT_BYTES: u64 = MAX_DIFF_BYTES as u64;
 const TOOL_SETTLE: Duration = Duration::from_secs(2);
 
 /// Which change to a file.
-#[derive(Debug, Clone, Deserialize, TS)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum DiffSource {
     /// What a commit changed, compared to its first parent.

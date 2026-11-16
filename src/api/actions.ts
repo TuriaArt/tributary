@@ -1,10 +1,15 @@
 // Changing a repository: actions run the installed git, with progress, cancelling and an activity log.
 import { invoke } from "./invoke";
 import { listen } from "@tauri-apps/api/event";
-import type { Action, CloneOptions, LineMode, LogEntry, Outcome, Progress, RebaseStep, StepAction } from "./generated";
-export type { Action, CloneOptions, LineMode, LogEntry, Outcome, Progress, RebaseStep, StepAction };
+import type { Action, ActionInfo, CloneOptions, LineMode, LogEntry, Outcome, Progress, RebaseStep, Rewrite, Running, StepAction } from "./generated";
+export type { Action, ActionInfo, CloneOptions, LineMode, LogEntry, Outcome, Progress, RebaseStep, Rewrite, Running, StepAction };
 
 /** Something that changes the repository. These run the installed git. */
+
+/** What `action` is like: how it shows while it runs, whether it can be stopped or run again with changes put aside, and whether it rewrites history. */
+export function actionInfo(action: Action): Promise<ActionInfo> {
+  return invoke("action_info", { action });
+}
 
 /** Stop the fetch, pull or push running in the repository at `path`, or without one, everything (a clone). */
 export function cancelAction(path?: string): Promise<boolean> {
