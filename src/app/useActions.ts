@@ -131,7 +131,8 @@ export function useActions({ snapshot, load, protectedHead, openDialog, setError
       let stopListening: (() => void) | undefined;
       let showTimer: number | undefined;
       if (kind && kind !== "other") {
-        const label = kind === "checkout" ? `Checking out ${target}` : kind === "discard" ? (discarding ?? RUNNING_LABELS.discard) : RUNNING_LABELS[kind];
+        const forced = action.kind === "push" && action.force;
+        const label = kind === "checkout" ? `Checking out ${target}` : kind === "discard" ? (discarding ?? RUNNING_LABELS.discard) : forced ? "Force pushing" : RUNNING_LABELS[kind];
         setProgress(() => ({ label, value: null, visible: false, cancellable: kind !== "checkout" && kind !== "discard" }));
         showTimer = window.setTimeout(() => setProgress((current) => current && { ...current, visible: true }), PROGRESS_DELAY);
         stopListening = await onProgress((value, path) => {

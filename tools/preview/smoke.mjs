@@ -14,7 +14,7 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { buildDemos, demoEnv, studioCommitRuns, STUDIO_PULL_REQUEST_CONVERSATIONS, STUDIO_PULL_REQUEST_DETAILS, STUDIO_PULL_REQUESTS } from "./demo.mjs";
 import { CONTROLS, describe as describeAligned, EXCEPT, misaligned } from "./aligned.mjs";
 import { describeOffCentre, moving, offCentre as offInPixels, probe, restore } from "../e2e/centred.mjs";
@@ -2203,7 +2203,7 @@ try {
     await card.waitFor({ state: "detached", timeout: 5000 });
   });
 
-  await step("syncs a branch with commits on both sides, and asks for a force push when it was rewritten", async () => {
+  await step("syncs a branch with commits on both sides, and force pushes it when it was rewritten", async () => {
     const was = (await page.locator('.tabs > .tab[aria-selected="true"]').textContent()).trim();
     await page.locator(".tab", { hasText: /^notebook$/ }).dispatchEvent("mousedown", { button: 0 });
     await row("Export notes as Markdown").waitFor({ timeout: 10_000 });
@@ -2248,7 +2248,26 @@ try {
     await dialog.getByText("Sync stopped.", { exact: false }).waitFor({ timeout: 20_000 });
     await dialog.getByRole("button", { name: "Cancel" }).click();
     expect(git("rev-parse", "origin/main") !== git("rev-parse", "main"), "something was pushed");
+    // Force pushed, the dialog goes and the push shows its progress, like any push. A slow
+    // pre-push hook gives it time to show.
+    const theirTip = git("rev-parse", "origin/main");
+    const hook = join(demos.notebook, git("rev-parse", "--git-path", "hooks/pre-push"));
+    mkdirSync(dirname(hook), { recursive: true });
+    writeFileSync(hook, "#!/bin/sh\nsleep 2\n");
+    chmodSync(hook, 0o755);
+    await sync.click();
+    await dialog.getByText("Sync stopped.", { exact: false }).waitFor({ timeout: 20_000 });
+    // main is protected here: its name is typed first.
+    await dialog.getByLabel("Type main to confirm").fill("main");
+    await dialog.getByRole("button", { name: "Force push", exact: true }).click();
+    await dialog.waitFor({ state: "detached", timeout: 5000 });
+    await page.locator(".progress-strip", { hasText: "Force pushing" }).waitFor({ timeout: 5000 });
+    await page.locator(".toast", { hasText: "Force pushed main to origin" }).waitFor({ timeout: 20_000 });
+    expect(git("rev-parse", "origin/main") === git("rev-parse", "main"), "main wasn't force pushed");
+    await dismissToast();
+    rmSync(hook);
     // Back as it was before the amend, for the steps after this one (the working files as they are).
+    git("push", "-q", "--force", "origin", `${theirTip}:main`);
     git("reset", "-q", "--soft", pushed);
     await page.keyboard.press("F5");
     await page.locator(".tabs > .tab[data-path]").filter({ hasText: new RegExp(`^${was}$`) }).dispatchEvent("mousedown", { button: 0 });
