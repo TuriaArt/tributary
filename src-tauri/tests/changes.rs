@@ -2,9 +2,8 @@
 
 mod common;
 
-use common::{TempRepo, failure, outcome, read, run, stash_count, with_identity};
+use common::{TempRepo, outcome, read, run, stash_count, with_identity};
 use tributary_lib::actions::Action;
-use tributary_lib::error::{ErrorKind, Stopped};
 
 #[test]
 fn stashes_apply_pop_and_drop() {
@@ -565,6 +564,9 @@ fn says_why_a_file_is_ignored_and_stages_it_anyway() {
 #[cfg(unix)]
 #[test]
 fn says_when_a_hook_stops_a_commit_and_commits_without_it() {
+    use common::failure;
+    use tributary_lib::error::{ErrorKind, Stopped};
+
     use std::os::unix::fs::PermissionsExt;
     let mut repo = TempRepo::new("hooks");
     with_identity(&repo);
