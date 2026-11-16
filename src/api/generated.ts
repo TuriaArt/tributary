@@ -145,6 +145,37 @@ export type Action =
   | { kind: "unlockFiles"; locks: Array<LockRef>; force?: boolean };
 
 /**
+ * What an action is like.
+ */
+export type ActionInfo = {
+  /**
+   * What it shows while it runs, for one that can take a while: none for a quick one.
+   */
+  running: Running | null;
+  /**
+   * Its progress bar's words: "Pushing", "Force pushing", "Checking out main".
+   */
+  label: string | null;
+  /**
+   * It can be stopped partway. A checkout or a discard can't: the files would be left
+   * half done.
+   */
+  cancellable: boolean;
+  /**
+   * It goes to a remote, so file locks and pull requests may have changed after it.
+   */
+  remote: boolean;
+  /**
+   * When uncommitted changes are in the way, it can run again with them put aside.
+   */
+  retryable: boolean;
+  /**
+   * It rewrites the checked-out branch's history.
+   */
+  rewrites: Rewrite | null;
+};
+
+/**
  * What an actor's file holds.
  */
 export type ActorName = {
@@ -603,6 +634,7 @@ export type Commands = {
   stop_update_restart: { args: Record<string, never>; returns: void };
   report_problem: { args: { what: string }; returns: string | null };
   take_recovery_note: { args: Record<string, never>; returns: string | null };
+  action_info: { args: { action: Action }; returns: ActionInfo };
   cancel_action: { args: { path?: string | null }; returns: boolean };
   activity_log: { args: Record<string, never>; returns: Array<LogEntry> };
   watch_repository: { args: { path: string }; returns: void };
@@ -1796,6 +1828,10 @@ export type Outcome = {
    * After a push: the files the pushed commits changed.
    */
   pushedFiles?: Array<string>;
+  /**
+   * What undoes it, when something does.
+   */
+  undo?: Action;
 };
 
 /**
@@ -2531,6 +2567,21 @@ export type ReviewState =
 export type ReviewVerdict = "approve" | "requestChanges" | "comment";
 
 /**
+ * An action that rewrites the checked-out branch's history, which is asked about first on a
+ * protected branch.
+ */
+export type Rewrite = {
+  /**
+   * What does it, to start a sentence: "This interactive rebase".
+   */
+  what: string;
+  /**
+   * The button that goes ahead: "Start rebase".
+   */
+  confirm: string;
+};
+
+/**
  * What a row in the graph stands for.
  */
 export type RowKind =
@@ -2566,6 +2617,20 @@ export type Run = {
    */
   groups: Array<JobGroup>;
 };
+
+/**
+ * What a long action shows while it runs: its progress bar, and the toolbar button it's
+ * running from.
+ */
+export type Running =
+  | "fetch"
+  | "pull"
+  | "push"
+  | "sync"
+  | "download"
+  | "submodules"
+  | "checkout"
+  | "discard";
 
 export type SearchResult = {
   /**

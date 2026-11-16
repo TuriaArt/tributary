@@ -12,6 +12,7 @@ mod branches;
 mod changes;
 mod clone;
 mod conflicts;
+mod describe;
 mod diff;
 mod diff_tools;
 mod elsewhere;
@@ -70,6 +71,7 @@ pub use blame::{Blame, BlameCommit, BlameLine, blame};
 pub use branches::{RemoteBranchChoice, UpstreamChoices, upstream_choices};
 pub use clone::{CloneOptions, clone_repository, init_repository};
 pub use conflicts::{ConflictText, conflict_text};
+pub use describe::{ActionInfo, Rewrite, Running};
 pub use diff::{
     DiffLine, DiffSource, FileDiff, Hunk, LineKind, Media, MediaKind, SubmoduleChange,
     SubmoduleCommit, file_diff,
@@ -113,9 +115,10 @@ pub use unity::{UnitySetup, unity_setup};
 pub use unity_meta::{MetaKind, MetaProblem};
 
 use self::stash::{pop_stash, stash_top};
+use self::validate::current_branch;
 
 /// Something to do to the repository, as sent by the frontend.
-#[derive(Debug, Deserialize, TS)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum Action {
     /// `git reset --hard <id>` on the checked-out branch.
@@ -500,14 +503,14 @@ pub enum Action {
 }
 
 /// A Git LFS lock: its id, and the file it's on (for messages).
-#[derive(Debug, Clone, Deserialize, TS)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
 pub struct LockRef {
     pub id: String,
     pub path: String,
 }
 
 /// How to merge.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Deserialize, TS)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
 pub enum MergeMode {
     /// Like `git merge`: fast-forward when possible, otherwise a merge commit.
@@ -520,7 +523,7 @@ pub enum MergeMode {
 }
 
 /// Which version of a conflicted file to keep.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, TS)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
 pub enum Side {
     /// The checked-out branch's version (for a rebase, the branch being rebased).
@@ -531,7 +534,7 @@ pub enum Side {
 
 /// A local branch, the commit it points to and, to restore it as it was, its upstream
 /// (`branch.<name>.remote` and `branch.<name>.merge`).
-#[derive(Debug, Clone, Deserialize, TS)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
 pub struct BranchTip {
     pub name: String,
     pub id: String,
@@ -544,7 +547,7 @@ pub struct BranchTip {
 }
 
 /// One commit in an interactive rebase.
-#[derive(Debug, Deserialize, TS)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
 pub struct RebaseStep {
     pub id: String,
     pub action: StepAction,
@@ -554,7 +557,7 @@ pub struct RebaseStep {
     pub message: Option<String>,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, TS)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "lowercase")]
 pub enum StepAction {
     Pick,
@@ -585,6 +588,10 @@ pub struct Outcome {
     #[ts(as = "Option<_>", optional)]
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub pushed_files: Vec<String>,
+    /// What undoes it, when something does.
+    #[ts(optional)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub undo: Option<Action>,
 }
 
 /// What an action reports besides its message.
@@ -606,14 +613,29 @@ pub fn run_with_progress(
     action: Action,
     on_progress: &dyn Fn(Progress),
 ) -> Result<Outcome, Error> {
+    let before = where_head_is(path);
+    let done = action.clone();
     let mut extra = Extra::default();
     let message = perform(path, action, on_progress, &mut extra)?;
+    let undo = describe::undo(&done, &before, extra.backup.as_deref());
     Ok(Outcome {
         message,
         pull_request: extra.pull_request,
         backup: extra.backup,
         pushed_files: extra.pushed_files,
+        undo,
     })
+}
+
+/// Where HEAD is, before an action: its branch (none when detached), and its commit.
+fn where_head_is(path: &Path) -> describe::Before {
+    let Ok(repo) = gix::discover(path) else {
+        return describe::Before::default();
+    };
+    describe::Before {
+        branch: current_branch(&repo).ok(),
+        commit: repo.head_id().ok().map(|id| id.to_string()),
+    }
 }
 
 fn perform(

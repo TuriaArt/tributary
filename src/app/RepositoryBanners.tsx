@@ -148,8 +148,8 @@ export function RepositoryBanners(props: Props) {
         <LfsHealthBanner
           health={lfsHealth.notice}
           busy={running !== null}
-          onDownload={() => act({ kind: "downloadLfsFiles" }, "download")}
-          onSetUp={() => act({ kind: "setUpLfs" }, "download")}
+          onDownload={() => act({ kind: "downloadLfsFiles" })}
+          onSetUp={() => act({ kind: "setUpLfs" })}
           onGetLfs={() => openInBrowser("https://git-lfs.com")}
           onDismiss={lfsHealth.dismiss}
         />

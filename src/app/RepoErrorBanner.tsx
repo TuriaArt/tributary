@@ -13,7 +13,7 @@ interface Props {
   /** The checked-out commit's row, for a new branch from it. */
   head: CommitRow | undefined;
   running: Running;
-  act: (action: Action, kind?: Running) => unknown;
+  act: (action: Action) => unknown;
   openDialog: (dialog: OpenDialog) => void;
   openWorktree: (path: string) => void;
   goTo: (id: string) => void;
@@ -21,18 +21,6 @@ interface Props {
 }
 
 /** How an action shows its progress, when it runs again. */
-function runningKind(action: Action): Running {
-  switch (action.kind) {
-    case "fetch":
-    case "pull":
-    case "push":
-    case "sync":
-      return action.kind;
-    default:
-      return "other";
-  }
-}
-
 /**
  * The last error, in plain words when it's one git often gives, with what can be done about
  * it. A force push that stopped for someone else's commits lists them.
@@ -86,7 +74,7 @@ export function RepoErrorBanner({ error, snapshot, head, running, act, openDialo
               Get their commits, then push yours on top. <b>Nothing is lost.</b>
             </>
           ),
-          run: () => act({ kind: "sync" }, "sync"),
+          run: () => act({ kind: "sync" }),
           disabled: busy,
         };
       case "forcePush":
@@ -120,13 +108,13 @@ export function RepoErrorBanner({ error, snapshot, head, running, act, openDialo
       }
       case "retry":
         return error.action
-          ? { label: "Try again", says: "Run it again.", run: () => act(error.action!, runningKind(error.action!)), disabled: busy }
+          ? { label: "Try again", says: "Run it again.", run: () => act(error.action!), disabled: busy }
           : null;
       case "push":
         return {
           label: "Push",
           says: `Push ${branch}, which links it to a branch of the same name on the remote.`,
-          run: () => act({ kind: "push", force: false }, "push"),
+          run: () => act({ kind: "push", force: false }),
           disabled: busy,
         };
       case "stash":
@@ -162,7 +150,7 @@ export function RepoErrorBanner({ error, snapshot, head, running, act, openDialo
         return {
           label: `Push ${branch}`,
           says: `Put ${branch} back on ${others?.remote ?? "the remote"}, as a branch of its own.`,
-          run: () => act({ kind: "push", force: false }, "push"),
+          run: () => act({ kind: "push", force: false }),
           disabled: busy,
         };
       case "moveToLfs":
@@ -182,7 +170,7 @@ export function RepoErrorBanner({ error, snapshot, head, running, act, openDialo
   if (error.retry && !fixes.includes("stash")) choices.push(stashChoice(error.retry));
   if (error.anyway) {
     const anyway = error.anyway;
-    choices.push({ label: "Download anyway", says: "If the disk fills up, the download stops partway.", run: () => act(anyway, "download"), disabled: busy });
+    choices.push({ label: "Download anyway", says: "If the disk fills up, the download stops partway.", run: () => act(anyway), disabled: busy });
   }
   if (error.worktree) {
     const worktree = error.worktree;

@@ -7,7 +7,6 @@ import { isMac } from "../lib/platform";
 import { newPullRequestUrl, openInBrowser, siteName, webRemote } from "../lib/weblinks";
 import { splitRemoteBranch, type OpenDialog } from "../menus";
 import { isSubmenu, type AppCommand, type MenuEntry } from "./appCommand";
-import type { Running } from "./constants";
 import { REOPEN_TAB_KEYS } from "./tabMenu";
 import type { Preferences } from "./usePreferences";
 
@@ -59,7 +58,7 @@ export interface MenuBarContext {
     viewOptions: () => void;
     resetLayout: () => void;
     refresh: () => void;
-    act: (action: Action, kind?: Exclude<Running, null>) => void;
+    act: (action: Action) => void;
     dialog: (dialog: OpenDialog) => void;
     select: (id: string) => void;
     history: (directory: boolean) => void;
@@ -194,10 +193,10 @@ export function appMenus(ctx: MenuBarContext): AppMenuDefinition[] {
         label: "Repository",
         entries: [
           { id: "refresh", label: "Refresh", keys: "CmdOrCtrl+R", icon: <RefreshIcon />, run: run.refresh },
-          { id: "fetch", label: "Fetch", icon: <FetchIcon />, enabled: hasRemotes && canChange, run: () => run.act({ kind: "fetch" }, "fetch") },
-          { id: "pull", label: "Pull", icon: <PullIcon />, enabled: hasRemotes && canChange && Boolean(snapshot.upstream), run: () => run.act({ kind: "pull" }, "pull") },
-          { id: "push", label: "Push", icon: <PushIcon />, enabled: hasRemotes && canChange && Boolean(snapshot.headBranch), run: () => run.act({ kind: "push", force: false }, "push") },
-          { id: "sync", label: "Sync (Pull, Then Push)", icon: <SyncIcon />, keywords: "pull push both diverged", enabled: hasRemotes && canChange && Boolean(snapshot.upstream), run: () => run.act({ kind: "sync" }, "sync") },
+          { id: "fetch", label: "Fetch", icon: <FetchIcon />, enabled: hasRemotes && canChange, run: () => run.act({ kind: "fetch" }) },
+          { id: "pull", label: "Pull", icon: <PullIcon />, enabled: hasRemotes && canChange && Boolean(snapshot.upstream), run: () => run.act({ kind: "pull" }) },
+          { id: "push", label: "Push", icon: <PushIcon />, enabled: hasRemotes && canChange && Boolean(snapshot.headBranch), run: () => run.act({ kind: "push", force: false }) },
+          { id: "sync", label: "Sync (Pull, Then Push)", icon: <SyncIcon />, keywords: "pull push both diverged", enabled: hasRemotes && canChange && Boolean(snapshot.upstream), run: () => run.act({ kind: "sync" }) },
           { id: "force-push", label: "Force Push…", icon: <PushIcon />, danger: true, enabled: hasRemotes && canChange && Boolean(snapshot.headBranch), run: () => run.dialog({ kind: "forcePush" }) },
           "-",
           { id: "commit", label: "Commit…", icon: <PlusIcon />, enabled: Boolean(snapshot.worktree) && canChange, run: () => run.select(WORKTREE_ID) },
@@ -249,7 +248,7 @@ export function appMenus(ctx: MenuBarContext): AppMenuDefinition[] {
             entries: [
               ...(ctx.usesLocks ? [{ id: "lock-files", label: "Lock Files…", icon: <LockIcon />, enabled: canChange, run: run.lockFiles }] : []),
               ...(ctx.lfsPointers > 0
-                ? [{ id: "download-lfs", label: "Download Git LFS Files", icon: <DownloadIcon />, enabled: canChange, run: () => run.act({ kind: "downloadLfsFiles" }, "download") }]
+                ? [{ id: "download-lfs", label: "Download Git LFS Files", icon: <DownloadIcon />, enabled: canChange, run: () => run.act({ kind: "downloadLfsFiles" }) }]
                 : []),
               ...(ctx.usesLocks || ctx.usesLfs
                 ? [{ id: "prune-lfs", label: "Clean Up Git LFS Files…", icon: <BroomIcon />, enabled: canChange, run: () => run.dialog({ kind: "pruneLfs" }) }]
