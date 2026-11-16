@@ -229,7 +229,10 @@ export function CommitList(props: Props) {
     onLaneHover: props.onLaneHover,
     onHover: (event, commit) => {
       window.clearTimeout(previewTimer.current);
-      if (!props.previews || commit.kind === "worktree" || event.buttons) return setPreview(null);
+      // Not beside the scrollbar, where the marks have a card of their own (MarkHover).
+      const list = body.current?.getBoundingClientRect();
+      const onMarks = list !== undefined && event.clientX >= list.right - (viewport.scrollbar || 6) - 2;
+      if (!props.previews || commit.kind === "worktree" || event.buttons || onMarks) return setPreview(null);
       const { clientX: x, clientY: y } = event;
       previewTimer.current = window.setTimeout(() => setPreview({ commit, x, y }), PREVIEW_DELAY);
     },
