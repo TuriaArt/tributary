@@ -210,7 +210,7 @@ npm run notices
 | `src-tauri/src/actions/` | Runs git for everything that changes the repository, one module per area (branches, history, stashes, conflicts, Git LFS, worktrees, backups, …) |
 | `src-tauri/src/git/` | Runs the user's git: progress and cancel, Git LFS progress, the activity log, credentials |
 | `src-tauri/src/commands.rs` | The commands the frontend calls |
-| `src-tauri/src/error.rs` | The error every command can return |
+| `src-tauri/src/error/` | The error every command can return: its message, and the kind of failure it is when the app knows (a rejected push, a hook that stopped a commit, changes in the way, …), said where the app makes it or recognised from git's message (`kind.rs`). The frontend explains a failure and offers its fix from the kind, never from the message's words (`src/lib/explainError.ts`); a command's failure reaches it as an `AppError` (`src/api/invoke.ts`) |
 | `src-tauri/src/bindings.rs` | Makes `src/api/generated.ts`, the TypeScript types of what the commands take and give back, from the Rust ones (a test) |
 | `src-tauri/src/github/` | Open pull requests and their checks, opening one and reading one in full; signing in |
 | `src-tauri/src/gitlab/` | The same for merge requests on GitLab and their pipelines |

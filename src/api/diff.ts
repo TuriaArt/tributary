@@ -1,5 +1,5 @@
 // What changed in a file: line by line, or (for pictures, sounds, videos, 3D models and other binary files) before and after.
-import { invoke } from "@tauri-apps/api/core";
+import { invoke } from "./invoke";
 import type { Blame, BlameCommit, BlameLine, ConflictText, DiffLine, DiffSource, FileDiff, Hunk, Media, MediaKind, SubmoduleChange } from "./generated";
 export type { Blame, BlameCommit, BlameLine, ConflictText, DiffLine, DiffSource, FileDiff, Hunk, Media, MediaKind, SubmoduleChange };
 

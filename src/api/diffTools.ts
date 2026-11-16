@@ -1,5 +1,5 @@
 // The diff and merge tools git opens (git difftool, git mergetool).
-import { invoke } from "@tauri-apps/api/core";
+import { invoke } from "./invoke";
 import type { DiffToolSettings } from "./generated";
 export type { DiffToolSettings };
 

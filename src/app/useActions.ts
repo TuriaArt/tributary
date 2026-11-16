@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type MutableRefObject } from "react";
-import { onProgress, PAGE_SIZE, runActionFor, type Action, type Outcome, type Progress, type RepoSnapshot } from "../api";
-import { hookFailure, involvesUntrackedFiles, isLocalChangesError, NOT_ENOUGH_SPACE, REWRITTEN } from "../lib/errors";
+import { asAppError, onProgress, PAGE_SIZE, runActionFor, type Action, type AppError, type Outcome, type Progress, type RepoSnapshot } from "../api";
 import { undoFor } from "../lib/undo";
 import { openInBrowser } from "../lib/weblinks";
 import { notifySystem } from "../lib/notify";
@@ -144,22 +143,23 @@ export function useActions({ snapshot, load, protectedHead, openDialog, setError
       }
 
       let outcome: Outcome | null = null;
-      let failure: string | null = null;
+      let failure: AppError | null = null;
       try {
         outcome = await runActionFor(before.path, action);
       } catch (e) {
-        failure = String(e);
+        failure = asAppError(e);
       }
+      const cancelled = failure?.kind?.kind === "cancelled";
       window.clearTimeout(showTimer);
       stopListening?.();
       change(before.path, () => undefined);
       // A long one, finished while you were elsewhere: say so.
-      if (kind && kind !== "other" && Date.now() - started > LONG_ACTION && !document.hasFocus() && failure !== "Cancelled.") {
+      if (kind && kind !== "other" && Date.now() - started > LONG_ACTION && !document.hasFocus() && !cancelled) {
         const files = (last as Progress | null)?.files;
         const count = files && files.total > 1 ? ` · ${files.total.toLocaleString()} Git LFS files` : "";
         const minutes = Math.round((Date.now() - started) / 60_000);
         const took = minutes >= 1 ? ` in ${minutes} min` : "";
-        void notifySystem(before.name, failure ? `Didn't finish: ${failure.split("\n")[0]}` : `${outcome?.message ?? "Done"}${count}${took}`);
+        void notifySystem(before.name, failure ? `Didn't finish: ${failure.message.split("\n")[0]}` : `${outcome?.message ?? "Done"}${count}${took}`);
       }
       // You went to another repository while it ran: it's reloaded when you're back there
       // (and what follows an action waits for then), and a message says how it went. Its
@@ -168,7 +168,7 @@ export function useActions({ snapshot, load, protectedHead, openDialog, setError
         const later = waiting.current.get(before.path) ?? [];
         later.push(() => after(action, kind, outcome));
         waiting.current.set(before.path, later);
-        const text = failure === "Cancelled." ? "Cancelled" : (failure?.split("\n")[0] ?? outcome?.message ?? "Done");
+        const text = cancelled ? "Cancelled" : (failure?.message.split("\n")[0] ?? outcome?.message ?? "Done");
         notify({ text: `${before.name}: ${text}` });
         if (outcome?.message) callbacks.current.record?.(before.path, outcome.message, action, undoOf(action, outcome, before));
         return failure === null;
@@ -178,30 +178,29 @@ export function useActions({ snapshot, load, protectedHead, openDialog, setError
       await load(before.path, "refresh", Math.max(PAGE_SIZE, before.commits.length));
       after(action, kind, outcome);
 
-      if (failure === "Cancelled.") {
+      if (cancelled) {
         notify({ text: "Cancelled" });
         return false;
       }
       if (failure || !outcome) {
-        const message = failure ?? "Something went wrong";
+        const message = failure?.message ?? "Something went wrong";
+        const why = failure?.kind ?? null;
         // A sync stopped before pulling into a branch rewritten since it was pushed: what
         // it needs is a force push, which is asked for.
-        if (message.startsWith(REWRITTEN)) {
-          openDialog({ kind: "forcePush", reason: `Sync stopped. ${message.slice(REWRITTEN.length).replace(/^[:\s]+/, "")}` });
+        if (why?.kind === "rewritten") {
+          openDialog({ kind: "forcePush", reason: `Sync stopped. ${message}` });
           return false;
         }
         const retry: Action | undefined =
-          RETRYABLE.has(action.kind) && isLocalChangesError(message)
-            ? { kind: "stashAndRetry", action, includeUntracked: involvesUntrackedFiles(message) }
-            : undefined;
+          RETRYABLE.has(action.kind) && why?.kind === "changesInTheWay" ? { kind: "stashAndRetry", action, includeUntracked: why.untracked } : undefined;
         // The branch is checked out in another working tree: offer to open that.
-        const worktree = /already (?:used by worktree|checked out) at '([^']+)'/.exec(message)?.[1];
+        const worktree = why?.kind === "checkedOutElsewhere" ? why.path : undefined;
         // A hook stopped it: offer to go ahead without it.
         const skipHooks: Action | undefined =
-          hookFailure(message) && (action.kind === "commit" || action.kind === "push") ? { ...action, noVerify: true } : undefined;
+          why?.kind === "hookFailed" && (action.kind === "commit" || action.kind === "push") ? { ...action, noVerify: true } : undefined;
         // Too little disk space, it seemed: offer to go ahead all the same.
-        const anyway: Action | undefined = message.startsWith(NOT_ENOUGH_SPACE) && action.kind !== "anyDiskSpace" ? { kind: "anyDiskSpace", action } : undefined;
-        setError({ message, retry: anyway ? undefined : retry, worktree, skipHooks, anyway, action, upstreamWas: before.upstream?.commit ?? null });
+        const anyway: Action | undefined = why?.kind === "notEnoughSpace" && action.kind !== "anyDiskSpace" ? { kind: "anyDiskSpace", action } : undefined;
+        setError({ message, kind: why, retry: anyway ? undefined : retry, worktree, skipHooks, anyway, action, upstreamWas: before.upstream?.commit ?? null });
         return false;
       }
       const { message, pullRequest } = outcome;

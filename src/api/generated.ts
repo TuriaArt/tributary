@@ -685,6 +685,40 @@ export type DownloadProgress = { downloaded: number; total: number | null };
 
 export type Engine = "unreal" | "unity";
 
+/**
+ * A failure the app knows, with what it needs to explain it.
+ */
+export type ErrorKind =
+  | { kind: "cancelled" }
+  | { kind: "rewritten" }
+  | { kind: "notEnoughSpace" }
+  | { kind: "hookFailed"; hook: string; stopped: Stopped; output: string }
+  | { kind: "pushRejected"; branch: string }
+  | { kind: "staleLease"; branch: string }
+  | { kind: "upstreamGone"; branch: string }
+  | { kind: "notFastForward" }
+  | { kind: "tooLarge"; file: string | null; host: string | null }
+  | { kind: "protected"; host: string | null }
+  | { kind: "signIn"; host: string | null }
+  | { kind: "repositoryNotFound"; host: string | null }
+  | { kind: "unreachable"; host: string | null }
+  | { kind: "connectionDropped"; host: string | null }
+  | { kind: "changesInTheWay"; files: number; untracked: boolean }
+  | { kind: "noUpstream" }
+  | { kind: "indexLocked" }
+  | { kind: "unrelatedHistories" }
+  | { kind: "diskFull" }
+  | { kind: "noLfs" }
+  | { kind: "notFullyMerged" }
+  | { kind: "checkedOutElsewhere"; path: string }
+  | { kind: "worktreeChanged" }
+  | { kind: "conflicts" };
+
+/**
+ * How an error reaches the frontend: its message, and its kind when that's known.
+ */
+export type Failure = { message: string; kind: ErrorKind | null };
+
 export type FileChange = {
   path: string;
   /**
@@ -2629,6 +2663,11 @@ export type Stacked = {
 };
 
 export type StepAction = "pick" | "reword" | "squash" | "fixup" | "drop";
+
+/**
+ * Which of a commit and a push a hook stopped.
+ */
+export type Stopped = "commit" | "push";
 
 export type Submodule = {
   /**

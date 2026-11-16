@@ -1,5 +1,5 @@
 // Changing a repository: actions run the installed git, with progress, cancelling and an activity log.
-import { invoke } from "@tauri-apps/api/core";
+import { invoke } from "./invoke";
 import { listen } from "@tauri-apps/api/event";
 import type { Action, CloneOptions, LineMode, LogEntry, Outcome, Progress, RebaseStep, StepAction } from "./generated";
 export type { Action, CloneOptions, LineMode, LogEntry, Outcome, Progress, RebaseStep, StepAction };

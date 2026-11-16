@@ -2,8 +2,9 @@
 
 mod common;
 
-use common::{TempRepo, outcome, remote_turn, run, with_identity};
+use common::{TempRepo, failure, outcome, remote_turn, run, with_identity};
 use tributary_lib::actions::{Action, CloneOptions};
+use tributary_lib::error::ErrorKind;
 use tributary_lib::{actions, git, repo, settings_repo};
 
 #[test]
@@ -235,8 +236,8 @@ fn syncs_by_pulling_then_pushing_and_stops_for_a_rewritten_branch() {
     bob.git(&["commit", "--quiet", "--amend", "-m", "Tidy, amended"]);
     let amended = bob.git(&["rev-parse", "main"]);
     let pushed = remote.git(&["rev-parse", "main"]);
-    let error = run(&bob, Action::Sync).unwrap_err();
-    assert!(error.starts_with(actions::REWRITTEN), "{error}");
+    let (error, kind) = failure(&bob, Action::Sync);
+    assert_eq!(kind, Some(ErrorKind::Rewritten), "{error}");
     assert_eq!(bob.git(&["rev-parse", "main"]), amended);
     assert_eq!(remote.git(&["rev-parse", "main"]), pushed);
 }

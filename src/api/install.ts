@@ -1,5 +1,5 @@
 // Where the user's git is, and getting it when it isn't there.
-import { invoke } from "@tauri-apps/api/core";
+import { invoke } from "./invoke";
 import type { GitInstall } from "./generated";
 export type { GitInstall };
 

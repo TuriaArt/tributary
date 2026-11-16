@@ -112,6 +112,8 @@ fn generate() -> String {
     c.visit::<codeowners::FileOwners>();
     c.visit::<commands::Notices>();
     c.visit::<diagnostics::Diagnostics>();
+    // What a command that fails gives back.
+    c.visit::<crate::error::Failure>();
     c.visit::<git::LogEntry>();
     c.visit::<git::install::GitInstall>();
     c.visit::<github::CheckState>();

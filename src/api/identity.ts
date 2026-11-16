@@ -1,5 +1,5 @@
 // Who commits are made as in a repository.
-import { invoke } from "@tauri-apps/api/core";
+import { invoke } from "./invoke";
 import type { CommitTemplate, ProjectSetup, RemoteInfo, RepoIdentity, SetupCheck, SetupFix, SigningKey, SigningMode, SigningSettings } from "./generated";
 export type { CommitTemplate, ProjectSetup, RemoteInfo, RepoIdentity, SetupCheck, SetupFix, SigningKey, SigningMode, SigningSettings };
 

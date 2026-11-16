@@ -1,5 +1,4 @@
 import { cancelAction, WORKTREE_ID, type RepoSnapshot } from "../api";
-import { hookFailure } from "../lib/errors";
 import { usePresence } from "../lib/usePresence";
 import { openInBrowser } from "../lib/weblinks";
 import { CloseIcon } from "../components/Icons";
@@ -62,7 +61,7 @@ export function RepositoryBanners(props: Props) {
   // An action's progress shows in the repository it runs in (its tab shows it too).
   const progress = actions.progress;
   const { error, setError } = repo;
-  const hook = error ? hookFailure(error.message) : null;
+  const hook = error?.kind?.kind === "hookFailed" ? error.kind : null;
   const { focus } = highlight;
   const branchLabel = snapshot.headBranch ?? "HEAD";
   const conflicted = (snapshot.worktree?.unstaged ?? []).filter((file) => file.status === "conflicted").map((file) => file.path);
@@ -109,7 +108,7 @@ export function RepositoryBanners(props: Props) {
         <div className="error-banner inline hook-failure" role="alert">
           <div className="hook-failure-text">
             <strong>
-              The {hook.hook} hook stopped the {hook.what}
+              The {hook.hook} hook stopped the {hook.stopped}
             </strong>
             {hook.output ? <pre className="hook-output mono">{hook.output}</pre> : <span> without saying why.</span>}
           </div>
@@ -117,14 +116,14 @@ export function RepositoryBanners(props: Props) {
             <button
               className="error-action"
               disabled={running !== null}
-              title={`Run it again without the repository's ${hook.what === "commit" ? "pre-commit and commit-msg hooks" : "pre-push hook"}: their checks are skipped this once`}
+              title={`Run it again without the repository's ${hook.stopped === "commit" ? "pre-commit and commit-msg hooks" : "pre-push hook"}: their checks are skipped this once`}
               onClick={() =>
                 act(error.skipHooks!).then((done) => {
                   if (done && error.skipHooks?.kind === "commit") props.onCommitted();
                 })
               }
             >
-              {hook.what === "commit" ? "Commit anyway (skip hooks)" : "Push anyway (skip hooks)"}
+              {hook.stopped === "commit" ? "Commit anyway (skip hooks)" : "Push anyway (skip hooks)"}
             </button>
           )}
           <Button kind="icon" onClick={() => setError(null)} aria-label="Dismiss">

@@ -42,7 +42,7 @@ export function RepoErrorBanner({ error, snapshot, head, running, act, openDialo
   const upstream = snapshot.upstream?.name ?? null;
   // A safe force push stopped for commits someone else pushed: the push fetched them, to
   // be listed here.
-  const stale = error.message.includes("(stale info)");
+  const stale = error.kind?.kind === "staleLease";
   const [unseen, setUnseen] = useState<UnseenCommits | null>(null);
   useEffect(() => {
     if (!stale || !upstream) return;
@@ -56,7 +56,7 @@ export function RepoErrorBanner({ error, snapshot, head, running, act, openDialo
   }, [stale, snapshot.path, upstream, error.upstreamWas, error.message]);
 
   // The branch's remote branch is gone: what it could go with instead.
-  const gone = error.message.includes("but no such ref was fetched");
+  const gone = error.kind?.kind === "upstreamGone";
   const [others, setOthers] = useState<UpstreamChoices | null>(null);
   useEffect(() => {
     if (!gone || !snapshot.headBranch) return;
@@ -71,7 +71,7 @@ export function RepoErrorBanner({ error, snapshot, head, running, act, openDialo
 
   // Whose commits they are: who pushed them isn't known (a merge brings in others' commits).
   const by = unseen ? byWhom(unseen.commits.map((commit) => commit.author), unseen.count > unseen.commits.length) : null;
-  const explained = explainError(error.message, { branch, upstream, unseen: unseen && unseen.count > 0 ? { count: unseen.count, by } : null });
+  const explained = explainError(error.kind ?? null, { branch, upstream, unseen: unseen && unseen.count > 0 ? { count: unseen.count, by } : null });
   const headline = explained?.headline ?? gitHeadline(error.message);
   const busy = running !== null;
   const them = unseen?.count === 1 ? "it" : "them";

@@ -1,5 +1,5 @@
 // GitHub: signing in, and open pull requests.
-import { invoke } from "@tauri-apps/api/core";
+import { invoke } from "./invoke";
 import type { CheckLog, CheckState, CommitChecks, CommitMessage, CommitRuns, Job, JobGroup, Run, GitHubAccount, GitHubStatus, MergeMethod, MergeRequestOptions, NewRequest, NewRequestInfo, PullRequest, RequestChange, RequestCheck, RequestComment, RequestConversation, RequestDetails, RequestReview, ReviewVerdict } from "./generated";
 export type { CheckState, CommitChecks, CommitMessage, CommitRuns, Job, JobGroup, Run, GitHubAccount, GitHubStatus, MergeMethod, MergeRequestOptions, NewRequest, NewRequestInfo, PullRequest, RequestChange, RequestCheck, RequestComment, RequestConversation, RequestDetails, RequestReview, ReviewVerdict };
 

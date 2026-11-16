@@ -1,5 +1,5 @@
 // Submodules: other repositories kept inside this one, each at a commit it records.
-import { invoke } from "@tauri-apps/api/core";
+import { invoke } from "./invoke";
 import type { Submodule, SubmoduleState } from "./generated";
 export type { Submodule, SubmoduleState };
 
