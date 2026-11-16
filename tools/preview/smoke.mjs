@@ -295,9 +295,9 @@ try {
     await page.locator(".menu-item", { hasText: /Highlight origin\/(main|feature\/onboarding)'s history/ }).waitFor({ timeout: 5000 });
     await page.keyboard.press("Escape");
     // A teammate merged main into feature/export: the local branch's label says it's behind.
-    const exportLabel = page.locator(".commit-list .ref-pill[title^='Branch feature/export (local)']");
+    const exportLabel = page.locator(".commit-list .ref-pill:is([title^='Branch feature/export (local)'], [data-hint^='Branch feature/export (local)'])");
     await exportLabel.locator(".ref-sync", { hasText: "↓" }).waitFor({ timeout: 10_000 });
-    expect((await exportLabel.getAttribute("title"))?.includes("behind origin/feature/export"), "the label doesn't say it's behind");
+    expect((await exportLabel.getAttribute("data-hint"))?.includes("behind origin/feature/export"), "the label doesn't say it's behind");
     await dismissToast();
   });
 
@@ -317,7 +317,7 @@ try {
   });
 
   await step("offers a hard reset from a branch label, and uses your own colours", async () => {
-    await page.locator(".commit-list .ref-pill[title^='Branch feature/export (local']").first().click({ button: "right" });
+    await page.locator(".commit-list .ref-pill:is([title^='Branch feature/export (local'], [data-hint^='Branch feature/export (local'])").first().click({ button: "right" });
     await page.locator(".menu-item", { hasText: "Hard reset main to feature/export…" }).waitFor({ timeout: 5000 });
     await page.keyboard.press("Escape");
     await page.keyboard.press("Control+,");
@@ -711,7 +711,7 @@ try {
   });
 
   await step("compares a branch with the checked-out one, and opens a file's change", async () => {
-    await page.locator(".commit-list .ref-pill[title^='Branch feature/export (local']").first().click({ button: "right" });
+    await page.locator(".commit-list .ref-pill:is([title^='Branch feature/export (local'], [data-hint^='Branch feature/export (local'])").first().click({ button: "right" });
     await page.locator(".menu-item", { hasText: "Compare with main" }).click();
     const panel = page.locator(".compare-panel");
     await panel.locator(".file", { hasText: "zip.ts" }).click({ timeout: 10_000 });
@@ -834,6 +834,19 @@ try {
     expect((await page.locator(".commit-preview").count()) === 0, "a row's preview opened over the mark's card");
     await page.mouse.move(strip.x - 300, strip.top + 200);
     await card.waitFor({ state: "detached", timeout: 5000 });
+  });
+
+  await step("says what a branch's label is in the row's hover card, not in a tooltip as well", async () => {
+    const label = page.locator(".commit-row .ref-pill.branch").first();
+    expect((await label.getAttribute("title")) === null, "a branch's label in the list still has a tooltip");
+    const box = await label.boundingBox();
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, { steps: 4 });
+    const hint = page.locator(".commit-preview .preview-hint");
+    await hint.waitFor({ timeout: 5000 });
+    expect(/^(Checked out branch|Branch) /.test(await hint.textContent()), `the card says "${await hint.textContent()}"`);
+    await page.mouse.move(box.x + box.width / 2, box.y + 400);
+    await page.mouse.move(10, 10);
+    await page.locator(".commit-preview").waitFor({ state: "detached", timeout: 5000 });
   });
 
   await step("lights up a branch's lane while the pointer is on it", async () => {
