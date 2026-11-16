@@ -4,5 +4,5 @@ import type { Submodule, SubmoduleState } from "./generated";
 export type { Submodule, SubmoduleState };
 
 export function submodules(path: string): Promise<Submodule[]> {
-  return invoke<Submodule[]>("submodules", { path });
+  return invoke("submodules", { path });
 }

@@ -14,11 +14,11 @@ export function isExternalActor(path: string): boolean {
  * there are read at `fallback` (by default the first parent, or the checked-out commit).
  */
 export function actorNames(path: string, at: string | null, fallback: string | null, files: string[]): Promise<Record<string, ActorName>> {
-  return invoke<Record<string, ActorName>>("actor_names", { path, at, fallback, files });
+  return invoke("actor_names", { path, at, fallback, files });
 }
 
 export function unitySetup(path: string): Promise<UnitySetup> {
-  return invoke<UnitySetup>("unity_setup", { path });
+  return invoke("unity_setup", { path });
 }
 
 /** The kinds of files Unity saves as YAML, which Smart Merge can merge. */

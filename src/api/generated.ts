@@ -413,6 +413,212 @@ export type CloneOptions = {
   submodules?: boolean;
 };
 
+/**
+ * Every command the frontend can call: what it takes (its arguments, as the frontend
+ * sends them) and what it gives back. Made from the command list
+ * (src-tauri/src/commands/list.rs).
+ */
+export type Commands = {
+  open_repository: {
+    args: {
+      path: string;
+      limit?: number | null;
+      includeStatus?: boolean | null;
+      firstParent?: boolean | null;
+      hidden?: Array<string> | null;
+      solo?: Array<string> | null;
+    };
+    returns: RepoSnapshot;
+  };
+  commit_details: { args: { path: string; id: string }; returns: CommitDetails };
+  compare_commits: {
+    args: { path: string; from: string; to: string; split: boolean };
+    returns: Comparison;
+  };
+  actor_names: {
+    args: { path: string; at?: string | null; fallback?: string | null; files: Array<string> };
+    returns: { [key in string]: ActorName };
+  };
+  init_repository: { args: { path: string }; returns: string };
+  prune_candidates: { args: { path: string; idleDays?: number | null }; returns: PruneInfo };
+  branch_backups: { args: { path: string }; returns: Array<Backup> };
+  lost_commits: { args: { path: string; reference: string }; returns: LostCommits };
+  upstream_choices: { args: { path: string; branch: string }; returns: UpstreamChoices };
+  unseen_commits: {
+    args: { path: string; reference: string; since?: string | null };
+    returns: UnseenCommits;
+  };
+  lfs_locks: { args: { path: string }; returns: Locks };
+  file_history: { args: { path: string; file: string }; returns: FileHistory };
+  file_checks: {
+    args: {
+      path: string;
+      files: Array<string>;
+      deleted?: Array<string> | null;
+      threshold: number;
+    };
+    returns: FileChecks;
+  };
+  lfs_health: { args: { path: string }; returns: LfsHealth | null };
+  changed_elsewhere: { args: { path: string; changed: Array<string> }; returns: Array<Overlap> };
+  diff_tool_settings: { args: { path?: string | null; list: boolean }; returns: DiffToolSettings };
+  set_diff_tool: {
+    args: { path?: string | null; merge: boolean; tool?: string | null; command?: string | null };
+    returns: string;
+  };
+  lfs_settings: { args: { path: string }; returns: LfsSettings };
+  repo_identity: { args: { path: string }; returns: RepoIdentity };
+  take_snapshot: {
+    args: { path: string; maxBytes: number; keepDays: number };
+    returns: Snapshot | null;
+  };
+  local_history: { args: { path: string }; returns: Array<Snapshot> };
+  shelves: { args: { path: string; fetch: boolean }; returns: Array<Shelf> };
+  project_setup: { args: { path: string }; returns: ProjectSetup };
+  commit_template: { args: { path: string }; returns: CommitTemplate };
+  repo_summary: { args: { path: string }; returns: RepoSummary };
+  remotes: { args: { path: string }; returns: Array<RemoteInfo> };
+  patch_info: { args: { path: string; file: string }; returns: PatchInfo };
+  merge_check: { args: { path: string; from: string; into?: string | null }; returns: MergeCheck };
+  save_settings_file: { args: { file: string; text: string }; returns: void };
+  read_settings_file: { args: { file: string }; returns: string };
+  export_settings_to_repository: { args: { url: string; contents: string }; returns: string };
+  import_settings_from_repository: { args: { url: string }; returns: string };
+  change_request: {
+    args: { path: string; number: number; change: RequestChange };
+    returns: string;
+  };
+  commit_states: {
+    args: { path: string; ids: Array<string> };
+    returns: { [key in string]: CheckState };
+  };
+  commit_checks: { args: { path: string; id: string }; returns: CommitChecks };
+  commit_runs: { args: { path: string; id: string }; returns: CommitRuns };
+  rerun_failed_checks: { args: { path: string; id: string }; returns: string };
+  check_log: { args: { path: string; url: string }; returns: CheckLog };
+  rerun_job: { args: { path: string; url: string }; returns: string };
+  installed_apps: { args: Record<string, never>; returns: Array<InstalledApp> };
+  open_in_app: { args: { app: string; path: string; file?: string | null }; returns: void };
+  ignore_reason: { args: { path: string; file: string }; returns: IgnoreReason };
+  repo_size: { args: { path: string }; returns: RepoSize };
+  release_notes: {
+    args: { path: string; to: string; from?: string | null };
+    returns: ReleaseNotes;
+  };
+  publish_release: {
+    args: { path: string; tag: string; title: string; notes: string };
+    returns: string;
+  };
+  since_then: {
+    args: { path: string; seen: Array<SeenTip>; paths: Array<string> };
+    returns: Array<SinceThen>;
+  };
+  branch_stacks: { args: { path: string }; returns: Array<Stacked> };
+  branch_versions: { args: { path: string; name: string }; returns: Array<BranchVersion> };
+  range_diff: {
+    args: { path: string; old: string; new: string; base?: string | null; branch?: string | null };
+    returns: RangeDiff;
+  };
+  code_owners: { args: { path: string; files: Array<string> }; returns: Array<FileOwners> };
+  patch_text: { args: { path: string; ids: Array<string> }; returns: string };
+  speed_settings: { args: { path: string }; returns: SpeedSettings };
+  sparse_settings: { args: { path: string }; returns: SparseSettings };
+  unity_setup: { args: { path: string }; returns: UnitySetup };
+  signing_settings: { args: { path: string }; returns: SigningSettings };
+  submodules: { args: { path: string }; returns: Array<Submodule> };
+  file_diff: {
+    args: {
+      path: string;
+      source: DiffSource;
+      file: string;
+      oldPath?: string | null;
+      ignoreWhitespace?: boolean | null;
+    };
+    returns: FileDiff;
+  };
+  search_commits: {
+    args: { path: string; mode: CommitSearchMode; query: string };
+    returns: SearchResult;
+  };
+  find_commit: { args: { path: string; query: string }; returns: string | null };
+  team_work: { args: { path: string; days: number }; returns: TeamWork };
+  team_pulse: { args: { path: string; days: number }; returns: TeamPulse };
+  recent_requests: { args: { path: string }; returns: Array<RecentRequest> };
+  team_activity: { args: { path: string; days: number }; returns: TeamActivity };
+  blame_file: { args: { path: string; file: string; at?: string | null }; returns: Blame };
+  conflict_text: { args: { path: string; file: string }; returns: ConflictText };
+  lfs_storage: { args: { path: string }; returns: LfsStorage | null };
+  avatars: {
+    args: { path: string; emails: Array<string> };
+    returns: { [key in string]: string | null };
+  };
+  pull_requests: { args: { path: string }; returns: Array<PullRequest> };
+  new_request_info: {
+    args: { path: string; branch: string; local?: string | null };
+    returns: NewRequestInfo;
+  };
+  create_pull_request: { args: { path: string; request: NewRequest }; returns: PullRequest };
+  pull_request_details: { args: { path: string; number: number }; returns: RequestDetails };
+  request_conversation: { args: { path: string; number: number }; returns: RequestConversation };
+  comment_on_request: {
+    args: { path: string; number: number; body: string; thread?: string | null };
+    returns: string;
+  };
+  review_request: {
+    args: { path: string; number: number; verdict: ReviewVerdict; body: string };
+    returns: string;
+  };
+  issues: { args: { path: string; tracker: Tracker; keys: Array<string> }; returns: Array<Issue> };
+  my_issues: { args: { path: string; tracker: Tracker }; returns: Array<Issue> };
+  tracker_status: { args: { path: string; tracker: Tracker }; returns: TrackerStatus };
+  tracker_sign_in: {
+    args: { tracker: Tracker; user: string; token: string };
+    returns: TrackerStatus;
+  };
+  tracker_sign_out: { args: { tracker: Tracker }; returns: void };
+  merge_request: {
+    args: { path: string; number: number; options: MergeRequestOptions };
+    returns: string;
+  };
+  git_install: { args: Record<string, never>; returns: GitInstall };
+  look_for_git: { args: Record<string, never>; returns: GitInstall };
+  install_command_line_tools: { args: Record<string, never>; returns: void };
+  github_status: { args: Record<string, never>; returns: GitHubStatus };
+  github_sign_in: { args: { token: string }; returns: GitHubAccount };
+  github_sign_in_with_browser: { args: Record<string, never>; returns: GitHubAccount };
+  github_sign_out: { args: Record<string, never>; returns: void };
+  github_repositories: { args: Record<string, never>; returns: Array<AccountRepo> };
+  gitlab_status: { args: { host: string }; returns: GitLabStatus };
+  gitlab_sign_in: { args: { host: string; token: string }; returns: GitLabAccount };
+  gitlab_sign_in_with_browser: { args: { host: string }; returns: GitLabAccount };
+  gitlab_sign_out: { args: { host: string }; returns: void };
+  gitlab_repositories: { args: { host: string }; returns: Array<AccountRepo> };
+  worktrees: { args: { path: string }; returns: Array<Worktree> };
+  reflog: { args: { path: string; limit?: number | null }; returns: Array<ReflogEntry> };
+  remote_state: { args: { path: string }; returns: RemoteState };
+  commits_between: { args: { path: string; from: string; to: string }; returns: NewCommits };
+  diagnostics: { args: { path?: string | null }; returns: Diagnostics };
+  forget_avatars: { args: Record<string, never>; returns: void };
+  forget_missing_avatars: { args: Record<string, never>; returns: void };
+  stop_update_restart: { args: Record<string, never>; returns: void };
+  report_problem: { args: { what: string }; returns: string | null };
+  take_recovery_note: { args: Record<string, never>; returns: string | null };
+  cancel_action: { args: { path?: string | null }; returns: boolean };
+  activity_log: { args: Record<string, never>; returns: Array<LogEntry> };
+  watch_repository: { args: { path: string }; returns: void };
+  stop_watching: { args: Record<string, never>; returns: void };
+  run_action: { args: { path: string; action: Action }; returns: Outcome };
+  clone_repository: {
+    args: { url: string; parent: string; name: string; options?: CloneOptions | null };
+    returns: string;
+  };
+  set_app_icon: { args: { dark: boolean }; returns: void };
+  check_for_update: { args: { beta?: boolean | null }; returns: UpdateInfo | null };
+  download_update: { args: Record<string, never>; returns: void };
+  restart_to_update: { args: Record<string, never>; returns: boolean };
+  third_party_notices: { args: Record<string, never>; returns: ThirdPartyNotices };
+};
+
 export type CommitBrief = { id: string; summary: string; time: number };
 
 /**
