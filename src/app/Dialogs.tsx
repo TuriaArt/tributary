@@ -285,7 +285,10 @@ export function RepositoryDialogs(props: Props) {
         reason={dialog.reason}
         protectedName={protectedHead}
         onCancel={() => onClose()}
-        onDone={(message) => onFinish(message)}
+        onPush={() => {
+          onClose();
+          run({ kind: "push", force: true }, "push");
+        }}
       />
     )}
     {dialog?.kind === "stash" && snapshot.worktree && (

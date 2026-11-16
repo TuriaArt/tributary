@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { runAction, type RepoSnapshot } from "../api";
+import type { RepoSnapshot } from "../api";
 import { Dialog } from "./Dialog";
 import { TypeToConfirm } from "./Safety";
 import { Button } from "./ui/Button";
@@ -11,42 +11,28 @@ interface Props {
   /** Why it's asked for, when something stopped for it (a sync, into a rewritten branch). */
   reason?: string;
   onCancel: () => void;
-  onDone: (message: string) => void;
+  /** Go ahead: the dialog closes, and the push runs with its progress bar, like any push. */
+  onPush: () => void;
 }
 
 /** Asks for confirmation before `git push --force-with-lease`. */
-export function ForcePushDialog({ snapshot, protectedName, reason, onCancel, onDone }: Props) {
+export function ForcePushDialog({ snapshot, protectedName, reason, onCancel, onPush }: Props) {
   const [typed, setTyped] = useState("");
   const confirmed = !protectedName || typed.trim() === protectedName;
-  const [running, setRunning] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const branch = snapshot.headBranch ?? "HEAD";
   const target = snapshot.upstream?.name ?? `${snapshot.remotes.includes("origin") ? "origin" : (snapshot.remotes[0] ?? "the remote")}/${branch}`;
-
-  const push = async () => {
-    setRunning(true);
-    setError(null);
-    try {
-      onDone(await runAction(snapshot.path, { kind: "push", force: true }));
-    } catch (e) {
-      setError(String(e));
-      setRunning(false);
-    }
-  };
 
   return (
     <Dialog
       title={`Force push ${branch}?`}
-      error={error}
-      busy={running}
       onCancel={onCancel}
       buttons={
         <>
-          <Button kind="secondary" onClick={onCancel} disabled={running} autoFocus={!protectedName}>
+          <Button kind="secondary" onClick={onCancel} autoFocus={!protectedName}>
             Cancel
           </Button>
-          <Button kind="danger" onClick={push} disabled={running || !confirmed}>
-            {running ? "Force pushing…" : "Force push"}
+          <Button kind="danger" onClick={onPush} disabled={!confirmed}>
+            Force push
           </Button>
         </>
       }
