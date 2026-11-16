@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { unseenCommits, type Action, type CommitRow, type RepoSnapshot, type UnseenCommits } from "../api";
 import { ErrorBanner, type ErrorChoice } from "../components/ErrorBanner";
-import { explainError, gitHeadline, whoPushed, type ErrorFix } from "../lib/explainError";
+import { byWhom, explainError, gitHeadline, type ErrorFix } from "../lib/explainError";
 import { relativeTime, shortId } from "../lib/format";
 import type { OpenDialog } from "../menus/context";
 import type { Running } from "./constants";
@@ -55,8 +55,9 @@ export function RepoErrorBanner({ error, snapshot, head, running, act, openDialo
     };
   }, [stale, snapshot.path, upstream, error.upstreamWas, error.message]);
 
-  const pushedBy = unseen ? whoPushed(unseen.commits.map((commit) => commit.author)) : null;
-  const explained = explainError(error.message, { branch, upstream, pushedBy });
+  // Whose commits they are: who pushed them isn't known (a merge brings in others' commits).
+  const by = unseen ? byWhom(unseen.commits.map((commit) => commit.author), unseen.count > unseen.commits.length) : null;
+  const explained = explainError(error.message, { branch, upstream, unseen: unseen && unseen.count > 0 ? { count: unseen.count, by } : null });
   const headline = explained?.headline ?? gitHeadline(error.message);
   const busy = running !== null;
   const them = unseen?.count === 1 ? "it" : "them";
@@ -150,7 +151,7 @@ export function RepoErrorBanner({ error, snapshot, head, running, act, openDialo
   }
 
   let detail: ReactNode = explained?.detail;
-  if (stale && unseen && unseen.count > 0) detail = `${explained?.detail ?? ""} ${unseen.count === 1 ? "This one would be:" : `These ${unseen.count} would be:`}`;
+  if (stale && unseen && unseen.count > 0) detail = `${explained?.detail ?? ""} ${unseen.count === 1 ? "It would be:" : "These would be:"}`;
   // git's own words, when there's more to them than the headline.
   const raw = error.message.trim() !== headline ? error.message.trim() : undefined;
 
