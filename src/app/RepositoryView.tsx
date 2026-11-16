@@ -35,6 +35,7 @@ import type { ToastMessage } from "../components/Toast";
 import { Toolbar, type RemoteAction } from "../components/Toolbar";
 import { DetailsPane } from "./DetailsPane";
 import { RepositoryDialogs } from "./Dialogs";
+import { OpenRepositoryContext, type OpenRepository } from "./OpenRepository";
 import { fileMenuItems, lockMenuItems } from "./fileMenus";
 import { columnMenuItems, detailsActionsFor, pushMenuItems, submoduleMenuItems, worktreeMenuItems } from "./listMenus";
 import { RepositoryBanners } from "./RepositoryBanners";
@@ -410,8 +411,40 @@ export function RepositoryView(props: Props) {
     ) : null,
   );
 
+  // What's shown over the repository (its dialogs and banners) takes what it needs from here.
+  const repository: OpenRepository = {
+    snapshot,
+    byId,
+    branchLabel: snapshot.headBranch ?? "HEAD",
+    protectedHead: settings.protectedHead,
+    protectedBranches: settings.protectedBranches,
+    pins: settings.pins,
+    localBranches: [...counts.localBranches],
+    worktrees: props.worktrees,
+    loadDetails: props.details.load,
+    act,
+    push: () => act({ kind: "push", force: false }),
+    select,
+    goTo,
+    openDialog,
+    closeDialog: () => openDialog(null),
+    finished: (message, undo) => {
+      openDialog(null);
+      actions.finished(message, undo, repo.refresh);
+    },
+    notify: (text) => props.notify({ text }),
+    locksChanged: () => lfs.refresh(true),
+    openTab: props.openTab,
+    requestCreated: props.onRequestCreated,
+    signIn: () => {
+      openDialog(null);
+      props.openSettings("Accounts");
+    },
+    openSettings: (section) => props.openSettings(section),
+  };
+
   return (
-    <Contexts issueTracker={issueTracker} checkWhy={setWhy}>
+    <Contexts repository={repository} issueTracker={issueTracker} checkWhy={setWhy}>
       {!preferences.simpleMode && (
         <Toolbar
           snapshot={snapshot}
@@ -464,8 +497,6 @@ export function RepositoryView(props: Props) {
           props.lockRelease.release();
         }}
         showWholeHistory={() => preferences.setFirstParentOnly(false)}
-        openWorktree={props.openTab}
-        openDialog={openDialog}
       />
       {preferences.simpleMode ? (
         <SimpleView
@@ -669,47 +700,19 @@ export function RepositoryView(props: Props) {
       {tours.offer && !tours.active && (
         <TourOffer tour={tours.offer} onStart={() => tours.start(tours.offer!.id)} onLater={tours.dismissOffer} onNever={tours.never} />
       )}
-      <RepositoryDialogs
-        notify={(text) => props.notify({ text })}
-        dialog={props.dialog}
-        snapshot={snapshot}
-        byId={byId}
-        branchLabel={snapshot.headBranch ?? "HEAD"}
-        protectedHead={settings.protectedHead}
-        protectedBranches={settings.protectedBranches}
-        pins={settings.pins}
-        loadDetails={props.details.load}
-        run={act}
-        select={select}
-        goTo={goTo}
-        open={openDialog}
-        onClose={() => openDialog(null)}
-        onFinish={(message, undo) => {
-          openDialog(null);
-          actions.finished(message, undo, repo.refresh);
-        }}
-        onLocksChanged={() => lfs.refresh(true)}
-        worktrees={props.worktrees}
-        localBranches={[...counts.localBranches]}
-        openWorktree={props.openTab}
-        push={() => act({ kind: "push", force: false })}
-        onRequestCreated={props.onRequestCreated}
-        openSettings={(section) => props.openSettings(section)}
-        signIn={() => {
-          openDialog(null);
-          props.openSettings("Accounts");
-        }}
-      />
+      <RepositoryDialogs dialog={props.dialog} />
       {why && <CheckWhy repoPath={snapshot.path} check={why} openUrl={openInBrowser} notify={(text) => props.notify({ text })} onClose={() => setWhy(null)} />}
     </Contexts>
   );
 }
 
-/** What the views inside a repository's ask for: its issue tracker, and showing why a check failed. */
-function Contexts({ issueTracker, checkWhy, children }: { issueTracker: ComponentProps<typeof IssueTrackerContext.Provider>["value"]; checkWhy: (check: WhyCheck) => void; children: ReactNode }) {
+/** What the views inside a repository's ask for: the repository itself, its issue tracker, and showing why a check failed. */
+function Contexts({ repository, issueTracker, checkWhy, children }: { repository: OpenRepository; issueTracker: ComponentProps<typeof IssueTrackerContext.Provider>["value"]; checkWhy: (check: WhyCheck) => void; children: ReactNode }) {
   return (
-    <IssueTrackerContext.Provider value={issueTracker}>
-      <CheckWhyContext.Provider value={checkWhy}>{children}</CheckWhyContext.Provider>
-    </IssueTrackerContext.Provider>
+    <OpenRepositoryContext.Provider value={repository}>
+      <IssueTrackerContext.Provider value={issueTracker}>
+        <CheckWhyContext.Provider value={checkWhy}>{children}</CheckWhyContext.Provider>
+      </IssueTrackerContext.Provider>
+    </OpenRepositoryContext.Provider>
   );
 }

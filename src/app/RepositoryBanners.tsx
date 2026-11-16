@@ -20,7 +20,6 @@ import type { Repository } from "./useRepository";
 import type { RepositorySettings } from "./useRepositorySettings";
 import type { Selection } from "./useSelection";
 import type { Submodules } from "./useSubmodules";
-import type { OpenDialog } from "../menus/context";
 import { RepoErrorBanner } from "./RepoErrorBanner";
 import { Button } from "../components/ui/Button";
 
@@ -40,15 +39,12 @@ interface Props {
   alwaysUpdateSubmodules: (() => void) | null;
   /** Turn off "only the checked-out branch's own history". */
   showWholeHistory: () => void;
-  /** Open another working tree, in its tab. */
-  openWorktree: (path: string) => void;
   /** A commit was made from here (without hooks): the message box starts empty again. */
   onCommitted: () => void;
   /** What arrived since you were last here (useSinceLastHere), going to a commit, and dismissing it. */
   since: SinceLastHere | null;
   goTo: (id: string) => void;
   dismissSince: () => void;
-  openDialog: (dialog: OpenDialog) => void;
 }
 
 /**
@@ -56,7 +52,7 @@ interface Props {
  * stopped, the last error, Git LFS trouble, and what part of the history is shown.
  */
 export function RepositoryBanners(props: Props) {
-  const { snapshot, repo, actions, selection, highlight, settings, lfsHealth, lockRelease, showWholeHistory, openWorktree } = props;
+  const { snapshot, repo, actions, selection, highlight, settings, lfsHealth, lockRelease, showWholeHistory } = props;
   const { act, running } = actions;
   // An action's progress shows in the repository it runs in (its tab shows it too).
   const progress = actions.progress;
@@ -134,13 +130,8 @@ export function RepositoryBanners(props: Props) {
       {error && !hook && (
         <RepoErrorBanner
           error={error}
-          snapshot={snapshot}
           head={snapshot.headCommit ? selection.byId.get(snapshot.headCommit) : undefined}
           running={running}
-          act={act}
-          openDialog={props.openDialog}
-          openWorktree={openWorktree}
-          goTo={props.goTo}
           onDismiss={() => setError(null)}
         />
       )}
