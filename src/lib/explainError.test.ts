@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { explainError, gitHeadline, whoPushed } from "./explainError";
+import { byWhom, explainError, gitHeadline } from "./explainError";
 
 // git's messages as git prints them.
 const FETCH_FIRST = `To github.com:rosa-bell/notebook.git
@@ -51,13 +51,14 @@ describe("explainError", () => {
     expect(explained?.fixes).toEqual(["sync", "forcePush"]);
   });
 
-  it("says who a force push stopped for, once that's known, and offers to replace their commits too", () => {
+  it("says how many commits a force push stopped for, and whose, once that's known, and offers to replace them too", () => {
     const context = { branch: "feat/environment-materials", upstream: "origin/feat/environment-materials" };
-    expect(explainError(STALE, context)?.headline).toBe(
-      "Force push stopped: someone pushed to origin/feat/environment-materials since you last fetched",
+    expect(explainError(STALE, context)?.headline).toBe("Force push stopped: origin/feat/environment-materials has commits you haven't fetched");
+    const explained = explainError(STALE, { ...context, unseen: { count: 2, by: "Theo Park" } });
+    expect(explained?.headline).toBe("Force push stopped: origin/feat/environment-materials has 2 commits you haven't fetched, by Theo Park");
+    expect(explainError(STALE, { ...context, unseen: { count: 1, by: "Theo Park" } })?.headline).toBe(
+      "Force push stopped: origin/feat/environment-materials has a commit you haven't fetched, by Theo Park",
     );
-    const explained = explainError(STALE, { ...context, pushedBy: "Theo Park" });
-    expect(explained?.headline).toBe("Force push stopped: Theo Park pushed to origin/feat/environment-materials since you last fetched");
     expect(explained?.fixes).toEqual(["forcePushAnyway", "showUnseen"]);
   });
 
@@ -121,11 +122,16 @@ describe("gitHeadline", () => {
   });
 });
 
-describe("whoPushed", () => {
-  it("names one or two people, and counts the rest", () => {
-    expect(whoPushed([])).toBeNull();
-    expect(whoPushed(["Theo Park", "Theo Park"])).toBe("Theo Park");
-    expect(whoPushed(["Theo Park", "Rosa Bell"])).toBe("Theo Park and Rosa Bell");
-    expect(whoPushed(["Theo Park", "Rosa Bell", "Lea Fischer"])).toBe("Theo Park and 2 others");
+describe("byWhom", () => {
+  it("names one or two authors, and counts the rest", () => {
+    expect(byWhom([])).toBeNull();
+    expect(byWhom(["Theo Park", "Theo Park"])).toBe("Theo Park");
+    expect(byWhom(["Theo Park", "Rosa Bell"])).toBe("Theo Park and Rosa Bell");
+    expect(byWhom(["Theo Park", "Rosa Bell", "Lea Fischer"])).toBe("Theo Park and 2 others");
+  });
+
+  it("says there are others when not every commit was listed", () => {
+    expect(byWhom(["Priya Nair"], true)).toBe("Priya Nair and others");
+    expect(byWhom(["Priya Nair", "Sam Okafor", "Lena Kovacs"], true)).toBe("Priya Nair, Sam Okafor and others");
   });
 });

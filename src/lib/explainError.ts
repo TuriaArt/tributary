@@ -39,8 +39,8 @@ export interface ErrorContext {
   branch?: string | null;
   /** Its remote branch: "origin/main". */
   upstream?: string | null;
-  /** Who pushed the commits a force push stopped for ("Theo Park"), once that's known. */
-  pushedBy?: string | null;
+  /** The commits a force push stopped for, once they're known: how many, and whose ("Theo Park"). */
+  unseen?: { count: number; by: string | null } | null;
 }
 
 /** The host in git's message ("github.com"): where it pushed to ("To …"), or the first address in it. */
@@ -80,7 +80,9 @@ export function explainError(message: string, context: ErrorContext = {}): Expla
   }
   if (rejected && rejected[3] === "stale info") {
     return {
-      headline: `Force push stopped: ${context.pushedBy ?? "someone"} pushed to ${remoteBranch} since you last fetched`,
+      headline: context.unseen
+        ? `Force push stopped: ${remoteBranch} has ${context.unseen.count === 1 ? "a commit" : `${context.unseen.count.toLocaleString()} commits`} you haven't fetched${context.unseen.by ? `, by ${context.unseen.by}` : ""}`
+        : `Force push stopped: ${remoteBranch} has commits you haven't fetched`,
       detail: "A force push stops for commits you haven't seen, so they aren't removed by mistake.",
       fixes: ["forcePushAnyway", "showUnseen"],
     };
@@ -206,10 +208,15 @@ export function gitHeadline(message: string): string {
   return plain === said ? said : plain.charAt(0).toUpperCase() + plain.slice(1);
 }
 
-/** Names for who pushed: "Theo Park", "Theo Park and Rosa Bell", "Theo Park and 2 others". */
-export function whoPushed(authors: string[]): string | null {
+/**
+ * Whose commits these are, by their authors: "Theo Park", "Theo Park and Rosa Bell", "Theo
+ * Park and 2 others". With `more`, some commits weren't listed, so their authors aren't
+ * known: "Theo Park and others".
+ */
+export function byWhom(authors: string[], more = false): string | null {
   const names = [...new Set(authors)];
   if (names.length === 0) return null;
+  if (more) return `${names.slice(0, 2).join(", ")} and others`;
   if (names.length === 1) return names[0];
   if (names.length === 2) return `${names[0]} and ${names[1]}`;
   return `${names[0]} and ${names.length - 1} others`;

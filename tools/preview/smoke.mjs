@@ -2283,7 +2283,7 @@ try {
     await dialog.getByLabel("Type main to confirm").fill("main");
     expect(!(await dialog.getByRole("checkbox").isChecked()), "the box to replace someone else's commits starts ticked");
     await dialog.getByRole("button", { name: "Force push", exact: true }).click();
-    const stopped = page.locator(".error-explained", { hasText: "Force push stopped: Lea Fischer pushed to origin/main since you last fetched" });
+    const stopped = page.locator(".error-explained", { hasText: "Force push stopped: origin/main has a commit you haven't fetched, by Lea Fischer" });
     await stopped.locator(".error-commits li", { hasText: "Say why, too" }).waitFor({ timeout: 20_000 });
     expect(git("rev-parse", "origin/main") === theirNew, "the teammate's commit wasn't fetched to be seen");
     expect(git("ls-remote", "origin", "refs/heads/main").startsWith(theirNew), "the safe force push replaced the teammate's commit");
