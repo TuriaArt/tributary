@@ -2179,6 +2179,10 @@ try {
     await dismissToast();
     await dragOnto(inSidebar);
     await page.locator(".error-banner", { hasText: "pick-target already has" }).waitFor({ timeout: 10_000 });
+    // A refresh (as after a fetch, or when files change) leaves it there to be read.
+    await page.keyboard.press("F5");
+    await page.waitForTimeout(1500);
+    expect(await page.locator(".error-banner", { hasText: "pick-target already has" }).isVisible(), "a refresh took the error away");
     await page.locator(".error-banner").getByRole("button", { name: "Dismiss" }).click();
     git("branch", "-D", "pick-source", "pick-target");
     await page.keyboard.press("F5");

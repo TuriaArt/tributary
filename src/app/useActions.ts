@@ -172,8 +172,8 @@ export function useActions({ snapshot, load, protectedHead, openDialog, setError
         if (outcome?.message) callbacks.current.record?.(before.path, outcome.message, action, undoOf(action, outcome, before));
         return failure === null;
       }
-      // Reload even after a failure (a pull with conflicts still changes things), and only
-      // then show the result, since reloading clears old errors.
+      // Reload even after a failure (a pull with conflicts still changes things), then show
+      // the result.
       await load(before.path, "refresh", Math.max(PAGE_SIZE, before.commits.length));
       after(action, kind, outcome);
 

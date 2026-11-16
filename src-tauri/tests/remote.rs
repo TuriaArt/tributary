@@ -236,6 +236,41 @@ fn syncs_by_pulling_then_pushing_and_stops_for_a_rewritten_branch() {
 }
 
 #[test]
+fn syncs_by_rebasing_when_git_only_fast_forwards() {
+    let _turn = remote_turn();
+    let remote = TempRepo::bare("sync-ff-remote.git");
+    let mut alice = TempRepo::new("sync-ff-alice");
+    alice.git(&["remote", "add", "origin", remote.url()]);
+    alice.commit("a.txt", "First");
+    let push = || Action::Push {
+        force: false,
+        no_verify: false,
+    };
+    run(&alice, push()).unwrap();
+    let mut bob = TempRepo::clone_of("sync-ff-bob", &remote);
+    bob.git(&["config", "user.name", "Bob"]);
+    bob.git(&["config", "user.email", "bob@example.com"]);
+    // Pulls only fast-forward here: git refuses to pull a branch with commits of its own.
+    bob.git(&["config", "pull.ff", "only"]);
+
+    let hers = alice.commit("b.txt", "From Alice");
+    run(&alice, push()).unwrap();
+    bob.commit("bob.txt", "From Bob");
+    assert_eq!(
+        run(&bob, Action::Sync).unwrap(),
+        "Synced main: pulled 1 commit, then pushed 1 commit"
+    );
+    // Bob's commit went on top of Alice's, without a merge commit, and was pushed.
+    assert_eq!(bob.git(&["rev-parse", "main~1"]), hers);
+    assert_eq!(bob.git(&["log", "-1", "--format=%s"]), "From Bob");
+    assert_eq!(bob.git(&["rev-list", "--merges", "--count", "main"]), "0");
+    assert_eq!(
+        remote.git(&["rev-parse", "main"]),
+        bob.git(&["rev-parse", "main"])
+    );
+}
+
+#[test]
 fn force_push_replaces_the_remote_branch() {
     let _turn = remote_turn();
     let remote = TempRepo::bare("force-remote.git");
