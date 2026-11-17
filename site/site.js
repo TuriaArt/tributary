@@ -805,10 +805,12 @@
     const col = CHECK_COLOURS[look][state];
     const add = (attrs, style) => { const c = svg("circle", attrs, g); Object.assign(c.style, style || {}); if (state === "pending" && !RM) c.classList.add("tm-ci-run"); return c; };
     if (ci === "beside") {
+      // As the app: half outside the node's lower right, cut out of it by a ring of the
+      // row's colour.
       svg("circle", { cx: x, cy: y, r }, g).style.fill = lane;
-      const bx = x + r + 2.2, by = y + r * 0.55;
-      svg("circle", { cx: bx, cy: by, r: 4.2 }, g).style.fill = bg;
-      add({ cx: bx, cy: by, r: 2.9 }, { fill: col });
+      const d = Math.round(((r + 1.7) / Math.SQRT2) * 2) / 2;
+      svg("circle", { cx: x + d, cy: y + d, r: 5 }, g).style.fill = bg;
+      add({ cx: x + d, cy: y + d, r: 3.5 }, { fill: col });
     } else if (ci === "ringed") {
       svg("circle", { cx: x, cy: y, r: r + 2.2 }, g).style.fill = bg;
       add({ cx: x, cy: y, r: r }, { fill: col, stroke: lane, strokeWidth: 2 });
@@ -922,7 +924,7 @@
         const s = $("svg", b); s.innerHTML = "";
         svg("path", { d: turnD([14, 13], [26, 13], [26, 28], 8, "smooth"), fill: "none", "stroke-width": 2.4, "stroke-linecap": "round" }, s).style.stroke = pal[1];
         svg("path", { d: "M14 2V28", "stroke-width": 2.4, "stroke-linecap": "round" }, s).style.stroke = pal[0];
-        ciMark(s, 14, 13, 4.6, pal[0], b.dataset.v, "success", "dark", "#1a1d24");
+        ciMark(s, 14, 13, 4.6, pal[0], b.dataset.v, "success", "dark", "var(--opt-bg)");
       });
     }
     function sync() {
