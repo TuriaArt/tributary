@@ -201,6 +201,12 @@ and put the public key in `tauri.conf.json`. Apps signed with the old key can't 
 npm run notices
 ```
 
+## Website
+
+The website is in `site/`: plain HTML, CSS and JavaScript, with no build step and nothing loaded from anywhere else (its fonts, logo and two pictures are in `site/assets/`). Open `site/index.html` in a browser to see it, or serve the folder with `python3 -m http.server --directory site`. It's dark only, follows the system's reduced motion setting, and its demos show made-up people and repositories, like the preview's.
+
+The Website workflow (`.github/workflows/website.yml`) publishes it on GitHub Pages when `site/` changes on develop, or when it's run from the Actions tab. Pages has to be switched on once, in the repository's Settings, Pages, Source: GitHub Actions; until then the workflow says so and publishes nothing. The download buttons link to the latest release, so a release needs no change to the site.
+
 ## Project layout
 
 | Path | What it does |
@@ -237,6 +243,7 @@ npm run notices
 | `src/components/ui/` | The parts the interface is built from: `Button`, `Switch`, `Field` and `Chip` |
 | `src/catalogue/` | The catalogue page (`?catalogue`): the building blocks together, dark and light |
 | `src/lib/` | Logic without an interface (search, selection, undo, paths, diagnostics, …), with its tests |
+| `site/` | The website, published on GitHub Pages (see [Website](#website)) |
 | `src/styles/` | The styles, an area per file, applied in the order `src/styles.css` lists them. `theme.css` holds the colours and themes, and the scales for text (`--type-xs` to `--type-4xl`), corners (`--radius-xs` to `--radius-pill`) and space (`--space-2` to `--space-96`): sizes, corners, padding, margins and gaps use those steps, never their own pixels, which a test checks (`src/lib/styles.test.ts`). An offset that lines something up with something else can stay in pixels, with its reason in a comment beside it. Colours come from `theme.css` too; one that's the same in every theme on purpose has its reason beside it, which the same test checks. Keyboard focus shows the same ring everywhere (`--focus-ring`), which `src/lib/focus.test.ts` checks. Words on controls are trimmed to their capitals (`.button-label`, which `Button` and `labelled()` in `ui/Button.tsx` add), so they sit in the middle; the smoke test checks every control on its screens, at 100% to 200% (`tools/preview/aligned.mjs`). Browsers draw letters on whole screen pixels, so the words' box is their capitals' height in whole pixels (`--cap-pixels`), and a control with words at `--type-sm` or `--type-base` is an odd number of pixels tall, at `--type-xs` an even number; the smoke test and the desktop tests on Windows check that in a screenshot at 100% (`tools/e2e/centred.mjs`) |
 | `tools/preview/` | The browser preview, demo repositories and the smoke test |
 | `tools/e2e/` | End-to-end tests of the desktop app, through tauri-driver and WebDriver |
