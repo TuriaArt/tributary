@@ -141,22 +141,22 @@ export async function startSession({ browser, browserName, userAgent, axeSource,
   };
 
   /**
-   * What's on screen meets WCAG 2.1's level A and AA criteria that can be checked
-   * automatically. Other branches' labels in the graph are left out of the contrast check:
+   * What's on screen (or just what's `within` a selector) meets WCAG 2.1's level A and AA
+   * criteria that can be checked automatically. Other branches' labels in the graph are left out of the contrast check:
    * they're faded on purpose until their row is pointed at or selected.
    */
-  session.accessible = async (where, frame = page) => {
+  session.accessible = async (where, frame = page, { within = null } = {}) => {
     // Once what's moving has stopped: halfway through fading in, text reads as fainter than it is.
     await frame.waitForFunction(() => document.getAnimations().every((animation) => animation.playState !== "running" || animation.effect?.getComputedTiming().iterations === Infinity), null, { timeout: 5000 });
     if (!(await frame.evaluate(() => "axe" in window))) await frame.addScriptTag({ content: axeSource });
-    const problems = await frame.evaluate(async (faded) => {
-      const { violations } = await window.axe.run(document, { runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"] } });
+    const problems = await frame.evaluate(async ([faded, within]) => {
+      const { violations } = await window.axe.run(within ? document.querySelector(within) : document, { runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"] } });
       return violations.flatMap((violation) =>
         violation.nodes
           .filter((node) => violation.id !== "color-contrast" || !document.querySelector(node.target.join(" "))?.closest(faded))
           .map((node) => `${violation.id} at ${node.target.join(" ")}${violation.id === "color-contrast" ? ` (${node.any[0]?.data?.contrastRatio} to 1)` : ""}`),
       );
-    }, ".refs-cell .ref-pill:not(.current)");
+    }, [".refs-cell .ref-pill:not(.current)", within]);
     session.expect(problems.length === 0, `${where}: ${[...new Set(problems)].slice(0, 6).join("; ")}`);
     await session.centred(where, frame);
   };

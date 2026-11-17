@@ -98,7 +98,10 @@ use remote::Force;
 pub use remote::{UnseenCommit, UnseenCommits, unseen_commits};
 pub use remote_settings::{RemoteInfo, remotes};
 pub use rewrites::{BranchVersion, CommitPair, PairStatus, RangeDiff, branch_versions, range_diff};
-pub use search::{SearchMode, SearchResult, search_commits};
+pub use search::{
+    AuthorMatch, FileMatch, FoundCommit, SearchMode, SearchOverview, SearchResult, search_commits,
+    search_overview,
+};
 pub use setup_check::{CheckStatus, Engine, ProjectSetup, SetupCheck, SetupFix, project_setup};
 pub use shelves::{Shelf, ShelfFile, shelves};
 pub use signing::{SigningKey, SigningMode, SigningSettings, signing_settings};

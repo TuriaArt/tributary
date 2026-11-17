@@ -647,6 +647,13 @@ pub async fn search_commits(
     blocking(move || actions::search_commits(&PathBuf::from(path), mode, &query)).await
 }
 
+/// Every kind of match for `query` at once (but code): commits by message and id, authors,
+/// and files.
+#[tauri::command]
+pub async fn search_overview(path: String, query: String) -> Result<actions::SearchOverview> {
+    blocking(move || actions::search_overview(&PathBuf::from(path), &query)).await
+}
+
 /// The commit `query` names (an id or its start, a branch, a tag, or a day), for Go to Commit.
 #[tauri::command]
 pub async fn find_commit(path: String, query: String) -> Result<Option<String>> {

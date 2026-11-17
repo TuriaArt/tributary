@@ -194,6 +194,7 @@ commands! {
         submodules(path: String) -> Vec<actions::Submodule>;
         file_diff(path: String, source: actions::DiffSource, file: String, old_path: Option<String>, ignore_whitespace: Option<bool>) -> actions::FileDiff;
         search_commits(path: String, mode: actions::SearchMode, query: String) -> actions::SearchResult;
+        search_overview(path: String, query: String) -> actions::SearchOverview;
         find_commit(path: String, query: String) -> Option<String>;
         team_work(path: String, days: u32) -> actions::TeamWork;
         team_pulse(path: String, days: u32) -> actions::TeamPulse;

@@ -54,9 +54,14 @@ export function commitDetails(path: string, id: string): Promise<CommitDetails> 
   return invoke("commit_details", { path, id });
 }
 
-/** The commits (newest first, in every branch) that changed a matching file, or added or removed the code. */
-export function searchCommits(path: string, mode: CommitSearchMode, query: string): Promise<{ ids: string[]; truncated: boolean }> {
+/** The commits (newest first, in every branch) whose message, author or id matches, that changed a matching file, or that added or removed the code. */
+export function searchCommits(path: string, mode: CommitSearchMode, query: string) {
   return invoke("search_commits", { path, mode, query });
+}
+
+/** Every kind of match at once (but code): commits by message and id, authors, and files. */
+export function searchOverview(path: string, query: string) {
+  return invoke("search_overview", { path, query });
 }
 
 /** The commit `query` names: an id or its start, a branch, a tag, or a day (2026-10-01), for Go to Commit. */
