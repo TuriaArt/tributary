@@ -17,6 +17,35 @@ export default async function ({ page, demos, step, accessible, expect, toast, d
   });
 
   await step("starts the search box where the history starts, with the sidebar shown or hidden", async () => {
+    // What happened, for when this fails on CI and nowhere else: every click and key, the
+    // sidebar's button and frame coming and going, and every tenth of a second where the
+    // history and the search box start.
+    await page.evaluate(() => {
+      const started = performance.now();
+      const log = (window.__sidebarLog = []);
+      const at = () => `${Math.round(performance.now() - started)}ms`;
+      const name = (element) => (element instanceof Element ? `${element.tagName.toLowerCase()}${element.getAttribute("aria-label") ? `[${element.getAttribute("aria-label")}]` : ""}.${[...element.classList].join(".")}` : String(element));
+      for (const type of ["click", "keydown"]) window.addEventListener(type, (event) => log.push(`${at()} ${type} ${event.key ?? name(event.target)}`), true);
+      const toggle = document.querySelector("[aria-label='Toggle the branches sidebar']");
+      new MutationObserver(() => log.push(`${at()} pressed=${toggle?.getAttribute("aria-pressed")}`)).observe(toggle, { attributes: true, attributeFilter: ["aria-pressed"] });
+      new MutationObserver((changes) => {
+        for (const change of changes) {
+          for (const node of change.addedNodes) if (node instanceof Element && node.matches(".sidebar-frame, .sidebar-over, .sidebar-strip")) log.push(`${at()} + ${name(node)}`);
+          for (const node of change.removedNodes) if (node instanceof Element && node.matches(".sidebar-frame, .sidebar-over, .sidebar-strip")) log.push(`${at()} - ${name(node)}`);
+        }
+      }).observe(document.body, { childList: true, subtree: true });
+      let last = "";
+      const sample = () => {
+        const left = (selector) => Math.round(document.querySelector(selector)?.getBoundingClientRect().left ?? -1);
+        const frame = document.querySelector(".sidebar-frame");
+        const now = `list ${left(".commit-list")} search ${left(".search")} frame ${frame ? Math.round(frame.getBoundingClientRect().width) : "none"}${frame?.classList.contains("closing") ? " closing" : ""} stored ${localStorage.getItem("tributary.sidebar.open")} tabs ${document.querySelectorAll(".tab").length} lists ${document.querySelectorAll(".commit-list").length} toggles ${document.querySelectorAll("[aria-label='Toggle the branches sidebar']").length}`;
+        if (now !== last) log.push(`${at()} ${now}`);
+        last = now;
+      };
+      sample();
+      window.__sidebarSampler = setInterval(sample, 100);
+    });
+    const said = async () => `; what happened: ${await page.evaluate(() => window.__sidebarLog.join(" | ")).catch(() => "(no log)")}`;
     const left = async (selector) => Math.round((await page.locator(selector).first().boundingBox()).x);
     const lined = async (when) => {
       // Once the sidebar has finished coming or going.
@@ -24,30 +53,46 @@ export default async function ({ page, demos, step, accessible, expect, toast, d
       await page.waitForFunction(() => Math.abs(document.querySelector(".search").getBoundingClientRect().left - document.querySelector(".commit-list").getBoundingClientRect().left) <= 1, null, { timeout: 3000 }).catch(() => {});
       const search = await left(".search");
       const list = await left(".commit-list");
-      expect(Math.abs(search - list) <= 1, `${when}, the search box starts at ${search}px and the history at ${list}px`);
+      expect(Math.abs(search - list) <= 1, `${when}, the search box starts at ${search}px and the history at ${list}px${Math.abs(search - list) <= 1 ? "" : await said()}`);
     };
-    await lined("with the sidebar");
     const toggle = page.getByRole("button", { name: "Toggle the branches sidebar" });
-    await toggle.click();
-    // Shown again even if a check below fails: the steps after this one use the sidebar.
-    const showAgain = async () => {
-      if (!(await page.locator(".sidebar-frame").count())) await toggle.click();
+    try {
+      await lined("with the sidebar");
+      await toggle.click();
+      await page.locator(".sidebar-frame").waitFor({ state: "detached", timeout: 5000 });
+      // Without the sidebar, the history starts at the window's edge: the search box follows the branch's chip.
+      await page.waitForFunction(() => document.querySelector(".search").getBoundingClientRect().left < 200, null, { timeout: 3000 }).catch(() => {});
+      const repo = await page.locator(".toolbar-repo").boundingBox();
+      const search = await left(".search");
+      const follows = search > repo.x + repo.width && search < repo.x + repo.width + 40;
+      expect(follows, `without the sidebar, the search box starts at ${search}px${follows ? "" : await said()}`);
+      await toggle.click();
       await page.locator(".sidebar-frame").waitFor({ timeout: 5000 });
-    };
-    await page.locator(".sidebar-frame").waitFor({ state: "detached", timeout: 5000 });
-    // Without the sidebar, the history starts at the window's edge: the search box follows the branch's chip.
-    await page.waitForFunction(() => document.querySelector(".search").getBoundingClientRect().left < 200, null, { timeout: 3000 }).catch(() => {});
-    const repo = await page.locator(".toolbar-repo").boundingBox();
-    const search = await left(".search");
-    await showAgain();
-    expect(search > repo.x + repo.width && search < repo.x + repo.width + 40, `without the sidebar, the search box starts at ${search}px`);
-    await lined("with the sidebar back");
+      await lined("with the sidebar back");
+    } finally {
+      // Shown again whatever happened above: the steps after this one use the sidebar.
+      await page.evaluate(() => clearInterval(window.__sidebarSampler)).catch(() => {});
+      if ((await toggle.getAttribute("aria-pressed")) !== "true") await toggle.click();
+      await page.locator(".sidebar-frame:not(.closing)").waitFor({ timeout: 5000 });
+    }
   });
 
   await step("offers to update a submodule a pull left behind, and updates it", async () => {
     const banner = page.locator(".notice-banner", { hasText: "editor-kit" });
     await banner.waitFor({ timeout: 10_000 });
-    await page.locator(".sidebar-submodule", { hasText: "out of date" }).waitFor({ timeout: 5000 });
+    await page
+      .locator(".sidebar-submodule", { hasText: "out of date" })
+      .waitFor({ timeout: 5000 })
+      .catch(async (error) => {
+        const sidebar = await page.evaluate(() => ({
+          pressed: document.querySelector("[aria-label='Toggle the branches sidebar']")?.getAttribute("aria-pressed"),
+          frame: document.querySelector(".sidebar-frame")?.className ?? "none",
+          submodules: [...document.querySelectorAll(".sidebar-submodule")].map((row) => row.innerText.replace(/\s+/g, " ")),
+          tabs: document.querySelectorAll(".tab").length,
+          lists: document.querySelectorAll(".commit-list").length,
+        }));
+        throw new Error(`${error.message.split("\n")[0]} (the sidebar: ${JSON.stringify(sidebar)})`);
+      });
     await banner.getByRole("button", { name: "Update it" }).click();
     await banner.waitFor({ state: "detached", timeout: 15_000 });
     await page.locator(".sidebar-submodule", { hasText: "out of date" }).waitFor({ state: "detached", timeout: 5000 });
