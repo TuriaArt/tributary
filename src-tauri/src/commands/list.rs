@@ -191,6 +191,9 @@ commands! {
         sparse_settings(path: String) -> actions::SparseSettings;
         unity_setup(path: String) -> actions::UnitySetup;
         signing_settings(path: String) -> actions::SigningSettings;
+        ssh_keys() -> Vec<actions::SshKey>;
+        generate_ssh_key(name: String, comment: String, passphrase: String) -> actions::SshKey;
+        check_ssh_key(host: String, public_key: String) -> actions::SshCheck;
         submodules(path: String) -> Vec<actions::Submodule>;
         file_diff(path: String, source: actions::DiffSource, file: String, old_path: Option<String>, ignore_whitespace: Option<bool>) -> actions::FileDiff;
         search_commits(path: String, mode: actions::SearchMode, query: String) -> actions::SearchResult;

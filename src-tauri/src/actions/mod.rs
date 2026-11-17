@@ -45,6 +45,7 @@ mod snapshot;
 mod sparse;
 mod speed;
 mod split;
+pub mod ssh;
 mod stacks;
 mod stash;
 mod submodules;
@@ -108,6 +109,7 @@ pub use signing::{SigningKey, SigningMode, SigningSettings, signing_settings};
 pub use size::{BigFile, RepoSize, SizeGroup, repo_size};
 pub use sparse::{FolderChoice, SparseSettings, sparse_settings};
 pub use speed::{SpeedSettings, SpeedUp, speed_settings};
+pub use ssh::{SshCheck, SshKey, check_ssh_key, generate_ssh_key, ssh_keys};
 pub use stacks::{Stacked, branch_stacks};
 pub use submodules::{Submodule, SubmoduleState, submodules};
 pub use team::{

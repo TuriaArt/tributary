@@ -1,6 +1,7 @@
 import type { ColumnOptions } from "../components/CommitList";
 import { appearanceRows } from "../components/AppearanceRows";
-import { BranchIcon, ClockIcon, ColumnsIcon, ContrastIcon, DiffIcon, FetchIcon, GearIcon, HistoryIcon, LockIcon, TransferIcon, UserIcon } from "../components/Icons";
+import { BranchIcon, ClockIcon, ColumnsIcon, ContrastIcon, DiffIcon, FetchIcon, GearIcon, HistoryIcon, KeyIcon, LockIcon, TransferIcon, UserIcon } from "../components/Icons";
+import { SshKeys } from "../components/SshKeys";
 import { describeRun, nextRun, type ScheduleDays } from "../lib/schedule";
 import type { SettingRow, SettingsSection } from "../components/SettingsDialog";
 import type { GitHubStatus, GitLabStatus } from "../api";
@@ -213,6 +214,11 @@ export function settingsSections({ preferences, onFetchLatestNow, accounts, diff
           onSignOut: accounts.onSignOut,
         }),
       ],
+    },
+    {
+      title: "SSH keys",
+      icon: <KeyIcon size={15} />,
+      rows: [{ kind: "block", label: "Your SSH keys", content: <SshKeys /> }],
     },
     {
       title: "Fetching",
