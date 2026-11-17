@@ -96,7 +96,7 @@ ESLint checks the interface's code, with React's rules of hooks:
 npm run lint
 ```
 
-A smoke test clicks through the main parts of the app in Chromium, on fresh demo repositories (it needs Playwright, see [tools/preview](../tools/preview/README.md)). `npm run preview:smoke -- --browser webkit` runs it in WebKit, Safari's engine, which draws the Mac app's window:
+A smoke test clicks through the main parts of the app in Chromium, on fresh demo repositories (it needs Playwright, see [tools/preview](../tools/preview/README.md)). Its steps are in `tools/preview/smoke/steps`, a file for each area of the app, which run three at a time, each in a browser of its own on fresh demos; a file that fails is run once more, and passes as flaky if it passes then. `npm run preview:smoke -- --browser webkit` runs it in WebKit, Safari's engine, which draws the Mac app's window:
 
 ```bash
 npm run preview:smoke
