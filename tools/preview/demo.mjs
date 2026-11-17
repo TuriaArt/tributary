@@ -1100,7 +1100,18 @@ function writeDemoGlobalConfig(root) {
 
 /** What to run the preview's git with on these demos (see DEMO_ENV and writeDemoGlobalConfig). */
 export function demoEnv(demos) {
-  return { ...DEMO_ENV, GIT_CONFIG_GLOBAL: demos.globalConfig };
+  return { ...DEMO_ENV, GIT_CONFIG_GLOBAL: demos.globalConfig, TRIBUTARY_SSH_DIR: demos.sshDir };
+}
+
+/**
+ * A folder of SSH keys for the preview, in place of ~/.ssh: one public key, Maya's (a key
+ * no one has the private half of), so Settings → SSH keys has something to show.
+ */
+function writeDemoSshKeys(root) {
+  const dir = join(root, "ssh");
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(join(dir, "id_ed25519.pub"), "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGxQ4oTTN0iSGKNPhlrkKZHzrqLmVp7HmVi2cQ6HTFxa maya@studio-laptop\n");
+  return dir;
 }
 
 /** Build every demo repository in `root`. Resolves to their folders. */
@@ -1111,6 +1122,7 @@ export function buildDemos(root = join(tmpdir(), "tributary-demo"), options = {}
   return {
     root,
     globalConfig: writeDemoGlobalConfig(root),
+    sshDir: writeDemoSshKeys(root),
     notebook: buildNotebook(root, configFile),
     studio: buildStudio(root, configFile, options),
     assets: buildAssets(root, configFile),

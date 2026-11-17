@@ -568,6 +568,12 @@ export type Commands = {
   sparse_settings: { args: { path: string }; returns: SparseSettings };
   unity_setup: { args: { path: string }; returns: UnitySetup };
   signing_settings: { args: { path: string }; returns: SigningSettings };
+  ssh_keys: { args: Record<string, never>; returns: Array<SshKey> };
+  generate_ssh_key: {
+    args: { name: string; comment: string; passphrase: string };
+    returns: SshKey;
+  };
+  check_ssh_key: { args: { host: string; publicKey: string }; returns: SshCheck };
   submodules: { args: { path: string }; returns: Array<Submodule> };
   file_diff: {
     args: {
@@ -2971,6 +2977,52 @@ export type SpeedUp =
   | "untrackedCache"
   | "commitGraph"
   | "maintenance";
+
+/**
+ * Whether a host let a key in, and as whom.
+ */
+export type SshCheck = {
+  host: string;
+  accepted: boolean;
+  /**
+   * The account the host knows the key as, like "maya-chen".
+   */
+  user: string | null;
+  /**
+   * What the host said, for when it's neither.
+   */
+  message: string;
+};
+
+/**
+ * An SSH key, by its public half.
+ */
+export type SshKey = {
+  /**
+   * Its file's name, without ".pub", like "id_ed25519".
+   */
+  name: string;
+  /**
+   * The public key's file.
+   */
+  path: string;
+  /**
+   * Like "Ed25519" or "RSA".
+   */
+  kind: string;
+  /**
+   * What it says about itself, often who made it where ("maya@studio-laptop").
+   */
+  comment: string;
+  /**
+   * Like "SHA256:q0mB4c…", as `ssh-keygen -l` and GitHub show it.
+   */
+  fingerprint: string;
+  /**
+   * The whole public key, to add to GitHub or GitLab.
+   */
+  publicKey: string;
+};
 
 /**
  * A branch built on another unmerged branch.

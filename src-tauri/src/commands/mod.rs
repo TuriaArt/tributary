@@ -609,6 +609,28 @@ pub async fn signing_settings(path: String) -> Result<actions::SigningSettings> 
     blocking(move || actions::signing_settings(&PathBuf::from(path))).await
 }
 
+/// The SSH keys in ~/.ssh, by their public halves.
+#[tauri::command]
+pub async fn ssh_keys() -> Result<Vec<actions::SshKey>> {
+    blocking(|| Ok(actions::ssh_keys())).await
+}
+
+/// Make a new Ed25519 SSH key in ~/.ssh with ssh-keygen (never over one already there).
+#[tauri::command]
+pub async fn generate_ssh_key(
+    name: String,
+    comment: String,
+    passphrase: String,
+) -> Result<actions::SshKey> {
+    blocking(move || actions::generate_ssh_key(&name, &comment, &passphrase)).await
+}
+
+/// Whether a host (like github.com) lets the key in, and as whom.
+#[tauri::command]
+pub async fn check_ssh_key(host: String, public_key: String) -> Result<actions::SshCheck> {
+    blocking(move || actions::check_ssh_key(&host, &public_key)).await
+}
+
 /// The repository's submodules, and whether each is at the commit it records.
 #[tauri::command]
 pub async fn submodules(path: String) -> Result<Vec<actions::Submodule>> {

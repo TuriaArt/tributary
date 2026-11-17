@@ -204,6 +204,27 @@ export default async function ({ page, demos, folder, preview, step, restoreSize
     await dismissToast();
   });
 
+  await step("lists your SSH keys in Settings, the public key shown only when asked", async () => {
+    await page.keyboard.press("Control+,");
+    await page.locator(".settings-nav [role=tab]", { hasText: "SSH keys" }).click();
+    const card = page.locator(".ssh-key", { hasText: "id_ed25519" });
+    await card.waitFor({ timeout: 10_000 });
+    expect((await card.innerText()).includes("Ed25519 · maya@studio-laptop"), await card.innerText());
+    expect((await card.locator(".ssh-key-fingerprint").innerText()).startsWith("SHA256:"), "no fingerprint");
+    // The key itself is hidden until the eye button shows it.
+    expect((await card.locator(".ssh-key-public").count()) === 0, "the public key showed before it was asked for");
+    await card.getByRole("button", { name: "Show the public key" }).click();
+    await card.locator(".ssh-key-public", { hasText: "ssh-ed25519 AAAAC3" }).waitFor({ timeout: 5000 });
+    await accessible("Settings → SSH keys");
+    await card.getByRole("button", { name: "Hide the public key" }).click();
+    await card.locator(".ssh-key-public").waitFor({ state: "detached", timeout: 5000 });
+    // Making a new key starts with a name that isn't taken.
+    await page.getByRole("button", { name: "Make a new key…" }).click();
+    expect((await page.getByLabel("The new key's name").inputValue()) === "id_ed25519_tributary", "the new key's name is one already taken");
+    await page.keyboard.press("Escape");
+    await page.locator(".settings-window").waitFor({ state: "detached", timeout: 5000 });
+  });
+
   await step("sets who you commit as in one repository, from its tab's menu", async () => {
     await page.locator(".tab", { hasText: "notebook" }).first().click({ button: "right" });
     await page.locator(".menu-item", { hasText: "Repository Settings…" }).click();
