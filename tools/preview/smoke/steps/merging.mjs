@@ -6,6 +6,24 @@ import { join, resolve } from "node:path";
 export default async function ({ page, demos, folder, locks, step, accessible, expect, dismissToast, row, scrollList, openNotebook }) {
   await openNotebook();
 
+  await step("starts bisecting from the menu bar, from the newest tag before the checked-out commit", async () => {
+    await page.locator(".menu-bar-item", { hasText: "Repository" }).dispatchEvent("mousedown", { button: 0 });
+    await page.locator(".menu-item", { hasText: /^History$/ }).hover();
+    await page.locator(".menu-item", { hasText: "Find What Broke (Bisect)…" }).click();
+    const dialog = page.locator(".dialog", { hasText: "Find the commit that broke it" });
+    await dialog.waitFor({ timeout: 5000 });
+    const chosen = await dialog.locator("select").evaluate((select) => select.selectedOptions[0]?.textContent ?? "");
+    expect(chosen.startsWith("v0.2.0"), `it offered "${chosen}" first, not the v0.2.0 tag`);
+    // Another commit to start from: how many commits it'll test follows it.
+    const said = () => dialog.locator(".dialog-note-line").innerText();
+    const before = await said();
+    await dialog.locator("select").selectOption({ label: await dialog.locator("option").last().innerText() });
+    expect((await said()) !== before, "choosing another commit didn't change how many there are to test");
+    await accessible("starting a bisect from the menu bar");
+    await dialog.getByRole("button", { name: "Cancel" }).click();
+    await dialog.waitFor({ state: "detached", timeout: 5000 });
+  });
+
   await step("bisects to the first bad commit", async () => {
     const git = (...args) => execFileSync("git", ["-C", demos.notebook, ...args], { encoding: "utf8" }).trim();
     const head = git("rev-parse", "HEAD");

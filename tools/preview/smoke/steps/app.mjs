@@ -127,7 +127,7 @@ export default async function ({ page, demos, folder, preview, step, restoreSize
         throw new Error("a tag's lane stayed lit after its label went with the sidebar");
       });
       expect(await tagsIcon.evaluate((element) => element === document.activeElement), "the focus didn't go back to the strip's Tags icon");
-      for (const label of ["Go to Commit", "New Branch", "New Tag", "New Worktree", "Stash Changes", "Prune Branches", "Restore Branch", "Recover Commits", "Repository Settings", "Shelves", "Local History", "What Makes It Big", "Check Project Setup", "Clean Up Git LFS Files", "Force Push", "Clone Repository", "Tours", "Third-Party Licences", "Why Is a File Ignored", "Keyboard Shortcuts"]) {
+      for (const label of ["Go to Commit", "New Branch", "New Tag", "New Worktree", "Stash Changes", "Prune Branches", "Restore Branch", "Recover Commits", "Find What Broke (Bisect)", "Repository Settings", "Shelves", "Local History", "What Makes It Big", "Check Project Setup", "Clean Up Git LFS Files", "Force Push", "Clone Repository", "Tours", "Third-Party Licences", "Why Is a File Ignored", "Keyboard Shortcuts"]) {
         if (!(await command(label))) continue;
         await fits(label);
         await closeAll();

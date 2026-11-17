@@ -1,6 +1,6 @@
 import { CreatePullRequestDialog } from "../components/CreatePullRequestDialog";
 import { BisectDialog } from "../components/BisectDialog";
-import { ancestors, countMissing } from "../lib/graph";
+import { ancestors, countMissing, goodChoices } from "../lib/graph";
 import { shortId } from "../lib/format";
 import { openInBrowser, webRemote } from "../lib/weblinks";
 import { ConfirmDialog } from "../components/ConfirmDialog";
@@ -55,20 +55,18 @@ function GoToCommit(_: Shown<"goToCommit">) {
 
 function Bisect({ dialog }: Shown<"bisect">) {
   const { act, byId, closeDialog, snapshot } = useOpenRepository();
-  if (!(snapshot.headCommit)) return null;
+  const head = snapshot.headCommit;
+  if (!head) return null;
+  const before = ancestors(head, byId);
   return (
     <BisectDialog
-      good={dialog.good}
-      bad={{
-        id: snapshot.headCommit,
-        label: snapshot.headBranch ?? shortId(snapshot.headCommit),
-        summary: byId.get(snapshot.headCommit)?.summary ?? "",
-      }}
-      between={countMissing(ancestors(snapshot.headCommit, byId), ancestors(dialog.good.id, byId))}
+      good={dialog.good ?? goodChoices(head, byId)}
+      bad={{ id: head, label: snapshot.headBranch ?? shortId(head), summary: byId.get(head)?.summary ?? "" }}
+      between={(good) => countMissing(before, ancestors(good.id, byId))}
       onCancel={closeDialog}
-      onStart={() => {
+      onStart={(good) => {
         closeDialog();
-        act({ kind: "bisectStart", bad: snapshot.headCommit!, good: dialog.good.id });
+        act({ kind: "bisectStart", bad: head, good: good.id });
       }}
     />
   );
