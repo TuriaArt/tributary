@@ -203,9 +203,9 @@ npm run notices
 
 ## Website
 
-The website is in `site/`: plain HTML, CSS and JavaScript, with no build step and nothing loaded from anywhere else (its fonts, logo and two pictures are in `site/assets/`). Open `site/index.html` in a browser to see it, or serve the folder with `python3 -m http.server --directory site`. It's dark only, follows the system's reduced motion setting, and its demos show made-up people and repositories, like the preview's.
+The website is in `site/`: plain HTML, CSS and JavaScript, with no build step. Its fonts, logo and two pictures are in `site/assets/`; the only thing it asks for elsewhere is the latest release's list of files, from GitHub's API, for the download buttons. Open `site/index.html` in a browser to see it, or serve the folder with `python3 -m http.server --directory site`. It's dark only, follows the system's reduced motion setting, and its demos show made-up people and repositories, like the preview's.
 
-The Website workflow (`.github/workflows/website.yml`) publishes it on GitHub Pages when `site/` changes on develop, or when it's run from the Actions tab. Pages has to be switched on once, in the repository's Settings, Pages, Source: GitHub Actions; until then the workflow says so and publishes nothing. The download buttons link to the latest release, so a release needs no change to the site.
+The Website workflow (`.github/workflows/website.yml`) publishes it on GitHub Pages when `site/` changes on develop, or when it's run from the Actions tab. Pages has to be switched on once, in the repository's Settings, Pages, Source: GitHub Actions; until then the workflow says so and publishes nothing. Each download button downloads its system's file from the latest release (the processor's, for Windows and Linux), found by its name: `_universal.dmg`, `_x64-setup.exe`, `_arm64-setup.exe`, `_amd64.AppImage` or `_aarch64.AppImage` at the end (`site/site.js`). So a release needs no change to the site, unless those names change. When GitHub can't be reached, the buttons go to the release's page.
 
 ## Project layout
 

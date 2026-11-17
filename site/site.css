@@ -834,6 +834,9 @@ main { position: relative; }
 .plat.primary::after { content: "Your system"; position: absolute; top: 26px; right: 24px; font-size: 12px; font-weight: 600; color: var(--t1); background: color-mix(in srgb, var(--l1) 13%, transparent); padding: 3px 9px; border-radius: 999px; }
 .download .after { margin-top: 40px; font-size: 15px; color: var(--muted); }
 .download .after a { color: var(--text-2); }
+/* The other downloads, under the cards: close to them, the note about who made it further down. */
+.download .after.also { margin-top: 28px; }
+.download .after.also + .after { margin-top: 12px; }
 
 .foot { border-top: 1px solid var(--border); padding: 28px var(--gutter); display: flex; flex-wrap: wrap; align-items: center; gap: 12px 26px; font-size: 14px; color: var(--muted); max-width: none; }
 .foot a { color: var(--text-2); text-decoration: none; }
