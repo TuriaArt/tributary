@@ -1,4 +1,4 @@
-import { useRef, type RefObject } from "react";
+import { useRef, type CSSProperties, type RefObject } from "react";
 import type { SearchMode } from "../app/useSearch";
 import type { RepoSnapshot } from "../api";
 import { describeCount } from "../lib/branchSync";
@@ -48,6 +48,8 @@ const MODES: { mode: SearchMode; label: string; placeholder: string; title: stri
 ];
 
 interface Props {
+  /** Where the history starts across the window: the search box starts there too. */
+  historyLeft: number | null;
   snapshot: RepoSnapshot;
   /** The remote action that is running, if any. */
   running: RemoteAction | null;
@@ -108,7 +110,7 @@ export function Toolbar(props: Props) {
         : `Push ${snapshot.headBranch} and set its upstream`;
 
   return (
-    <header className="toolbar" data-tauri-drag-region>
+    <header className="toolbar" data-tauri-drag-region style={props.historyLeft !== null ? ({ "--history-left": `${props.historyLeft}px` } as CSSProperties) : undefined}>
       <div className="toolbar-repo" data-tauri-drag-region>
         <Button
           kind="icon" className={props.sidebarOpen ? "active" : undefined}

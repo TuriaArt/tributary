@@ -16,6 +16,34 @@ export default async function ({ page, demos, step, accessible, expect, toast, d
     await page.waitForSelector(".summary.wip", { timeout: 5000 });
   });
 
+  await step("starts the search box where the history starts, with the sidebar shown or hidden", async () => {
+    const left = async (selector) => Math.round((await page.locator(selector).first().boundingBox()).x);
+    const lined = async (when) => {
+      // Once the sidebar has finished coming or going.
+      await page.waitForFunction(() => document.getAnimations().every((animation) => animation.playState !== "running"), null, { timeout: 5000 }).catch(() => {});
+      await page.waitForFunction(() => Math.abs(document.querySelector(".search").getBoundingClientRect().left - document.querySelector(".commit-list").getBoundingClientRect().left) <= 1, null, { timeout: 3000 }).catch(() => {});
+      const search = await left(".search");
+      const list = await left(".commit-list");
+      expect(Math.abs(search - list) <= 1, `${when}, the search box starts at ${search}px and the history at ${list}px`);
+    };
+    await lined("with the sidebar");
+    const toggle = page.getByRole("button", { name: "Toggle the branches sidebar" });
+    await toggle.click();
+    // Shown again even if a check below fails: the steps after this one use the sidebar.
+    const showAgain = async () => {
+      if (!(await page.locator(".sidebar-frame").count())) await toggle.click();
+      await page.locator(".sidebar-frame").waitFor({ timeout: 5000 });
+    };
+    await page.locator(".sidebar-frame").waitFor({ state: "detached", timeout: 5000 });
+    // Without the sidebar, the history starts at the window's edge: the search box follows the branch's chip.
+    await page.waitForFunction(() => document.querySelector(".search").getBoundingClientRect().left < 200, null, { timeout: 3000 }).catch(() => {});
+    const repo = await page.locator(".toolbar-repo").boundingBox();
+    const search = await left(".search");
+    await showAgain();
+    expect(search > repo.x + repo.width && search < repo.x + repo.width + 40, `without the sidebar, the search box starts at ${search}px`);
+    await lined("with the sidebar back");
+  });
+
   await step("offers to update a submodule a pull left behind, and updates it", async () => {
     const banner = page.locator(".notice-banner", { hasText: "editor-kit" });
     await banner.waitFor({ timeout: 10_000 });

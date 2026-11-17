@@ -129,6 +129,18 @@ export function RepositoryView(props: Props) {
   const { act, running, runningLabel } = actions;
   const { select, byId, selectedIds, selectedCommits } = selection;
   const { sidebarOpen, setSidebarOpen, sidebarWidth, setSidebarWidth, detailsWidth, setDetailsWidth, activityOpen, setActivityOpen } = preferences;
+  // Where the history starts across the window, for the search box to start there too. It
+  // moves with the sidebar (shown, hidden, a strip, resized) and the window.
+  const centerPane = useRef<HTMLDivElement>(null);
+  const [historyLeft, setHistoryLeft] = useState<number | null>(null);
+  useEffect(() => {
+    const pane = centerPane.current;
+    if (!pane) return;
+    const measure = () => setHistoryLeft(Math.round(pane.getBoundingClientRect().left));
+    const observer = new ResizeObserver(measure);
+    observer.observe(pane);
+    return () => observer.disconnect();
+  }, [preferences.simpleMode]);
   // In a narrow window, the sidebar is a strip of icons, and opens over the list from them.
   const strip = useSidebarStrip();
   const canChange = !snapshot.bare && running === null;
@@ -447,6 +459,7 @@ export function RepositoryView(props: Props) {
     <Contexts repository={repository} issueTracker={issueTracker} checkWhy={setWhy}>
       {!preferences.simpleMode && (
         <Toolbar
+          historyLeft={historyLeft}
           snapshot={snapshot}
           running={running === "fetch" || running === "pull" || running === "push" ? running : null}
           ahead={counts.ahead}
@@ -534,7 +547,7 @@ export function RepositoryView(props: Props) {
                 <ResizeHandle className="panel-handle" {...panelResize("sidebar")} />
               </>
             ))}
-          <div className="center-pane" data-tour="graph">
+          <div ref={centerPane} className="center-pane" data-tour="graph">
             <CommitList
               key={snapshot.path}
               viewButton={viewButton}
