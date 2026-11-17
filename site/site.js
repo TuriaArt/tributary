@@ -148,6 +148,73 @@
   });
   $$("[data-plats] .plat").forEach((p) => p.classList.toggle("primary", p.dataset.os === os));
 
+  /* =========================================================
+     Downloads: each button downloads its file from the latest release, which GitHub's API
+     lists (the files' names have the version in them). Until that answers, or if it
+     can't be reached, the buttons go to the release's page, where every file is.
+     ========================================================= */
+  const RELEASE_PAGE = "https://github.com/shikoko/tributary/releases/latest";
+  const RELEASE_API = "https://api.github.com/repos/shikoko/tributary/releases/latest";
+  // Which file each system gets, by processor: a Mac's one app is for both.
+  const FILES = {
+    mac: { x64: /_universal\.dmg$/, arm: /_universal\.dmg$/ },
+    win: { x64: /_x64-setup\.exe$/, arm: /_arm64-setup\.exe$/ },
+    linux: { x64: /_amd64\.AppImage$/, arm: /_aarch64\.AppImage$/ },
+  };
+  const ARCH_NAME = { x64: "x64", arm: "ARM" };
+  // The processor: Chromium browsers say when asked; Linux on ARM says so in its user agent.
+  const archGuess = /aarch64|arm64|armv8/i.test(ua) ? "arm" : "x64";
+  const archOf = navigator.userAgentData && navigator.userAgentData.getHighEntropyValues
+    ? navigator.userAgentData.getHighEntropyValues(["architecture"]).then((v) => (v.architecture === "arm" ? "arm" : v.architecture === "x86" ? "x64" : archGuess)).catch(() => archGuess)
+    : Promise.resolve(archGuess);
+  const releaseOf = () => {
+    // Once a visit: GitHub allows sixty requests an hour without signing in.
+    try {
+      const kept = JSON.parse(sessionStorage.getItem("tributary.release") || "null");
+      if (kept && kept.assets) return Promise.resolve(kept);
+    } catch (e) { /* no storage: ask */ }
+    return fetch(RELEASE_API, { headers: { Accept: "application/vnd.github+json" } })
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+      .then((release) => {
+        const kept = { tag: release.tag_name, assets: (release.assets || []).map((a) => ({ name: a.name, url: a.browser_download_url })) };
+        try { sessionStorage.setItem("tributary.release", JSON.stringify(kept)); } catch (e) { /* not kept */ }
+        return kept;
+      });
+  };
+  Promise.all([releaseOf(), archOf])
+    .then(([release, arch]) => {
+      const file = (system, which) => release.assets.find((a) => FILES[system][which].test(a.name));
+      $$("[data-dl] .btn, [data-plats] .plat").forEach((link) => {
+        const found = file(link.dataset.os, arch) || file(link.dataset.os, "x64");
+        if (!found) return;
+        link.href = found.url;
+        link.title = found.name;
+        const name = link.querySelector(".f");
+        if (name) name.textContent = found.name;
+      });
+      // The other processor's files, for Windows and Linux, and the release's page.
+      const other = arch === "arm" ? "x64" : "arm";
+      const also = $("[data-also]");
+      const links = [["win", "Windows"], ["linux", "Linux"]]
+        .map(([system, label]) => [file(system, other), other === "arm" ? `${label} on ARM` : `${label} (${ARCH_NAME[other]})`])
+        .filter(([found]) => found);
+      if (!also || !links.length) return;
+      also.textContent = "Also: ";
+      links.forEach(([found, label]) => {
+        const a = document.createElement("a");
+        a.href = found.url;
+        a.title = found.name;
+        a.textContent = label;
+        also.append(a, " · ");
+      });
+      const page = document.createElement("a");
+      page.href = RELEASE_PAGE;
+      page.textContent = `every file in ${release.tag}`;
+      also.append(page);
+      also.hidden = false;
+    })
+    .catch(() => { /* the buttons keep the release's page */ });
+
   // Scroll-triggered entrances.
   const revealIO = "IntersectionObserver" in window
     ? new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add("in"); revealIO.unobserve(e.target); } }), { rootMargin: "0px 0px -10% 0px" })
