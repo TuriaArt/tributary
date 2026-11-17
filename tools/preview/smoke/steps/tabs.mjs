@@ -156,7 +156,11 @@ export default async function ({ page, demos, step, restoreSize, accessible, exp
     // Nothing left to reopen.
     await tab("studio").click({ button: "right" });
     expect(await page.locator(".menu-item", { hasText: "Reopen closed tab" }).isDisabled(), "Reopen closed tab with nothing to reopen");
+    // Esc closes the menu even when the focus isn't in it (WebKit sometimes gives it back to
+    // the tab that was clicked), and the menu is gone before the next step points at a tab.
+    await page.evaluate(() => document.activeElement instanceof HTMLElement && document.activeElement.blur());
     await page.keyboard.press("Escape");
+    await page.locator(".context-menu").waitFor({ state: "detached", timeout: 5000 });
     await tab("studio").dispatchEvent("mousedown", { button: 0 });
     await row("Add a tavern chair").waitFor({ timeout: 10_000 });
   });
