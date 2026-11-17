@@ -1109,3 +1109,45 @@ fn adds_renames_repoints_and_removes_remotes() {
     assert!(actions::remotes(repo.path()).unwrap().is_empty());
     assert_eq!(repo.git(&["branch", "-r"]), "");
 }
+
+/// A pre-push hook's report reaches the error even when its lines look like git's counts
+/// ("lint: 2 problems"), on standard output and standard error alike.
+#[cfg(unix)]
+#[test]
+fn keeps_what_a_push_hook_reports() {
+    use std::os::unix::fs::PermissionsExt;
+    use tributary_lib::error::Stopped;
+    let _turn = remote_turn();
+    let remote = TempRepo::bare("hooked.git");
+    let mut repo = TempRepo::new("hooked");
+    repo.git(&["remote", "add", "origin", remote.url()]);
+    repo.commit("a.txt", "First");
+    let hook = repo.path().join(".git/hooks/pre-push");
+    std::fs::create_dir_all(hook.parent().unwrap()).unwrap();
+    std::fs::write(
+        &hook,
+        "#!/bin/sh\necho 'lint: 2 problems in a.txt'\necho 'Tests: 3 failed' >&2\nexit 1\n",
+    )
+    .unwrap();
+    std::fs::set_permissions(&hook, std::fs::Permissions::from_mode(0o755)).unwrap();
+
+    let (_, kind) = failure(
+        &repo,
+        Action::Push {
+            force: false,
+            no_verify: false,
+            overwrite: false,
+        },
+    );
+    let Some(ErrorKind::HookFailed {
+        hook,
+        stopped,
+        output,
+    }) = kind
+    else {
+        panic!("{kind:?}");
+    };
+    assert_eq!((hook.as_str(), stopped), ("pre-push", Stopped::Push));
+    assert!(output.contains("lint: 2 problems in a.txt"), "{output}");
+    assert!(output.contains("Tests: 3 failed"), "{output}");
+}
