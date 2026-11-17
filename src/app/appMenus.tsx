@@ -1,7 +1,7 @@
 import { open as openFile } from "@tauri-apps/plugin-dialog";
 import type { Action, CommitRow, InstalledApp, RepoSnapshot } from "../api";
 import { WORKTREE_ID } from "../api";
-import { BranchIcon, BroomIcon, CheckIcon, CloneIcon, CloseIcon, CodeIcon, CommitIcon, CopyIcon, DownloadIcon, ExternalLinkIcon, FetchIcon, FileHistoryIcon, FolderIcon, GearIcon, HistoryIcon, IgnoreIcon, InfoIcon, KeyboardIcon, LockIcon, NewRepoIcon, NotesIcon, PlusIcon, PullIcon, PullRequestIcon, PushIcon, RecoverIcon, RefreshIcon, SearchIcon, ShelfIcon, StashIcon, SyncIcon, TagIcon, TerminalIcon, ViewIcon } from "../components/Icons";
+import { BranchIcon, BroomIcon, CheckIcon, CloneIcon, CloseIcon, CodeIcon, CommitIcon, CopyIcon, DownloadIcon, ExternalLinkIcon, FetchIcon, FileHistoryIcon, FolderIcon, GearIcon, HistoryIcon, IgnoreIcon, InfoIcon, KeyboardIcon, LockIcon, NewRepoIcon, NotesIcon, PlusIcon, PullIcon, PullRequestIcon, PushIcon, RecoverIcon, RefreshIcon, SearchIcon, ShelfIcon, StashIcon, SyncIcon, TagIcon, TargetIcon, TerminalIcon, ViewIcon } from "../components/Icons";
 import type { NativeMenu } from "../lib/nativeMenu";
 import { isMac } from "../lib/platform";
 import { newPullRequestUrl, openInBrowser, siteName, webRemote } from "../lib/weblinks";
@@ -229,6 +229,14 @@ export function appMenus(ctx: MenuBarContext): AppMenuDefinition[] {
               { id: "folder-history", label: "Folder History…", icon: <FolderIcon />, run: () => run.history(true) },
               "-",
               { id: "recover", label: "Recover Commits…", icon: <RecoverIcon />, run: () => run.dialog({ kind: "recover" }) },
+              {
+                id: "bisect",
+                label: "Find What Broke (Bisect)…",
+                icon: <TargetIcon />,
+                keywords: "bisect bug regression good bad",
+                enabled: canChange && Boolean(snapshot.headCommit) && !snapshot.bisect,
+                run: () => run.dialog({ kind: "bisect" }),
+              },
               {
                 id: "apply-patch",
                 label: "Apply Patch…",

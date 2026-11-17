@@ -66,8 +66,8 @@ export type OpenDialog =
   | { kind: "releaseNotes"; tag: string }
   /** Split a commit in two; `later`: how many commits come after it on the branch. */
   | { kind: "splitCommit"; commit: CommitRow; later: number }
-  /** Start bisecting from `good` (which worked) to the checked-out commit. */
-  | { kind: "bisect"; good: CommitRow }
+  /** Start bisecting from `good` (which worked), or one chosen in the dialog, to the checked-out commit. */
+  | { kind: "bisect"; good?: CommitRow }
   | null;
 
 /** What the menus need from the app. */
