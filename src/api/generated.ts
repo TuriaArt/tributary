@@ -194,6 +194,18 @@ export type ActorName = {
 };
 
 /**
+ * Someone whose commits matched, by name or email.
+ */
+export type AuthorMatch = {
+  name: string;
+  email: string;
+  /**
+   * How many of their commits there are (up to the search's limit).
+   */
+  commits: number;
+};
+
+/**
  * Where a branch was before Tributary deleted, reset, rebased or force-pushed it, kept
  * for [`BACKUP_DAYS`] days so it can be put back.
  */
@@ -571,6 +583,7 @@ export type Commands = {
     args: { path: string; mode: CommitSearchMode; query: string };
     returns: SearchResult;
   };
+  search_overview: { args: { path: string; query: string }; returns: SearchOverview };
   find_commit: { args: { path: string; query: string }; returns: string | null };
   team_work: { args: { path: string; days: number }; returns: TeamWork };
   team_pulse: { args: { path: string; days: number }; returns: TeamPulse };
@@ -763,9 +776,12 @@ export type CommitRuns = {
 };
 
 /**
- * What to search commits for, besides their messages: a file's path, or code they added or removed.
+ * What to search commits for.
  */
 export type CommitSearchMode =
+  | "messages"
+  | "authors"
+  | "hashes"
   | "files"
   | "code";
 
@@ -1053,6 +1069,11 @@ export type FileHistory = {
 export type FileKind = "code" | "art" | "levels" | "audio" | "other";
 
 /**
+ * A file or folder whose path matched, and how many commits changed it.
+ */
+export type FileMatch = { path: string; commits: number };
+
+/**
  * A file and who owns it.
  */
 export type FileOwners = { path: string; owners: Array<string> };
@@ -1084,6 +1105,19 @@ export type FolderChoice = {
  * The site a pull (or merge) request is on.
  */
 export type Forge = "github" | "gitlab";
+
+/**
+ * A commit found, with enough to list it before it's loaded in the history.
+ */
+export type FoundCommit = {
+  id: string;
+  summary: string;
+  author: string;
+  /**
+   * When it was made, in seconds since the Unix epoch.
+   */
+  time: number;
+};
 
 /**
  * A GitHub user.
@@ -2632,11 +2666,36 @@ export type Running =
   | "checkout"
   | "discard";
 
+/**
+ * Every kind of match for a search at once, but code (which takes longer, and is asked for
+ * on its own).
+ */
+export type SearchOverview = {
+  messages: SearchResult;
+  /**
+   * Most commits first.
+   */
+  authors: Array<AuthorMatch>;
+  /**
+   * Most commits first.
+   */
+  files: Array<FileMatch>;
+  /**
+   * The commits that changed those files.
+   */
+  fileCommits: SearchResult;
+  hashes: SearchResult;
+};
+
 export type SearchResult = {
   /**
    * Newest first.
    */
   ids: Array<string>;
+  /**
+   * The same commits, with their summaries.
+   */
+  commits: Array<FoundCommit>;
   /**
    * More commits matched than were listed.
    */

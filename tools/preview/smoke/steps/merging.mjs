@@ -206,7 +206,41 @@ export default async function ({ page, demos, folder, locks, step, accessible, e
     await settled();
     expect(/1 of 1/.test(await count.innerText()), `code: "${await count.innerText()}"`);
     await box.press("Escape");
-    await page.getByLabel("Search in").selectOption("message");
+    await page.getByLabel("Search in").selectOption("everything");
+    await box.press("Escape");
+  });
+
+  await step("searches everything at once, and lists what it found by kind beside the history", async () => {
+    const box = page.getByLabel("Search commits");
+    await box.fill("export");
+    const results = page.locator(".search-results");
+    await results.waitFor({ timeout: 5000 });
+    const group = (title) => results.locator(".search-results-group", { has: page.locator(".search-results-title", { hasText: title }) });
+    await group("Messages").locator(".search-result", { hasText: "Export notes as Markdown" }).waitFor({ timeout: 10_000 });
+    await group("Branches and tags").locator(".search-result", { hasText: "feature/export" }).first().waitFor({ timeout: 5000 });
+    await group("Files").locator(".search-result", { hasText: "src/export/markdown.ts" }).waitFor({ timeout: 5000 });
+    // In the sidebar's place and as wide: the history, and the search box above it, stay put.
+    const left = async (selector) => Math.round((await page.locator(selector).first().boundingBox()).x);
+    expect(Math.abs((await left(".search")) - (await left(".commit-list"))) <= 1, `the search box starts at ${await left(".search")}px, the history at ${await left(".commit-list")}px`);
+    // Code comes last: once it's there, nothing is still being searched.
+    await page.waitForFunction(() => !document.querySelector(".search-results")?.textContent?.includes("searching…"), null, { timeout: 15_000 });
+    // The results (the history beside them is faded on purpose, but for the matches).
+    await accessible("the results of a search of everything", page, { within: ".search-results" });
+    // A message found goes to its commit in the history.
+    await group("Messages").locator(".search-result", { hasText: "Export notes as Markdown" }).click();
+    await page.locator(".commit-row.selected", { hasText: "Export notes as Markdown" }).waitFor({ timeout: 5000 });
+    // A file found searches the commits that changed it.
+    await group("Files").locator(".search-result", { hasText: "src/export/markdown.ts" }).click();
+    expect((await page.getByLabel("Search in").inputValue()) === "files", "a file found didn't search files");
+    expect((await box.inputValue()) === "src/export/markdown.ts", `searching "${await box.inputValue()}"`);
+    await results.waitFor({ state: "detached", timeout: 5000 });
+    // A prefix searches one kind.
+    await page.getByLabel("Search in").selectOption("everything");
+    await box.fill("author:priya");
+    expect((await page.getByLabel("Search in").inputValue()) === "authors", "author: didn't search authors");
+    expect((await box.inputValue()) === "priya", `searching "${await box.inputValue()}"`);
+    await page.getByLabel("Search in").selectOption("everything");
+    await box.press("Escape");
     await box.press("Escape");
   });
 }

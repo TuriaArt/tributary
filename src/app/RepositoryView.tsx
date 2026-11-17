@@ -26,6 +26,7 @@ import { useRepositoryMenus } from "./useRepositoryMenus";
 import { BranchIcon, EyeIcon, FolderIcon, LockIcon, PinIcon, PlusIcon, StashIcon, SubmoduleIcon, TagIcon } from "../components/Icons";
 import { MessageTools } from "../components/MessageTools";
 import { ResizeHandle } from "../components/ResizeHandle";
+import { SearchResults } from "../components/SearchResults";
 import { Sidebar } from "../components/Sidebar";
 import { SidebarStrip, type StripSection } from "../components/sidebar/SidebarStrip";
 import { sidebarLists } from "../components/sidebar/refTree";
@@ -319,6 +320,21 @@ export function RepositoryView(props: Props) {
   const lastHere = [...activityHere].reverse().find((entry) => entry.folder === snapshot.path && !entry.background);
   const canFetch = !snapshot.bare && snapshot.remotes.length > 0;
 
+  // What a search of everything found, by kind (shown in the sidebar's place, or over the history).
+  const searchResults = search.everything ? (
+    <SearchResults
+      everything={search.everything}
+      commits={snapshot.commits}
+      hiddenRefs={snapshot.hiddenRefs}
+      onGo={goTo}
+      onKind={search.searchKind}
+      onClose={() => {
+        search.clear();
+        search.focus();
+      }}
+    />
+  ) : null;
+
   // The side panels slide open and closed (see usePresence).
   const sidebarPanel = usePresence(
     sidebarOpen,
@@ -529,7 +545,17 @@ export function RepositoryView(props: Props) {
         />
       ) : (
         <main className="workspace">
-          {sidebarPanel.shown &&
+          {/* A search of everything lists what it found in the sidebar's place, as wide as it,
+              so the history and the search box above it stay where they are. With no
+              sidebar beside the history, the results go over it instead. */}
+          {searchResults && sidebarOpen && !strip.narrow ? (
+            <>
+              <div className="sidebar-frame search-results-frame" style={{ width: sidebarWidth }}>
+                {searchResults}
+              </div>
+              <ResizeHandle className="panel-handle" {...panelResize("sidebar")} />
+            </>
+          ) : sidebarPanel.shown &&
             (strip.narrow ? (
               <>
                 <SidebarStrip sections={stripSections} open={strip.open} onOpen={strip.toggle} />
@@ -547,6 +573,11 @@ export function RepositoryView(props: Props) {
                 <ResizeHandle className="panel-handle" {...panelResize("sidebar")} />
               </>
             ))}
+          {searchResults && !(sidebarOpen && !strip.narrow) && (
+            <div className="sidebar-over search-results-over" style={{ width: Math.max(sidebarWidth, 280), left: sidebarPanel.shown && strip.narrow ? undefined : 0 }}>
+              {searchResults}
+            </div>
+          )}
           <div ref={centerPane} className="center-pane" data-tour="graph">
             <CommitList
               key={snapshot.path}
