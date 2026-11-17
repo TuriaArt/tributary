@@ -40,6 +40,11 @@ use tauri::Emitter;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // The PATH for git and what it runs is worked out while the window opens: on a Mac it
+    // asks the login shell, which can take a moment (see `host`).
+    std::thread::spawn(|| {
+        let _ = host::search_path();
+    });
     let builder = tauri::Builder::default();
     // On macOS, WebKit's web content process can stop (out of memory, or a crash in WebKit),
     // which empties the window. Like Tauri does by default, it's loaded again, and also noted
