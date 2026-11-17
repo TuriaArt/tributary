@@ -175,7 +175,13 @@ fn path_in(printed: &str) -> Vec<PathBuf> {
         .iter()
         .map(|part| part.trim())
         .rfind(|part| !part.is_empty() && !part.contains('\n') && part.contains('/'))
-        .map(|path| std::env::split_paths(path).collect())
+        // A shell's PATH, joined with colons (split_paths would look for semicolons on Windows).
+        .map(|path| {
+            path.split(':')
+                .filter(|folder| !folder.is_empty())
+                .map(PathBuf::from)
+                .collect()
+        })
         .unwrap_or_default()
 }
 
