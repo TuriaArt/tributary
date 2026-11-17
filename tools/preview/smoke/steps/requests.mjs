@@ -315,6 +315,29 @@ export default async function ({ browserName, page, demos, folder, preview, brow
     await view.waitFor({ state: "detached", timeout: 5000 });
   });
 
+  await step("makes way for the history when searching from a pull request, with the kind menu as wide as its choice", async () => {
+    await page.locator(".commit-row", { has: page.locator(".pr-badge", { hasText: "#14" }) }).first().click();
+    await page.locator(".details .commit-request", { hasText: "#14" }).getByRole("button", { name: "Show" }).click();
+    const view = page.locator(".request-view");
+    await view.waitFor({ timeout: 10_000 });
+    await page.keyboard.press("Control+f");
+    await page.keyboard.type("creak");
+    await view.waitFor({ state: "detached", timeout: 5000 });
+    await page.locator(".commit-row", { hasText: "Make the door creak" }).first().waitFor({ timeout: 5000 });
+    await page.keyboard.press("Escape");
+    // The menu of kinds is as wide as the one chosen: narrower for Code than for Everything.
+    const menu = page.getByLabel("Search in");
+    const width = async () => (await menu.boundingBox()).width;
+    const everything = await width();
+    await menu.selectOption("code");
+    const code = await width();
+    await menu.selectOption("everything");
+    expect(code < everything - 20 && Math.abs((await width()) - everything) < 1, `the menu is ${everything}px for Everything and ${code}px for Code`);
+    // Not cut short: the chosen kind's name fits.
+    expect(await menu.evaluate((element) => element.scrollWidth <= element.clientWidth), "the kind's name is cut short");
+    await page.keyboard.press("Escape");
+  });
+
   await step("comments on, approves and merges a pull request", async () => {
     await page.locator(".pr-badge", { hasText: "#12" }).first().click();
     const view = page.locator(".request-view");
