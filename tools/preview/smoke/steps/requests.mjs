@@ -65,6 +65,75 @@ export default async function ({ browserName, page, demos, folder, preview, brow
     await settings.waitFor({ state: "detached", timeout: 5000 });
   });
 
+  await step("lists pull requests and your issues in the sidebar, each section switched off and on", async () => {
+    // Your open issues in the repository's tracker (Jira here): the done one isn't listed.
+    const tracker = { kind: "jira", site: "https://studio.atlassian.net", keys: ["FEAST"] };
+    const issues = {
+      all: [
+        { key: "FEAST-23", title: "Tavern sign: add the opening hours", status: "In Progress", done: false, url: "https://studio.atlassian.net/browse/FEAST-23" },
+        { key: "FEAST-21", title: "Door creak is too loud", status: "To Do", done: false, url: "https://studio.atlassian.net/browse/FEAST-21" },
+        { key: "FEAST-9", title: "Barber clips through the chair", status: "Done", done: true, url: "https://studio.atlassian.net/browse/FEAST-9" },
+      ],
+      mine: ["FEAST-23", "FEAST-21", "FEAST-9"],
+      user: "Maya Chen",
+    };
+    const setTracker = (value) =>
+      page.evaluate(
+        ([key, value, issues]) => {
+          window.__PREVIEW__.issues = issues;
+          // As Repository Settings → Issues stores it (repoPrefs.ts).
+          localStorage.setItem(key, JSON.stringify(value));
+          window.dispatchEvent(new CustomEvent("tributary-repo-setting", { detail: key }));
+        },
+        [`tributary.issueTracker:${demos.studio}`, value, value ? issues : undefined],
+      );
+    await setTracker(tracker);
+    const sidebar = page.locator(".sidebar");
+    const requests = sidebar.locator(".sidebar-request");
+    const issueRows = sidebar.locator(".sidebar-issue");
+    await requests.first().waitFor({ timeout: 10_000 });
+    await issueRows.first().waitFor({ timeout: 10_000 });
+    expect((await requests.count()) === STUDIO_PULL_REQUESTS.length, `${await requests.count()} pull requests listed`);
+    expect((await issueRows.count()) === 2, `the issues listed: ${await issueRows.allInnerTexts()}`);
+    expect((await requests.filter({ hasText: "#14" }).locator(".sidebar-request-state.failure").count()) === 1, "#14's failed checks aren't shown on its icon");
+    await accessible("the sidebar's pull requests and issues", page, { within: ".sidebar" });
+
+    // The filter finds them as it finds branches.
+    const filter = sidebar.getByLabel("Filter the sidebar");
+    await filter.fill("creak");
+    await requests.filter({ hasText: "Barber" }).waitFor({ state: "detached", timeout: 5000 });
+    expect((await requests.count()) === 1 && (await issueRows.count()) === 1, `filtered: ${await requests.allInnerTexts()} ${await issueRows.allInnerTexts()}`);
+    await filter.fill("");
+
+    // A pull request opens in the app.
+    await requests.filter({ hasText: "Make the door creak" }).click();
+    await page.locator(".request-view", { hasText: "Make the door creak" }).waitFor({ timeout: 10_000 });
+    await page.keyboard.press("Escape");
+    await page.locator(".request-view").waitFor({ state: "detached", timeout: 5000 });
+
+    // Switched off from the menu by the filter, and on again in Settings, which it opens.
+    const sections = page.getByRole("button", { name: "Sidebar sections" });
+    await sections.click();
+    const item = page.getByRole("menuitemcheckbox", { name: "Pull requests" });
+    expect((await item.getAttribute("aria-checked")) === "true", "Pull requests isn't checked in the menu");
+    await item.click();
+    await requests.first().waitFor({ state: "detached", timeout: 5000 });
+    await sections.click();
+    await page.getByRole("menuitem", { name: "Sidebar settings…" }).click();
+    const settings = page.locator(".dialog", { hasText: "Settings" }).first();
+    const toggle = settings.getByRole("switch", { name: "Pull requests" });
+    await toggle.waitFor({ timeout: 5000 });
+    expect((await toggle.getAttribute("aria-checked")) === "false", "Settings has Pull requests switched on");
+    await toggle.click();
+    await requests.first().waitFor({ timeout: 5000 });
+    await page.keyboard.press("Escape");
+    await settings.waitFor({ state: "detached", timeout: 5000 });
+
+    // As it was, for the steps after this one.
+    await setTracker(null);
+    await issueRows.first().waitFor({ state: "detached", timeout: 5000 });
+  });
+
   await step("colours checks as you pick, and as the theme does again", async () => {
     // A pull request whose checks failed, in the failed checks' colour: the theme's, yours, then the theme's.
     const badge = page.locator(".commit-list .pr-badge.failure").first();

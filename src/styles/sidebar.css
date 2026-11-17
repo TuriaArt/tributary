@@ -10,18 +10,27 @@
   flex: none;
 }
 
+/* The filter, and the button for what the sidebar shows. */
+.sidebar-top {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin: var(--space-10) var(--space-6) var(--space-10) var(--space-10);
+  flex: none;
+}
+
 .sidebar-filter {
   display: flex;
   align-items: center;
   gap: var(--space-6);
-  margin: var(--space-10);
+  flex: 1;
+  min-width: 0;
   padding: 0 var(--space-8);
   height: 28px;
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-md);
   background: var(--bg);
   color: var(--text-faint);
-  flex: none;
 }
 
 .sidebar-filter:focus-within {
@@ -147,6 +156,32 @@
   align-content: unsafe end;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* Pull requests and issues: the number at the end, the checks' colour on the icon. */
+.sidebar-request-number {
+  margin-left: auto;
+  padding-left: var(--space-6);
+  color: var(--text-faint);
+  font-size: var(--type-xs);
+  font-variant-numeric: tabular-nums;
+  flex: none;
+}
+
+.sidebar-request.draft .sidebar-name {
+  color: var(--text-faint);
+}
+
+.sidebar-request-state.success {
+  color: var(--success);
+}
+
+.sidebar-request-state.failure {
+  color: var(--danger);
+}
+
+.sidebar-request-state.pending {
+  color: var(--warning);
 }
 
 .sidebar-empty {

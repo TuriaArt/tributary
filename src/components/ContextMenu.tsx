@@ -186,7 +186,9 @@ function MenuPanel({ x, y, flipX, items, onClose, onSideways, onBack, focusFirst
             {item.separated && <div className="menu-separator" role="separator" />}
             <button
               className={`menu-item${item.danger ? " danger" : ""}${open?.index === index ? " open" : ""}`}
-              role="menuitem"
+              // An on/off setting says whether it's on.
+              role={item.checked === undefined ? "menuitem" : "menuitemcheckbox"}
+              aria-checked={item.checked}
               aria-haspopup={item.submenu ? "menu" : undefined}
               aria-expanded={item.submenu ? open?.index === index : undefined}
               disabled={item.disabled}
