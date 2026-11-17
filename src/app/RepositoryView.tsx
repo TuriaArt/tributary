@@ -206,6 +206,16 @@ export function RepositoryView(props: Props) {
     },
   });
   const { comparing, compared, showChanges, showBlame, shownDiff } = views;
+  // A search finds commits in the history, so what's shown over it (a pull request, a
+  // commit's checks, the team, a file's changes or who changed its lines) makes way. A
+  // history rewrite being planned stays: closing it would lose the plan.
+  const showHistory = () => {
+    if (props.teamOpen) props.onCloseTeam();
+    if (props.request) props.onCloseRequest();
+    setChecksOf(null);
+    views.closeDiff();
+    views.closeBlame();
+  };
 
   // Who committed this week, for the status bar: read again when the commits change (after a fetch, say).
   const [pulse, setPulse] = useState<{ path: string; people: number; commits: number } | null>(null);
@@ -326,7 +336,10 @@ export function RepositoryView(props: Props) {
       everything={search.everything}
       commits={snapshot.commits}
       hiddenRefs={snapshot.hiddenRefs}
-      onGo={goTo}
+      onGo={(id) => {
+        showHistory();
+        goTo(id);
+      }}
       onKind={search.searchKind}
       onClose={() => {
         search.clear();
@@ -485,8 +498,14 @@ export function RepositoryView(props: Props) {
           behindCommits={counts.behindCommits}
           search={search.position}
           searchInput={search.input}
-          onSearch={search.search}
-          onSearchStep={search.step}
+          onSearch={(text) => {
+            if (text.trim()) showHistory();
+            search.search(text);
+          }}
+          onSearchStep={(by) => {
+            showHistory();
+            search.step(by);
+          }}
           onSearchMode={search.setMode}
           onRemote={(action) => act(REMOTE_ACTIONS[action])}
           onPushMenu={(anchor) => menu.under(anchor, pushMenuItems(() => act({ kind: "push", force: false }), () => act({ kind: "sync" }), openDialog))}

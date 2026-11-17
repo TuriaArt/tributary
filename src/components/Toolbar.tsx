@@ -144,19 +144,26 @@ export function Toolbar(props: Props) {
 
       <div className="search" role="search">
         <SearchIcon size={14} />
-        <select
-          className="search-mode"
-          value={search.mode}
-          onChange={(event) => props.onSearchMode(event.target.value as SearchMode)}
-          title={MODES.find((entry) => entry.mode === search.mode)?.title}
-          aria-label="Search in"
-        >
-          {MODES.map((entry) => (
-            <option key={entry.mode} value={entry.mode}>
-              {entry.label}
-            </option>
-          ))}
-        </select>
+        {/* As wide as the kind chosen, not the longest one: the hidden copy of its name
+            sizes the box, and the menu lies over it. */}
+        <span className="search-mode-box">
+          <span className="search-mode-size" aria-hidden="true">
+            {MODES.find((entry) => entry.mode === search.mode)?.label}
+          </span>
+          <select
+            className="search-mode"
+            value={search.mode}
+            onChange={(event) => props.onSearchMode(event.target.value as SearchMode)}
+            title={MODES.find((entry) => entry.mode === search.mode)?.title}
+            aria-label="Search in"
+          >
+            {MODES.map((entry) => (
+              <option key={entry.mode} value={entry.mode}>
+                {entry.label}
+              </option>
+            ))}
+          </select>
+        </span>
         <input
           ref={searchInput}
           value={search.query}

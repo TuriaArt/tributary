@@ -130,9 +130,26 @@
   color: var(--text-muted);
 }
 
-/* Messages, Files or Code: what the search box looks in. */
-.search-mode {
+/* Messages, Files or Code: what the search box looks in. The box is as wide as the kind's
+   name (a hidden copy of it, with the menu's padding), and the menu fills it. */
+.search-mode-box {
+  position: relative;
   flex: none;
+  display: flex;
+}
+
+.search-mode-size {
+  visibility: hidden;
+  height: 22px;
+  padding: 0 var(--space-20) 0 var(--space-6);
+  font-size: var(--type-sm);
+  white-space: nowrap;
+}
+
+.search-mode {
+  position: absolute;
+  inset: 0;
+  width: 100%;
   height: 22px;
   padding: 0 var(--space-20) 0 var(--space-6);
   border: none;
