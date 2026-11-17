@@ -376,6 +376,7 @@ export function RepositoryView(props: Props) {
         onOpenSubmodule={submoduleContext.open}
         onSubmoduleMenu={(submodule, x, y) => menu.show(x, y, submoduleMenuItems(submodule, submoduleContext))}
         reveal={strip.open}
+        onSidebarSettings={() => props.openSettings("Sidebar")}
       />
     ) : null,
   );
