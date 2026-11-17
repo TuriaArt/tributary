@@ -94,7 +94,7 @@ svg { overflow: visible; }
 /* Stroke icons, drawn at 24 × 24. */
 .demo svg, .hint svg, .plat svg, .points svg, .support svg { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 /* Drawings (not icons) set their own strokes. */
-.demo svg.gd-svg, .demo .ud-vis svg, .demo #sm-graph-svg { stroke: none; }
+.demo svg.gd-svg, .demo .ud-vis svg, .demo #sm-graph-svg, .demo svg.tm-svg, .demo .tm-opt > svg { stroke: none; }
 
 /* ---------- Navigation ---------- */
 .nav {
@@ -636,11 +636,13 @@ main { position: relative; }
 .tm-choices { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 11px; }
 .tm-opt {
   display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 5px; min-width: 66px; padding: 8px 9px 7px;
-  border-radius: 10px; border: 1px solid var(--border); background: var(--panel); color: var(--text-2); font-size: 12.5px; cursor: pointer;
+  /* Its picture's dots are cut out of their lines in --opt-bg, the button's own colour. */
+  --opt-bg: var(--panel);
+  border-radius: 10px; border: 1px solid var(--border); background: var(--opt-bg); color: var(--text-2); font-size: 12.5px; cursor: pointer;
   transition: border-color .2s, box-shadow .2s, color .2s, background .2s;
 }
 .tm-opt:hover { border-color: var(--border-hover); color: var(--text); }
-.tm-opt.on { border-color: var(--tm-accent); box-shadow: inset 0 0 0 1px var(--tm-accent); color: var(--text); background: color-mix(in srgb, var(--tm-accent) 8%, var(--panel)); }
+.tm-opt.on { --opt-bg: color-mix(in srgb, var(--tm-accent) 8%, var(--panel)); border-color: var(--tm-accent); box-shadow: inset 0 0 0 1px var(--tm-accent); color: var(--text); }
 .tm-opt svg { display: block; }
 .tm-sw { display: flex; gap: 2px; height: 18px; align-items: stretch; }
 .tm-sw i { width: 5px; border-radius: 2px; }
