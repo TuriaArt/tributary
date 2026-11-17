@@ -183,6 +183,38 @@ export default async function ({ page, demos, step, accessible, expect, toast, d
     await page.locator(".details", { hasText: "Priya Nair" }).waitFor({ timeout: 5000 });
   });
 
+  await step("shows an SVG as a picture, and pictures written into a stylesheet under their lines", async () => {
+    await row("High-contrast theme").click();
+    const view = page.locator(".diff-view");
+    // The logo, a drawing: before and after at its own size, and line by line as well.
+    await page.locator(".details .file", { hasText: "logo.svg" }).first().click();
+    await view.locator(".diff-image img").nth(1).waitFor({ timeout: 10_000 });
+    await view.locator(".diff-media-facts", { hasText: "64 × 64" }).first().waitFor({ timeout: 5000 });
+    await view.getByRole("button", { name: "Text", exact: true }).click();
+    await view.locator(".diff-row.added").first().waitFor({ timeout: 5000 });
+    await view.getByRole("button", { name: "Picture", exact: true }).click();
+    await view.locator(".diff-image img").first().waitFor({ timeout: 5000 });
+    await page.keyboard.press("Escape");
+    await view.waitFor({ state: "detached", timeout: 5000 });
+    // The theme icons, written into a stylesheet: each folded into a label, and the three
+    // that changed shown before → after under their lines.
+    await page.locator(".details .file", { hasText: "icons.css" }).first().click();
+    await view.locator(".diff-picture-chip", { hasText: "PNG picture" }).first().waitFor({ timeout: 10_000 });
+    const changed = await view.locator(".diff-picture-inline").count();
+    expect(changed === 3, `${changed} pictures shown as changed`);
+    expect((await view.locator(".diff-text", { hasText: "base64," }).count()) === 0, "a picture's letters still showing");
+    await accessible("pictures written into a stylesheet");
+    // Compared in full: a 32 × 32 icon, made bigger in whole steps.
+    await view.getByRole("button", { name: "Compare" }).first().click();
+    await view.locator(".diff-picture-inline .diff-image img").nth(1).waitFor({ timeout: 5000 });
+    await view.locator(".diff-media-facts", { hasText: "32 × 32, shown 8× bigger" }).first().waitFor({ timeout: 5000 });
+    // A label shows the letters it folded when clicked.
+    await view.locator(".diff-picture-chip").first().click();
+    await view.locator(".diff-text", { hasText: "data:image/png;base64," }).first().waitFor({ timeout: 5000 });
+    await page.keyboard.press("Escape");
+    await view.waitFor({ state: "detached", timeout: 5000 });
+  });
+
   await step("wraps long lines when asked, and remembers it", async () => {
     const store = join(demos.notebook, "src", "store.ts");
     const before = readFileSync(store, "utf8");

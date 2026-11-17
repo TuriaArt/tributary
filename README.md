@@ -46,7 +46,7 @@
     <td width="50%" valign="top">
       <img src="docs/images/textures.png" alt="A Photoshop texture's changes, with the pixels that changed lit up"><br>
       <b>See what changed in your art</b><br>
-      PSD, TGA, DDS, EXR and more, Blender and Unreal thumbnails, with swipe, onion skin and changed pixels.
+      PSD, TGA, DDS, EXR and more, SVGs, Blender and Unreal thumbnails, with swipe, onion skin and changed pixels. Pictures written into text files, like base64 icons in a stylesheet, show as pictures too.
     </td>
   </tr>
   <tr>
