@@ -53,6 +53,8 @@ interface Props {
   hasCommit: (id: string) => boolean;
   /** Its details, as its site says, each time they're read: its files are listed beside it. */
   onDetails?: (details: RequestDetails | null) => void;
+  /** Its conversation, each time it's read, and what to do after a reply elsewhere (say so, and read it again). */
+  onConversation?: (conversation: RequestConversation | null, onReplied: (message: string) => void) => void;
   /** Say what was done, like "Approved #12". */
   notify: (text: string) => void;
   /** Show what changed when its branch was force-pushed (`branch` and `base`: their names on the remote). */
@@ -91,7 +93,7 @@ const checkState = (check: RequestCheck) => check.state ?? "skipped";
  * Merge, and its checks), what can be done with it, its description and the
  * conversation. Checks still running are followed.
  */
-export function PullRequestView({ repoPath, request, onClose, openUrl, onShowBranch, hasCommit, onDetails, notify, onShowRewrite, onShowChecks }: Props) {
+export function PullRequestView({ repoPath, request, onClose, openUrl, onShowBranch, hasCommit, onDetails, onConversation, notify, onShowRewrite, onShowChecks }: Props) {
   const view = useRef<HTMLElement>(null);
   const [details, setDetails] = useState<RequestDetails | null>(null);
   useEffect(() => {
@@ -169,6 +171,11 @@ export function PullRequestView({ repoPath, request, onClose, openUrl, onShowBra
     refresh(message);
   };
   const { busy, error: changeError, change } = useRequestChange(repoPath, details, done);
+  useEffect(() => {
+    onConversation?.(conversation, refresh);
+    // Said when it changes, not when the callbacks do.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversation]);
 
   // Follow checks that are still running.
   const running = details?.checks.some((check) => check.state === "pending") || details?.mergeable === "checking";

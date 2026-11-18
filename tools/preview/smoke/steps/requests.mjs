@@ -367,6 +367,68 @@ export default async function ({ browserName, page, demos, folder, preview, brow
     }
   });
 
+  await step("shows a pull request's review comments at their lines in its files' changes, and replies there", async () => {
+    // #12 has a thread on DefaultGame.ini's line 3 (Lena's comment and Rosa's reply), and here
+    // one more, on a line that has changed since.
+    const before = await page.evaluate(() => structuredClone(window.__PREVIEW__.conversations[12]));
+    await page.evaluate(() =>
+      window.__PREVIEW__.conversations[12].comments.push({
+        id: "l9",
+        author: "diego-ramos",
+        body: "Is 0.2 still right here?",
+        created: new Date(Date.now() - 4 * 86_400_000).toISOString(),
+        review: null,
+        path: "Config/DefaultGame.ini",
+        line: 2,
+        side: "after",
+        outdated: true,
+        hunk: " ProjectName=Feast of the Forgotten\n+ProjectVersion=0.2",
+        thread: "9",
+        reply: false,
+      }),
+    );
+    try {
+      await page.locator(".pr-badge", { hasText: "#12" }).first().click();
+      const panel = page.locator(".details.request-files");
+      // Its file says how many comments it has.
+      const file = panel.locator(".file", { hasText: "DefaultGame.ini" });
+      await file.locator(".file-comments", { hasText: "3" }).waitFor({ timeout: 10_000 });
+      await file.click();
+      const diff = page.locator(".diff-view:not(.request-view)");
+      // The thread is under its line, with a mark beside the line.
+      const notes = diff.locator(".diff-notes");
+      await notes.locator(".review-thread", { hasText: "version bump" }).waitFor({ timeout: 10_000 });
+      expect((await notes.locator(".request-comment").count()) === 2, `${await notes.locator(".request-comment").count()} comments under the line`);
+      const marked = diff.locator(".diff-row", { has: page.locator(".diff-note-mark") });
+      expect((await marked.count()) === 1 && (await marked.innerText()).includes("ProjectVersion=0.3"), `marked: ${await marked.allInnerTexts()}`);
+      // The one on a line that has changed since is above the changes, with the lines it was about.
+      const elsewhere = diff.locator(".review-elsewhere");
+      await elsewhere.getByText("On an older version of this file").waitFor({ timeout: 5000 });
+      expect(await elsewhere.locator(".request-hunk", { hasText: "ProjectVersion=0.2" }).isVisible(), "the older version's lines aren't quoted");
+      await accessible("review comments at their lines");
+      // The mark hides the thread, and shows it again.
+      const mark = diff.locator(".diff-note-mark");
+      await mark.click();
+      await notes.first().waitFor({ state: "detached", timeout: 5000 });
+      expect((await mark.getAttribute("aria-expanded")) === "false", "the mark doesn't say the thread is hidden");
+      await mark.click();
+      await notes.locator(".review-thread").first().waitFor({ timeout: 5000 });
+      // A reply goes into the thread, under the line.
+      await notes.getByRole("button", { name: "Reply" }).click();
+      await notes.getByLabel("Your reply").fill("Bumped on purpose: it's in the patch notes.");
+      await notes.locator(".comment-box").getByRole("button", { name: "Reply" }).click();
+      await notes.locator(".request-comment", { hasText: "Bumped on purpose" }).waitFor({ timeout: 10_000 });
+      await dismissToast();
+      await page.keyboard.press("Escape");
+      await diff.waitFor({ state: "detached", timeout: 5000 });
+      await page.keyboard.press("Escape");
+      await panel.waitFor({ state: "detached", timeout: 5000 });
+    } finally {
+      // As it was, for the steps after this one.
+      await page.evaluate((conversation) => (window.__PREVIEW__.conversations[12] = conversation), before);
+    }
+  });
+
   await step("shows an open pull request from its branch's commit", async () => {
     // The commit at the tip of fix/door: its pull request, saying where it stands as its view
     // does, with its title, who opened it and Show, under a heading with the site's chip, and

@@ -14,7 +14,9 @@ import { changedPictures } from "../../lib/embeddedPictures";
 import { describeOwners, useCodeOwners } from "../../lib/codeOwners";
 import { FileKindIcon } from "../FileKindIcon";
 import { ConflictEditor } from "./ConflictEditor";
-import { DiffLines, type LinePicking } from "./DiffLines";
+import { DiffLines, type LineNotes, type LinePicking } from "./DiffLines";
+import { ReviewThreads, type ReviewNotes } from "./ReviewThreads";
+import { placeThreads, threadsOn, type ReviewThread } from "../../lib/reviewThreads";
 import { DiffSubmodule } from "./DiffSubmodule";
 import { Loader } from "../Loader";
 import { Button } from "../ui/Button";
@@ -38,6 +40,8 @@ interface Props {
   onBlame: (target: DiffTarget) => void;
   /** What these changes were opened from and go back to, like a pull request: shown before them, and Esc goes back too. */
   back?: { label: string; onBack: () => void };
+  /** A pull request's review comments, when these are its changes: shown at their lines. */
+  review?: ReviewNotes;
 }
 
 /** The narrowest the changes can be to show side by side. */
@@ -47,7 +51,7 @@ const SPLIT_MIN_WIDTH = 640;
  * A file's changes over the commit list: text line by line, images side by side, other
  * files by their size. Esc closes, [ and ] go to the previous and next file.
  */
-export function DiffView({ repoPath, targets, index, onIndex, onClose, run, version, onChooseTool, sides, onBlame, back }: Props) {
+export function DiffView({ repoPath, targets, index, onIndex, onClose, run, version, onChooseTool, sides, onBlame, back, review }: Props) {
   const view = useRef<HTMLElement>(null);
   const target = targets[index];
   const [ignoreWhitespace, setIgnoreWhitespace] = useStoredState("diff.ignoreWhitespace", false);
@@ -164,6 +168,16 @@ export function DiffView({ repoPath, targets, index, onIndex, onClose, run, vers
   // Pictures written into the text (data: URLs, notebook outputs): folded into labels, and
   // the ones that changed shown under their lines.
   const pictures = useMemo(() => (diff && !diff.media ? { changes: changedPictures(diff.hunks), path } : undefined), [diff, path]);
+  // A pull request's review threads on this file: under their lines, or above the changes
+  // when they're on lines that have changed since, or aren't shown.
+  const threads = useMemo(() => (review ? threadsOn(review.comments, target.file.path) : []), [review, target.file.path]);
+  const showsLines = Boolean(diff && !(conflicted && live) && !error && !diff.submodule && !showMedia && !diff.binary && !diff.tooLarge && diff.hunks.length > 0);
+  const placed = useMemo(() => (diff && threads.length > 0 ? placeThreads(threads, showsLines ? diff.hunks : []) : null), [diff, threads, showsLines]);
+  const notes: LineNotes | undefined = useMemo(
+    () => (review && placed && placed.at.size > 0 ? { at: placed.at, render: (here: ReviewThread[]) => <ReviewThreads threads={here} notes={review} atLine /> } : undefined),
+    [review, placed],
+  );
+  const elsewhere = placed?.elsewhere ?? [];
   /** Shown as something other than lines: whitespace and diff tools don't apply. */
   const whole = Boolean(diff && (diff.binary || diff.tooLarge || diff.submodule || showMedia));
   return (
@@ -204,12 +218,12 @@ export function DiffView({ repoPath, targets, index, onIndex, onClose, run, vers
           <span className="diff-source"><span className="chip-text">{target.label}</span></span>
           {owners.length > 0 && (
             <span className="diff-source diff-owners" title={`Its owners, by CODEOWNERS: ${owners.join(", ")}`}>
-              Owned by {describeOwners(owners)}
+              <span className="chip-text">Owned by {describeOwners(owners)}</span>
             </span>
           )}
           {diff?.lfs && !diff.binary && !diff.tooLarge && (
             <span className="diff-source" title="Stored with Git LFS: these are the files' real contents">
-              Git LFS
+              <span className="chip-text">Git LFS</span>
             </span>
           )}
         </div>
@@ -288,6 +302,7 @@ export function DiffView({ repoPath, targets, index, onIndex, onClose, run, vers
       </header>
       {/* It scrolls: from the keyboard too, once it has focus. */}
       <div className="diff-body" ref={body} tabIndex={0}>
+        {review && elsewhere.length > 0 && <ReviewElsewhere threads={elsewhere} review={review} />}
         {conflicted && live ? (
           <ConflictEditor repoPath={repoPath} path={path} mine={sides.mine} theirs={sides.theirs} version={version} run={run} />
         ) : error ? (
@@ -306,7 +321,7 @@ export function DiffView({ repoPath, targets, index, onIndex, onClose, run, vers
         ) : diff.hunks.length === 0 ? (
           <div className="diff-message muted">{ignoreWhitespace ? "Only whitespace changed." : "No changes to show (only the file's name or mode changed)."}</div>
         ) : (
-          <DiffLines hunks={diff.hunks} picking={picking} language={languageFor(path)} split={split && roomy} wrap={wrap} pictures={pictures} />
+          <DiffLines hunks={diff.hunks} picking={picking} language={languageFor(path)} split={split && roomy} wrap={wrap} pictures={pictures} notes={notes} />
         )}
       </div>
         {picking && selected.size > 0 && (
@@ -331,6 +346,32 @@ export function DiffView({ repoPath, targets, index, onIndex, onClose, run, vers
             </Button>
           </div>
         )}
+    </section>
+  );
+}
+
+/**
+ * A pull request's review threads on lines that aren't shown here, above the changes: on
+ * lines that have changed since they were written, or outside these changes. Each says
+ * which line it was on, with the lines it's about.
+ */
+function ReviewElsewhere({ threads, review }: { threads: ReviewThread[]; review: ReviewNotes }) {
+  const outdated = threads.filter((thread) => thread.outdated);
+  const others = threads.filter((thread) => !thread.outdated);
+  return (
+    <section className="review-elsewhere" aria-label="Comments on lines not shown">
+      {outdated.length > 0 && (
+        <>
+          <h3>On an older version of this file</h3>
+          <ReviewThreads threads={outdated} notes={review} atLine={false} />
+        </>
+      )}
+      {others.length > 0 && (
+        <>
+          <h3>On lines not shown here</h3>
+          <ReviewThreads threads={others} notes={review} atLine={false} />
+        </>
+      )}
     </section>
   );
 }

@@ -186,14 +186,17 @@
   const say = (number, body, more = {}) => {
     const conversation = conversationOf(number);
     const id = `fake${conversation.comments.length + 1}`;
-    conversation.comments.push({ id, author: conversation.you, body, created: new Date().toISOString(), review: null, path: null, line: null, hunk: null, thread: null, reply: false, ...more });
+    conversation.comments.push({ id, author: conversation.you, body, created: new Date().toISOString(), review: null, path: null, line: null, side: null, outdated: false, hunk: null, thread: null, reply: false, ...more });
   };
   const fakeComment = ({ number, body, thread }) => {
     if (thread) {
       // After the thread's last comment.
       const comments = conversationOf(number).comments;
       const at = comments.map((comment) => comment.thread).lastIndexOf(thread) + 1;
-      comments.splice(at, 0, { id: `fake${comments.length + 1}`, author: conversationOf(number).you, body, created: new Date().toISOString(), review: null, path: null, line: null, hunk: null, thread, reply: true });
+      // On the line its thread is on, as GitHub says a reply is.
+      const first = comments.find((comment) => comment.thread === thread);
+      const where = { path: first?.path ?? null, line: first?.line ?? null, side: first?.side ?? null, outdated: first?.outdated ?? false };
+      comments.splice(at, 0, { id: `fake${comments.length + 1}`, author: conversationOf(number).you, body, created: new Date().toISOString(), review: null, ...where, hunk: null, thread, reply: true });
     } else say(number, body);
     return later(thread ? "Replied" : "Commented");
   };
