@@ -38,6 +38,7 @@ export type Action =
   | { kind: "fetch"; background?: boolean }
   | { kind: "pull" }
   | { kind: "fetchLatest" }
+  | { kind: "fetchRequest"; remote: string; number: number; forge: Forge; base: string }
   | { kind: "sync" }
   | { kind: "push"; force: boolean; noVerify?: boolean; overwrite?: boolean }
   | { kind: "shelve"; paths?: Array<string>; description: string; keep?: boolean }

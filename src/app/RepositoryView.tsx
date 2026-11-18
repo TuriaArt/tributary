@@ -198,7 +198,13 @@ export function RepositoryView(props: Props) {
   const requestKey = props.request ? `${props.request.remote}/${props.request.number}` : null;
   const [requestLoaded, setRequestLoaded] = useState<{ key: string; details: RequestDetails } | null>(null);
   const requestDetails = requestLoaded && requestLoaded.key === requestKey ? requestLoaded.details : null;
-  const requestFiles = useRequestFiles(snapshot.path, requestDetails, (id) => byId.has(id));
+  // Asked again after each reload while its commits aren't here, as after fetching them.
+  const requestFiles = useRequestFiles(snapshot.path, requestDetails, snapshot);
+  // Fetching the pull request's own commits, from the remote it's on: a fork's too.
+  const requestFetch: Action | null =
+    props.request && requestDetails
+      ? { kind: "fetchRequest", remote: props.request.remote, number: props.request.number, forge: props.request.forge, base: requestDetails.base }
+      : null;
   const requestRange: RequestRange | null = useMemo(() => {
     const { key, comparison } = requestFiles;
     if (!props.request || !key || !comparison?.base || !requestDetails?.headSha) return null;
@@ -431,7 +437,7 @@ export function RepositoryView(props: Props) {
         files={requestFiles}
         onOpenFile={views.showRequestChanges}
         isShown={(path) => Boolean(requestRange && views.overRequest && isShown(shownDiff && { source: shownDiff.source, path: shownDiff.file.path }, { kind: "range", from: requestRange.base, to: requestRange.head }, path))}
-        onFetch={canFetch && canChange ? () => act({ kind: "fetch" }) : null}
+        onFetch={requestFetch && canFetch && canChange ? () => act(requestFetch) : null}
         onClose={props.onCloseRequest}
       />
     ) : comparing.request ? (

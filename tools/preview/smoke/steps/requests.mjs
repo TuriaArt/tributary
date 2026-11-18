@@ -1,6 +1,6 @@
 // The smoke test: Pull requests and checks: badges, colours, failed checks and why, the checks graph, reviews, comments, merging and opening one.
 import { execFileSync } from "node:child_process";
-import { studioCommitRuns, STUDIO_PULL_REQUEST_DETAILS, STUDIO_PULL_REQUESTS } from "../../demo.mjs";
+import { studioCommitRuns, STUDIO_FORK_REQUEST, STUDIO_FORK_REQUEST_DETAILS, STUDIO_PULL_REQUEST_DETAILS, STUDIO_PULL_REQUESTS } from "../../demo.mjs";
 import { CONTROLS, EXCEPT } from "../../aligned.mjs";
 import { describeOffCentre, moving, offCentre as offInPixels, probe } from "../../../e2e/centred.mjs";
 
@@ -312,6 +312,59 @@ export default async function ({ browserName, page, demos, folder, preview, brow
     await page.keyboard.press("Escape");
     await view.waitFor({ state: "detached", timeout: 5000 });
     await panel.waitFor({ state: "detached", timeout: 5000 });
+  });
+
+  await step("fetches a pull request's commits from a fork, to list its files", async () => {
+    // #21's commit is only on origin, under refs/pull/21/head as GitHub keeps it: its
+    // branch is on a fork.
+    const git = (...args) => execFileSync("git", ["-C", demos.studio, ...args], { encoding: "utf8" }).trim();
+    const origin = git("remote", "get-url", "origin");
+    const head = execFileSync("git", ["--git-dir", origin, "rev-parse", "refs/pull/21/head"], { encoding: "utf8" }).trim();
+    const here = (id) => {
+      try {
+        execFileSync("git", ["-C", demos.studio, "cat-file", "-e", `${id}^{commit}`], { stdio: "ignore" });
+        return true;
+      } catch {
+        return false;
+      }
+    };
+    expect(!here(head), "#21's commit is here already");
+    const fakes = (list, details) =>
+      page.evaluate(([list, details]) => {
+        window.__PREVIEW__.pullRequests = list;
+        window.__PREVIEW__.pullRequestDetails = { ...window.__PREVIEW__.pullRequestDetails, ...details };
+      }, [list, details]);
+    // After a fetch, the pull requests are asked for again.
+    const refetch = async () => {
+      await page.getByRole("button", { name: "Fetch", exact: true }).click();
+      await page.locator(".toast", { hasText: "Fetched from" }).waitFor({ timeout: 10_000 });
+      await dismissToast();
+    };
+    await fakes([...STUDIO_PULL_REQUESTS, STUDIO_FORK_REQUEST], { 21: { ...STUDIO_FORK_REQUEST_DETAILS, headSha: head } });
+    try {
+      await refetch();
+      await page.locator(".sidebar .sidebar-request", { hasText: "Lanterns" }).click();
+      const panel = page.locator(".details.request-files");
+      const missing = panel.locator(".request-files-missing");
+      await missing.waitFor({ timeout: 10_000 });
+      await accessible("a pull request's files before its commits are fetched");
+      await missing.getByRole("button", { name: "Fetch its commits" }).click();
+      const said = await toast();
+      expect(said.includes("Fetched #21 from origin"), `the fetch said: ${said}`);
+      await panel.locator(".file", { hasText: "Lantern.cpp" }).waitFor({ timeout: 10_000 });
+      const names = (await panel.locator(".file .file-name").allInnerTexts()).sort();
+      expect(names.join(", ") === "DefaultGame.ini, Lantern.cpp", `#21's files are ${names.join(", ")}`);
+      // Kept under Tributary's own refs: it's on no branch here.
+      expect(git("for-each-ref", "--format=%(objectname)", "refs/tributary/requests/") === head, "#21's commits aren't kept");
+      await page.keyboard.press("Escape");
+      await panel.waitFor({ state: "detached", timeout: 5000 });
+      await dismissToast();
+    } finally {
+      // As it was, for the steps after this one.
+      await page.keyboard.press("Escape");
+      await fakes(STUDIO_PULL_REQUESTS, {});
+      await refetch();
+    }
   });
 
   await step("shows an open pull request from its branch's commit", async () => {
