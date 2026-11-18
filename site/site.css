@@ -179,7 +179,7 @@ svg text.ini { font-family: var(--font); font-weight: 700; fill: var(--on-lane);
 }
 h1 { font-size: 92px; line-height: .98; letter-spacing: -.045em; font-weight: 680; margin: 26px 0 24px; }
 h1 em { font-style: normal; background: linear-gradient(90deg, var(--l1), var(--l5) 30%, var(--l2) 62%, var(--l3)); -webkit-background-clip: text; background-clip: text; color: transparent; }
-.lede { font-size: 20.5px; line-height: 1.5; color: var(--text-2); margin: 0 auto 36px; max-width: 690px; }
+.lede { font-size: 20.5px; line-height: 1.5; color: var(--text-2); margin: 0 auto 36px; max-width: 690px; text-wrap: balance; }
 .lede strong { color: var(--text); font-weight: 600; }
 
 .dl { display: inline-flex; gap: 6px; padding: 6px; border-radius: 22px; border: 1px solid var(--border); background: color-mix(in srgb, var(--card) 92%, transparent); backdrop-filter: blur(8px); box-shadow: var(--shadow-card); }
