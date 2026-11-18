@@ -21,7 +21,7 @@ interface Props {
   /** Show a file's changes, over the pull request. */
   onOpenFile: (file: FileChange) => void;
   isShown: (path: string) => boolean;
-  /** Fetch, for its commits. */
+  /** Fetch its commits, from the remote it's on. */
   onFetch: (() => void) | null;
   /** Close the pull request. */
   onClose: () => void;
@@ -96,10 +96,10 @@ export function RequestFilesPanel({ repoPath, request, details, files, onOpenFil
               <div className="muted">{site} didn't say which commits it's between, so its files can't be read here.</div>
             ) : missing ? (
               <div className="request-files-missing">
-                <p className="muted">Its commits aren't in this repository yet. Fetch to see its files here.</p>
+                <p className="muted">Its commits aren't in this repository yet. Fetch them to see its files here.</p>
                 {onFetch && (
-                  <Button kind="outline" onClick={onFetch}>
-                    <span className="button-label">Fetch</span>
+                  <Button kind="outline" onClick={onFetch} title={`Fetch ${requestNumber(request)}'s commits from ${request.remote}`}>
+                    <span className="button-label">Fetch its commits</span>
                   </Button>
                 )}
               </div>
