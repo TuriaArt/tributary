@@ -48,6 +48,41 @@
   flex: none;
 }
 
+/* What the changes were opened from, like a pull request: back to it, before them. */
+.diff-back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-6);
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 280px;
+  height: 28px;
+  padding: 0 var(--space-10) 0 var(--space-6);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: none;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: var(--type-sm);
+  cursor: pointer;
+}
+
+.diff-back svg {
+  flex: none;
+}
+
+.diff-back .button-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.diff-back:hover {
+  border-color: var(--border-hover);
+  background: var(--bg-hover);
+  color: var(--text);
+}
+
 .diff-count {
   margin-left: var(--space-4);
   color: var(--text-muted);

@@ -4,9 +4,10 @@ import { languageFor } from "../../lib/syntax";
 import { fileDiff, type Action, type FileDiff, type LineMode } from "../../api";
 import type { DiffTarget } from "../../lib/diffTargets";
 import { toolLabel, useDiffTools } from "../../lib/diffTools";
+import { isTopView } from "../../lib/overlays";
 import { useStoredState } from "../../lib/settings";
 import { describeActor, useActorNames } from "../../lib/actorNames";
-import { BlameIcon, ChevronDownIcon, ChevronUpIcon, CloseIcon, ExternalLinkIcon, SplitIcon, WrapIcon } from "../Icons";
+import { BlameIcon, ChevronDownIcon, ChevronLeftIcon, ChevronUpIcon, CloseIcon, ExternalLinkIcon, SplitIcon, WrapIcon } from "../Icons";
 import { DiffBinary } from "./DiffBinary";
 import { DiffMedia } from "./DiffMedia";
 import { changedPictures } from "../../lib/embeddedPictures";
@@ -35,6 +36,8 @@ interface Props {
   sides: { mine: string; theirs: string };
   /** Show who changed each line of the file instead. */
   onBlame: (target: DiffTarget) => void;
+  /** What these changes were opened from and go back to, like a pull request: shown before them, and Esc goes back too. */
+  back?: { label: string; onBack: () => void };
 }
 
 /** The narrowest the changes can be to show side by side. */
@@ -44,7 +47,8 @@ const SPLIT_MIN_WIDTH = 640;
  * A file's changes over the commit list: text line by line, images side by side, other
  * files by their size. Esc closes, [ and ] go to the previous and next file.
  */
-export function DiffView({ repoPath, targets, index, onIndex, onClose, run, version, onChooseTool, sides, onBlame }: Props) {
+export function DiffView({ repoPath, targets, index, onIndex, onClose, run, version, onChooseTool, sides, onBlame, back }: Props) {
+  const view = useRef<HTMLElement>(null);
   const target = targets[index];
   const [ignoreWhitespace, setIgnoreWhitespace] = useStoredState("diff.ignoreWhitespace", false);
   const [split, setSplit] = useStoredState("diff.sideBySide", false);
@@ -92,7 +96,8 @@ export function DiffView({ repoPath, targets, index, onIndex, onClose, run, vers
       const typing = (event.target as HTMLElement | null)?.closest?.('textarea, select, [contenteditable], input:not([type="checkbox"])');
       // Menus and dialogs over this one close first.
       const above = document.querySelector('[role="menu"], [role="dialog"], [aria-modal="true"]');
-      if (typing || above || event.metaKey || event.ctrlKey || event.altKey) return;
+      // A view opened over these changes (a pull request) has the keys.
+      if (typing || above || event.metaKey || event.ctrlKey || event.altKey || !isTopView(view.current)) return;
       const step = event.key === "[" ? -1 : event.key === "]" ? 1 : 0;
       // Esc lets go of chosen lines first.
       if (event.key === "Escape" && selectedCount.current > 0) setSelected(new Set());
@@ -162,8 +167,14 @@ export function DiffView({ repoPath, targets, index, onIndex, onClose, run, vers
   /** Shown as something other than lines: whitespace and diff tools don't apply. */
   const whole = Boolean(diff && (diff.binary || diff.tooLarge || diff.submodule || showMedia));
   return (
-    <section className="diff-view" aria-label={`Changes to ${path}`}>
+    <section ref={view} className="diff-view" aria-label={`Changes to ${path}`}>
       <header className="diff-header">
+        {back && (
+          <button className="diff-back" onClick={back.onBack} title={`Back to ${back.label} (Esc)`}>
+            <ChevronLeftIcon size={14} />
+            <span className="button-label">{back.label}</span>
+          </button>
+        )}
         <div className="diff-steps">
           <Button kind="icon" onClick={() => onIndex(index - 1)} disabled={index === 0} title="Previous file ([)" aria-label="Previous file">
             <ChevronUpIcon size={14} />

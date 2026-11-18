@@ -285,6 +285,35 @@ export default async function ({ browserName, page, demos, folder, preview, brow
     expect((await selected()) === before, `pressing the badge selected ${await selected()}, not ${before}`);
   });
 
+  await step("lists a pull request's files beside it, and opens their changes over it", async () => {
+    // Its two commits are origin/main and origin/art/barber-v2, as the preview reads them.
+    await page.locator(".pr-badge", { hasText: "#12" }).first().click();
+    const view = page.locator(".request-view");
+    await view.waitFor({ timeout: 10_000 });
+    // The details panel lists what its branch changed since it split from main.
+    const panel = page.locator(".details.request-files");
+    await panel.locator(".file", { hasText: "DefaultGame.ini" }).waitFor({ timeout: 10_000 });
+    const names = (await panel.locator(".file .file-name").allInnerTexts()).sort();
+    expect(names.join(", ") === "Barber.uasset, DefaultGame.ini, Innkeeper.uasset", `the pull request's files are ${names.join(", ")}`);
+    await accessible("a pull request's files");
+    // A file's changes open over the pull request, which stays open under them, with the way back to it.
+    await panel.locator(".file", { hasText: "DefaultGame.ini" }).click();
+    const diff = page.locator(".diff-view:not(.request-view)");
+    await diff.locator(".diff-row.added").first().waitFor({ timeout: 10_000 });
+    expect(await diff.locator(".diff-back", { hasText: "#12" }).isVisible(), "the changes have no way back to the pull request");
+    expect((await view.count()) === 1, "opening a file closed the pull request");
+    // Esc goes back to the pull request, as the way back does; Esc again closes it.
+    await page.keyboard.press("Escape");
+    await diff.waitFor({ state: "detached", timeout: 5000 });
+    expect(await view.isVisible(), "Esc closed the pull request along with its file");
+    await panel.locator(".file", { hasText: "DefaultGame.ini" }).click();
+    await diff.locator(".diff-back").click();
+    await diff.waitFor({ state: "detached", timeout: 5000 });
+    await page.keyboard.press("Escape");
+    await view.waitFor({ state: "detached", timeout: 5000 });
+    await panel.waitFor({ state: "detached", timeout: 5000 });
+  });
+
   await step("shows an open pull request from its branch's commit", async () => {
     // The commit at the tip of fix/door: its pull request, saying where it stands as its view
     // does, with its title, who opened it and Show, under a heading with the site's chip, and
