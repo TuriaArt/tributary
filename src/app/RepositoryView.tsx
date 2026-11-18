@@ -2,7 +2,7 @@ import { useContext, useEffect, useRef, useState, useMemo, type ComponentProps, 
 import { onCommitDrop } from "../lib/drag";
 import { usePresence } from "../lib/usePresence";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
-import { fullRefName, PAGE_SIZE, teamPulse, type Action, type CommitRow, type DiffSource, type FileChange, type FileChecks, type Lock, type Overlap, type PullRequest, type RepoSnapshot, type RequestDetails, type Worktree } from "../api";
+import { fullRefName, PAGE_SIZE, teamPulse, type Action, type CommitRow, type DiffSource, type FileChange, type FileChecks, type Lock, type Overlap, type PullRequest, type RepoSnapshot, type RequestConversation, type RequestDetails, type Worktree } from "../api";
 import { isShown } from "../lib/diffTargets";
 import { withCoAuthor } from "../lib/commitMessage";
 import type { LfsLocks } from "../lib/locks";
@@ -20,6 +20,7 @@ import { ComparePanel } from "../components/ComparePanel";
 import { RequestFilesPanel } from "../components/RequestFilesPanel";
 import { useFileViews, type RequestRange } from "./useFileViews";
 import { useRequestFiles } from "./useRequestFiles";
+import { commentsByFile } from "../lib/reviewThreads";
 import { EMPTY_DRAFT } from "../components/worktree/CommitBox";
 import type { ChecksOf } from "../components/ChecksView";
 import { ListOverlays, type RewriteShown } from "./ListOverlays";
@@ -205,6 +206,10 @@ export function RepositoryView(props: Props) {
     props.request && requestDetails
       ? { kind: "fetchRequest", remote: props.request.remote, number: props.request.number, forge: props.request.forge, base: requestDetails.base }
       : null;
+  // Its conversation, as last read: its comments on lines show in its files' changes, and how many each file has.
+  const [requestTalk, setRequestTalk] = useState<{ key: string; conversation: RequestConversation; onReplied: (message: string) => void } | null>(null);
+  const requestConversation = requestTalk && requestTalk.key === requestKey ? requestTalk : null;
+  const requestComments = useMemo(() => (requestConversation ? commentsByFile(requestConversation.conversation.comments) : null), [requestConversation]);
   const requestRange: RequestRange | null = useMemo(() => {
     const { key, comparison } = requestFiles;
     if (!props.request || !key || !comparison?.base || !requestDetails?.headSha) return null;
@@ -436,6 +441,7 @@ export function RepositoryView(props: Props) {
         details={requestDetails}
         files={requestFiles}
         onOpenFile={views.showRequestChanges}
+        comments={requestComments}
         isShown={(path) => Boolean(requestRange && views.overRequest && isShown(shownDiff && { source: shownDiff.source, path: shownDiff.file.path }, { kind: "range", from: requestRange.base, to: requestRange.head }, path))}
         onFetch={requestFetch && canFetch && canChange ? () => act(requestFetch) : null}
         onClose={props.onCloseRequest}
@@ -697,6 +703,8 @@ export function RepositoryView(props: Props) {
               request={props.request}
               onCloseRequest={props.onCloseRequest}
               onRequestDetails={(details) => requestKey && setRequestLoaded(details ? { key: requestKey, details } : null)}
+              onRequestConversation={(conversation, onReplied) => requestKey && setRequestTalk(conversation ? { key: requestKey, conversation, onReplied } : null)}
+              requestConversation={requestConversation}
               notify={(text) => props.notify({ text })}
               rewrite={rewrite}
               onShowRewrite={setRewrite}

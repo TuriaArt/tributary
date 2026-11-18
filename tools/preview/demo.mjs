@@ -1085,17 +1085,18 @@ export function studioCommitRuns() {
 }
 
 /** What was said on the studio's pull requests, for the preview's fakes. */
-const comment = (id, author, body, created, more = {}) => ({ id, author, body, created, review: null, path: null, line: null, hunk: null, thread: null, reply: false, ...more });
+const comment = (id, author, body, created, more = {}) => ({ id, author, body, created, review: null, path: null, line: null, side: null, outdated: false, hunk: null, thread: null, reply: false, ...more });
 export const STUDIO_PULL_REQUEST_CONVERSATIONS = {
   12: {
     comments: [
       comment("l1", "lena-fischer", "Should the version bump go in with the art? Fine by me, just checking.", daysAgo(1.6), {
         path: "Config/DefaultGame.ini",
         line: 3,
+        side: "after",
         hunk: " [/Script/EngineSettings.GeneralProjectSettings]\n ProjectName=Feast of the Forgotten\n+ProjectVersion=0.3",
         thread: "1",
       }),
-      comment("l2", "rosa-bell", "Yes: the build script reads it for the patch notes.", daysAgo(1.5), { thread: "1", reply: true, path: "Config/DefaultGame.ini", line: 3 }),
+      comment("l2", "rosa-bell", "Yes: the build script reads it for the patch notes.", daysAgo(1.5), { thread: "1", reply: true, path: "Config/DefaultGame.ini", line: 3, side: "after" }),
       comment("c1", "sam-okafor", "I'll check the scissors socket against the cutting animation tomorrow.", daysAgo(1.2)),
       comment("r1", "maya-chen", "Looks great in the tavern. The apron reads well from across the room.", daysAgo(0.4), { review: "approved" }),
     ],

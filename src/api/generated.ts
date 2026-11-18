@@ -1510,6 +1510,13 @@ export type LineKind = "context" | "added" | "removed";
 export type LineMode = "stage" | "unstage" | "discard";
 
 /**
+ * A side of a file's changes: the file as it was before them, or after.
+ */
+export type LineSide =
+  | "before"
+  | "after";
+
+/**
  * A file locked with Git LFS.
  */
 export type Lock = {
@@ -2504,6 +2511,15 @@ export type RequestComment = {
    */
   path: string | null;
   line: number | null;
+  /**
+   * Which side of the changes `line` is on: the file as it was before them, or after.
+   */
+  side: LineSide | null;
+  /**
+   * The lines it was on have changed since it was written, so `line` is where they were
+   * then (GitHub).
+   */
+  outdated: boolean;
   /**
    * The lines it's about, from the diff (GitHub).
    */

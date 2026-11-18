@@ -21,6 +21,8 @@ interface Props {
   /** Show a file's changes, over the pull request. */
   onOpenFile: (file: FileChange) => void;
   isShown: (path: string) => boolean;
+  /** How many comments each file has on its lines, once its conversation is read. */
+  comments: ReadonlyMap<string, number> | null;
   /** Fetch its commits, from the remote it's on. */
   onFetch: (() => void) | null;
   /** Close the pull request. */
@@ -34,7 +36,7 @@ const NONE_CLOSED: ReadonlySet<string> = new Set();
  * changed since it split from the one it goes into, each opening its changes over the
  * pull request.
  */
-export function RequestFilesPanel({ repoPath, request, details, files, onOpenFile, isShown, onFetch, onClose }: Props) {
+export function RequestFilesPanel({ repoPath, request, details, files, onOpenFile, isShown, comments, onFetch, onClose }: Props) {
   const { comparison, error, unknown, missing } = files;
   const noun = requestNoun(request.forge);
   const Noun = noun[0].toUpperCase() + noun.slice(1);
@@ -56,7 +58,7 @@ export function RequestFilesPanel({ repoPath, request, details, files, onOpenFil
   const all = comparison?.files;
   const shown = useMemo(() => (all ? (all.length > FILTER_FROM && query.trim() ? filterFiles(all, query, actors) : all) : []), [all, query, actors]);
   const rows = useMemo(() => (layout === "tree" ? fileTreeRows(shown, closed) : null), [layout, shown, closed]);
-  const fileLine = (file: FileChange, depth?: number) => <FileLine file={file} depth={depth} onOpen={onOpenFile} shown={isShown(file.path)} />;
+  const fileLine = (file: FileChange, depth?: number) => <FileLine file={file} depth={depth} onOpen={onOpenFile} shown={isShown(file.path)} comments={comments?.get(file.path)} />;
 
   return (
     <ActorNames.Provider value={actors}>
