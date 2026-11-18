@@ -81,7 +81,7 @@
       Mine, theirs, both or your own edit for text; a whole version for assets.
     </td>
     <td width="50%" valign="top">
-      <img src="docs/images/pull-request.png" alt="A pull request with its reviews, checks and conversation"><br>
+      <img src="docs/images/pull-request.png" alt="A pull request with its reviews, checks and conversation, and the files it changes beside it"><br>
       <b>Pull requests in the app</b><br>
       Reviews, checks, comments and merging, on GitHub and GitLab.
     </td>

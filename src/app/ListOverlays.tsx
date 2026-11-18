@@ -1,4 +1,4 @@
-import type { Action, Lock, Overlap, PullRequest, RepoSnapshot } from "../api";
+import type { Action, Lock, Overlap, PullRequest, RepoSnapshot, RequestDetails } from "../api";
 import { BlameView } from "../components/BlameView";
 import { ChecksView, type ChecksOf } from "../components/ChecksView";
 import { DiffView } from "../components/diff/DiffView";
@@ -6,6 +6,7 @@ import { PullRequestView } from "../components/PullRequestView";
 import { RewriteView } from "../components/RewriteView";
 import { TeamView } from "../components/TeamView";
 import { conflictSides } from "../components/WorktreeDetails";
+import { requestNumber } from "../lib/pullRequests";
 import { openInBrowser } from "../lib/weblinks";
 import { DIFF_SECTION } from "./settingsSections";
 import type { FileViews } from "./useFileViews";
@@ -27,6 +28,8 @@ interface Props {
   onCloseTeam: () => void;
   request: PullRequest | null;
   onCloseRequest: () => void;
+  /** The open pull request's details, as its site says, each time they're read. */
+  onRequestDetails: (details: RequestDetails | null) => void;
   notify: (text: string) => void;
   /** A branch whose rewrite is shown: what changed when it was rebased or force-pushed. */
   rewrite: RewriteShown | null;
@@ -61,6 +64,7 @@ export function ListOverlays({
   onCloseTeam,
   request,
   onCloseRequest,
+  onRequestDetails,
   notify,
   rewrite,
   onShowRewrite,
@@ -70,22 +74,27 @@ export function ListOverlays({
   onCloseChecks,
 }: Props) {
   const { shownDiff, diffTargets, diffIndex, stepDiff, closeDiff, showBlame, blameAt, closeBlame } = views;
+  // A file's changes show over what was opened since, except one of the open pull request's
+  // files: that shows over the pull request, with a way back to it.
+  const overRequest = Boolean(request && views.overRequest);
+  const diff = shownDiff && (
+    <DiffView
+      repoPath={snapshot.path}
+      targets={diffTargets}
+      index={diffIndex}
+      onIndex={stepDiff}
+      onClose={closeDiff}
+      run={run}
+      version={snapshot.worktree}
+      onChooseTool={() => openSettings(DIFF_SECTION)}
+      sides={conflictSides(snapshot)}
+      onBlame={(target) => showBlame(target.file.path, target.source)}
+      back={request && overRequest ? { label: `${requestNumber(request)} ${request.title}`, onBack: closeDiff } : undefined}
+    />
+  );
   return (
     <>
-      {shownDiff && (
-        <DiffView
-          repoPath={snapshot.path}
-          targets={diffTargets}
-          index={diffIndex}
-          onIndex={stepDiff}
-          onClose={closeDiff}
-          run={run}
-          version={snapshot.worktree}
-          onChooseTool={() => openSettings(DIFF_SECTION)}
-          sides={conflictSides(snapshot)}
-          onBlame={(target) => showBlame(target.file.path, target.source)}
-        />
-      )}
+      {!overRequest && diff}
       {teamOpen && (
         <TeamView
           repoPath={snapshot.path}
@@ -118,11 +127,7 @@ export function ListOverlays({
           notify={notify}
           onShowRewrite={(branch, base) => onShowRewrite({ branch: `${request.remote}/${branch}`, base: `${request.remote}/${base}` })}
           onShowChecks={(id, summary) => onShowChecks({ id, summary })}
-          onCompare={(details) => {
-            if (!details.baseSha || !details.headSha) return;
-            views.comparing.compare({ from: { id: details.baseSha, label: details.base }, to: { id: details.headSha, label: details.branch }, split: true });
-            onCloseRequest();
-          }}
+          onDetails={onRequestDetails}
           onShowBranch={(branch) => {
             const ref = snapshot.commits.find((commit) => commit.refs.some((r) => r.kind === "branch" && (r.name === `${request.remote}/${branch}` || r.name === branch)));
             if (!ref) {
@@ -134,6 +139,7 @@ export function ListOverlays({
           }}
         />
       )}
+      {overRequest && diff}
       {rewrite && <RewriteView repoPath={snapshot.path} branch={rewrite.branch} base={rewrite.base} onClose={onCloseRewrite} />}
       {checksOf && <ChecksView repoPath={snapshot.path} commit={checksOf} onClose={onCloseChecks} openUrl={openInBrowser} notify={notify} />}
       {blameAt && <BlameView repoPath={snapshot.path} path={blameAt.path} at={blameAt.at} onClose={closeBlame} onSelectCommit={select} hasCommit={hasCommit} />}

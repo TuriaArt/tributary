@@ -112,9 +112,9 @@
 
   /** Pull requests, when they're faked: their details, and opening new ones. */
   const faking = () => preview.pullRequests !== undefined;
-  const fakeDetails = ({ number }) => {
+  const fakeDetails = ({ path, number }) => {
     const known = preview.pullRequestDetails?.[number];
-    if (known) return structuredClone(known);
+    if (known) return withCommits(path, structuredClone(known));
     const pr = (preview.pullRequests || []).find((each) => each.number === number);
     if (!pr) return Promise.reject(`GitHub didn't show pull request #${number}: it isn't there.`);
     return {
@@ -136,6 +136,18 @@
       checks: [],
       forge: pr.forge || "github",
     };
+  };
+  /**
+   * A faked request's two commits, when the script didn't give them: as its site would say
+   * them, the branch it goes into and its own branch, on its remote, as they are here. The
+   * app reads its files from them.
+   */
+  const withCommits = async (path, details) => {
+    if (details.baseSha && details.headSha) return details;
+    const remote = (preview.pullRequests || []).find((pr) => pr.number === details.number)?.remote ?? "origin";
+    const find = (name) => server("find_commit", { path, query: `${remote}/${name}` }).catch(() => null);
+    const [baseSha, headSha] = await Promise.all([details.baseSha ?? find(details.base), details.headSha ?? find(details.branch)]);
+    return { ...details, baseSha, headSha };
   };
   /** A request's conversation, made up when the script didn't give one. */
   const conversationOf = (number) => {
