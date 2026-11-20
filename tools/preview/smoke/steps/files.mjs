@@ -63,6 +63,59 @@ export default async function ({ page, folder, locks, preview, step, accessible,
     await view.waitFor({ state: "detached", timeout: 5000 });
   });
 
+  await step("lists your forks on GitHub once Settings shows them, syncs them, and keeps one in sync by itself", async () => {
+    const { demoForks } = await import("../../demo.mjs");
+    const before = await page.evaluate((forks) => {
+      const was = window.__PREVIEW__.github;
+      window.__PREVIEW__.github = { account: { login: "maya-chen", name: "Maya Chen" }, forks };
+      return was ?? null;
+    }, demoForks());
+    try {
+      expect((await page.getByRole("button", { name: "Your forks" }).count()) === 0, "the Forks button showed before Settings showed your forks");
+      await page.keyboard.press("Control+Comma");
+      await page.getByRole("tab", { name: "Forks" }).click();
+      await page.getByRole("switch", { name: "Your forks" }).click();
+      await page.keyboard.press("Escape");
+      await page.getByRole("button", { name: "Your forks" }).click();
+      const view = page.locator(".forks-view");
+      const fonts = view.getByRole("listitem", { name: "maya-chen/pixel-fonts" });
+      await fonts.getByRole("img", { name: "0 of its own, 7 new" }).waitFor({ timeout: 10_000 });
+      await view.locator(".forks-summary", { hasText: "4 forks of yours on GitHub · 3 behind their originals" }).waitFor({ timeout: 5000 });
+      await accessible("your forks");
+      // Opened, it lists the original's new commits.
+      await fonts.locator(".forks-name").click();
+      await fonts.getByText("Kerning for the small sizes").waitFor({ timeout: 5000 });
+      // One syncs; another's own changes clash with its original's, and it says what to do.
+      await view.getByRole("button", { name: "Sync maya-chen/pixel-fonts" }).click();
+      await fonts.locator(".forks-note.good", { hasText: "Synced" }).waitFor({ timeout: 5000 });
+      await fonts.getByText("Synced: it moved straight on to the original's commits.").waitFor({ timeout: 5000 });
+      const lantern = view.getByRole("listitem", { name: "maya-chen/lantern-ui" });
+      await view.getByRole("button", { name: "Sync maya-chen/lantern-ui" }).click();
+      await lantern.locator(".forks-note.bad", { hasText: "Clashes" }).waitFor({ timeout: 5000 });
+      await lantern.locator(".forks-name").click();
+      await lantern.getByText(/GitHub couldn't sync it by itself/).waitFor({ timeout: 5000 });
+      await accessible("your forks, after syncing two");
+      const synced = await page.evaluate(() => window.__PREVIEW__.syncedForks);
+      expect(JSON.stringify(synced) === JSON.stringify(["maya-chen/pixel-fonts", "maya-chen/lantern-ui"]), `synced ${JSON.stringify(synced)}`);
+      // Auto is remembered by the fork's name.
+      await view.getByRole("switch", { name: "Sync maya-chen/tavern-assets by itself" }).click();
+      const auto = await page.evaluate(() => JSON.parse(localStorage.getItem("tributary.forks.auto")));
+      expect(JSON.stringify(auto) === JSON.stringify(["maya-chen/tavern-assets"]), `auto ${JSON.stringify(auto)}`);
+      await view.getByRole("switch", { name: "Sync maya-chen/tavern-assets by itself" }).click();
+      await page.keyboard.press("Escape");
+      await view.waitFor({ state: "detached", timeout: 5000 });
+    } finally {
+      // As it was: your forks out of sight, and GitHub as before.
+      await page.keyboard.press("Control+Comma");
+      await page.getByRole("tab", { name: "Forks" }).click();
+      const shown = page.getByRole("switch", { name: "Your forks" });
+      if ((await shown.getAttribute("aria-checked")) === "true") await shown.click();
+      await page.keyboard.press("Escape");
+      await page.evaluate((was) => (window.__PREVIEW__.github = was ?? undefined), before);
+    }
+    expect((await page.getByRole("button", { name: "Your forks" }).count()) === 0, "the Forks button stayed after Settings hid your forks");
+  });
+
   await step("offers to release your locks after pushing", async () => {
     await page.locator(".commit-row", { has: page.locator(".summary.wip") }).click();
     await page.getByRole("button", { name: "Unstage all" }).click();
