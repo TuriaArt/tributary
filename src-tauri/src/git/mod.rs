@@ -370,7 +370,7 @@ pub fn working() -> bool {
 }
 
 pub(crate) fn command(executable: &Path) -> Command {
-    let mut command = Command::new(executable);
+    let mut command = crate::host::program(executable);
     // git's messages in English, whatever language the computer is in: the app reads them
     // (to explain an error in plain words, or to offer to put changes aside), and a
     // translated one would go unrecognised. LANGUAGE only chooses the messages' language,
