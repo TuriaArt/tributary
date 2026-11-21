@@ -521,6 +521,16 @@ export const TeamIcon = (p: IconProps) => (
   </Icon>
 );
 
+/** A repository forked: two branches from one, as GitHub draws a fork. */
+export const ForkIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <circle cx="4.5" cy="3.5" r="1.5" />
+    <circle cx="11.5" cy="3.5" r="1.5" />
+    <circle cx="8" cy="12.5" r="1.5" />
+    <path d="M4.5 5v1.25c0 1.1.9 2 2 2h3c1.1 0 2-.9 2-2V5M8 8.25V11" />
+  </Icon>
+);
+
 export const ColumnsIcon = (p: IconProps) => (
   <Icon {...p}>
     <rect x="2" y="3" width="12" height="10" rx="1.5" />
