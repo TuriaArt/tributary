@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { forkStatus, gitHubForks, syncFork, type Fork, type Forks, type ForkStatus, type ForkSync } from "../api";
-import { barWidth, forkKey, outcomeText, parentKey, synced, type ForkSyncEvery } from "../lib/forks";
+import { barWidth, forkKey, outcomeText, parentKey, shortCount, synced, type ForkSyncEvery } from "../lib/forks";
 import { relativeTime } from "../lib/format";
 import { Avatar } from "./Avatar";
-import { ChevronRightIcon, CloseIcon, ForkIcon, RefreshIcon } from "./Icons";
+import { CheckIcon, ChevronRightIcon, CloseIcon, ForkIcon, RefreshIcon, WarningIcon } from "./Icons";
 import { Loader } from "./Loader";
 import { Button } from "./ui/Button";
 import { Switch } from "./ui/Switch";
@@ -11,7 +11,7 @@ import { Switch } from "./ui/Switch";
 /** How many forks are compared with their originals at once. */
 const AT_ONCE = 4;
 /** The longest bar, in pixels, for the fork with the most commits. */
-const BAR = 44;
+const BAR = 40;
 
 /** A fork's comparison with its original: being read, read, or why it couldn't be. */
 type Compared = { status: ForkStatus | null; error: string | null };
@@ -31,6 +31,8 @@ interface Props {
 }
 
 const seconds = (iso: string | null | undefined) => (iso ? Date.parse(iso) / 1000 : NaN);
+/** A count in words, with its thousands apart: 2,195. */
+const many = (count: number) => count.toLocaleString("en-US");
 /** Whether a sync brought the original's commits in. */
 const synced_ = (sync: ForkSync) => synced(sync.outcome);
 
@@ -45,6 +47,8 @@ export function ForksView({ auto, setAuto, every, onSignIn, openUrl, onClose }: 
   const [syncs, setSyncs] = useState<Record<string, Synced>>({});
   const [open, setOpen] = useState<string | null>(null);
   const [round, setRound] = useState(0);
+  // Sync all running: its button stays pressed until the last fork is done.
+  const [syncingAll, setSyncingAll] = useState(false);
   const alive = useRef(true);
   useEffect(
     () => () => {
@@ -68,6 +72,7 @@ export function ForksView({ auto, setAuto, every, onSignIn, openUrl, onClose }: 
     let current = true;
     setList(null);
     setCompared({});
+    setSyncs({});
     gitHubForks()
       .then(async (forks) => {
         if (!current) return;
@@ -101,9 +106,9 @@ export function ForksView({ auto, setAuto, every, onSignIn, openUrl, onClose }: 
       setSyncs((all) => ({ ...all, [key]: { running: true } }));
       try {
         const result = await syncFork(fork);
-        if (!alive.current) return;
-        setSyncs((all) => ({ ...all, [key]: { running: false, sync: result, error: null } }));
-        if (synced(result.outcome)) await compare(fork);
+        // Still syncing until it's compared again, so its old counts never show as behind.
+        if (alive.current && synced(result.outcome)) await compare(fork);
+        if (alive.current) setSyncs((all) => ({ ...all, [key]: { running: false, sync: result, error: null } }));
       } catch (error) {
         if (alive.current) setSyncs((all) => ({ ...all, [key]: { running: false, sync: null, error: String(error) } }));
       }
@@ -112,16 +117,26 @@ export function ForksView({ auto, setAuto, every, onSignIn, openUrl, onClose }: 
   );
 
   const forks = list?.forks?.forks ?? [];
-  // Behind their originals, and worth syncing: not while one is, nor again after it clashed.
-  const behind = forks.filter((fork) => {
+  // Behind their originals; and of those, the ones worth syncing: not while one is, nor again
+  // after it didn't sync (until the forks are looked at again).
+  const behind = forks.filter((fork) => (compared[forkKey(fork)]?.status?.new ?? 0) > 0);
+  const toSync = behind.filter((fork) => {
     const sync = syncs[forkKey(fork)];
-    const clashed = sync && !sync.running && sync.sync?.outcome === "conflict";
-    return (compared[forkKey(fork)]?.status?.new ?? 0) > 0 && !sync?.running && !clashed;
+    const failed = sync && !sync.running && (sync.error !== null || (sync.sync !== null && !synced(sync.sync.outcome)));
+    return !sync?.running && !failed;
   });
   const most = Math.max(1, ...forks.map((fork) => Math.max(compared[forkKey(fork)]?.status?.new ?? 0, compared[forkKey(fork)]?.status?.own ?? 0)));
   const syncingAny = Object.values(syncs).some((entry) => entry.running);
   const syncAll = async () => {
-    for (const fork of behind) await sync(fork);
+    setSyncingAll(true);
+    try {
+      for (const fork of toSync) {
+        if (!alive.current) return;
+        await sync(fork);
+      }
+    } finally {
+      if (alive.current) setSyncingAll(false);
+    }
   };
   const setAutoFor = (fork: Fork, on: boolean) => {
     const key = forkKey(fork);
@@ -161,9 +176,9 @@ export function ForksView({ auto, setAuto, every, onSignIn, openUrl, onClose }: 
             {reading ? " · comparing them with their originals…" : ` · ${behind.length === 0 ? "all up to date" : `${behind.length} behind ${behind.length === 1 ? "its original" : "their originals"}`}`}
             {` · ${often}.`}
           </p>
-          <Button kind="primary" disabled={behind.length === 0 || syncingAny} onClick={() => void syncAll()}>
-            <RefreshIcon size={14} />
-            <span className="button-label">{behind.length > 1 ? `Sync ${behind.length} behind` : "Sync"}</span>
+          <Button kind="primary" disabled={toSync.length === 0 || syncingAny || syncingAll} aria-busy={syncingAll} onClick={() => void syncAll()}>
+            <RefreshIcon size={14} className={syncingAll ? "spin" : undefined} />
+            <span className="button-label">{syncingAll ? "Syncing…" : toSync.length > 1 ? `Sync ${toSync.length} behind` : "Sync"}</span>
           </Button>
         </div>
         <div className="forks-table">
@@ -203,7 +218,7 @@ export function ForksView({ auto, setAuto, every, onSignIn, openUrl, onClose }: 
           <ForkIcon size={14} />
           <span className="team-title">Your forks</span>
         </div>
-        <Button kind="icon" onClick={() => setRound((n) => n + 1)} disabled={!list || syncingAny} title="Look again" aria-label="Look at your forks again">
+        <Button kind="icon" onClick={() => setRound((n) => n + 1)} disabled={!list || syncingAny || syncingAll} title="Look again" aria-label="Look at your forks again">
           <RefreshIcon />
         </Button>
         <Button kind="icon" onClick={onClose} title="Close (Esc)" aria-label="Close your forks">
@@ -238,10 +253,33 @@ function ForkRow({ fork, compared, synced, most, open, auto, onToggle, onAuto, o
   const clashed = result?.sync?.outcome === "conflict";
 
   let action;
-  if (synced?.running) action = <span className="forks-note">Syncing…</span>;
-  else if (result?.error) action = <span className="forks-note bad">Couldn't sync</span>;
-  else if (result?.sync && result.sync.outcome !== "upToDate")
-    action = <span className={`forks-note ${synced_(result.sync) ? "good" : "bad"}`}>{synced_(result.sync) ? "Synced" : clashed ? "Clashes" : "Not synced"}</span>;
+  if (synced?.running)
+    action = (
+      <span className="forks-note forks-state">
+        <RefreshIcon size={12} className="spin" />
+        Syncing…
+      </span>
+    );
+  else if (result?.error || (result?.sync && !synced_(result.sync) && result.sync.outcome !== "upToDate"))
+    action = (
+      <button
+        className="forks-state bad"
+        onClick={onToggle}
+        aria-expanded={open}
+        aria-label={`${clashed ? "Clashes" : "Couldn't sync"}: what to do about ${name}`}
+        title={open ? undefined : "See what to do"}
+      >
+        <WarningIcon size={12} />
+        <span className="button-label">{clashed ? "Clashes" : "Couldn't sync"}</span>
+      </button>
+    );
+  else if (result?.sync && synced_(result.sync))
+    action = (
+      <span className="forks-note forks-state good">
+        <CheckIcon size={12} />
+        Synced
+      </span>
+    );
   else if (status && status.new > 0)
     action = (
       <Button kind="secondary" onClick={onSync} aria-label={`Sync ${name}`}>
@@ -264,11 +302,11 @@ function ForkRow({ fork, compared, synced, most, open, auto, onToggle, onAuto, o
           </span>
         </button>
         {status ? (
-          <span className="forks-bars" role="img" aria-label={`${status.own} of its own, ${status.new} new`}>
+          <span className="forks-bars" role="img" aria-label={`${status.own} of its own, ${status.new} new`} title={`${status.own} of its own, ${status.new} new`}>
             <span className="forks-half own">
               {status.own > 0 && (
                 <>
-                  <span>{status.own}</span>
+                  <span className="forks-count">{shortCount(status.own)}</span>
                   <span className="forks-bar own" style={{ width: barWidth(status.own, most, BAR) }} />
                 </>
               )}
@@ -278,7 +316,7 @@ function ForkRow({ fork, compared, synced, most, open, auto, onToggle, onAuto, o
               {status.new > 0 && (
                 <>
                   <span className="forks-bar new" style={{ width: barWidth(status.new, most, BAR) }} />
-                  <span>{status.new}</span>
+                  <span className="forks-count">{shortCount(status.new)}</span>
                 </>
               )}
             </span>
@@ -310,12 +348,12 @@ function ForkRow({ fork, compared, synced, most, open, auto, onToggle, onAuto, o
               <h4 className="forks-detail-title">
                 {status.new === 0
                   ? `It has all of ${parentKey(fork)}'s commits on ${fork.parent.branch}.`
-                  : `${status.new === 1 ? "1 new commit" : `${status.new} new commits`} from ${parentKey(fork)}${
+                  : `${status.new === 1 ? "1 new commit" : `${many(status.new)} new commits`} from ${parentKey(fork)}${
                       status.own === 0
                         ? ": it has none of its own, so it moves straight on to them."
                         : clashed
-                          ? `: it has ${status.own} of its own, which clash with them.`
-                          : `: it has ${status.own} of its own, so syncing adds a merge commit, unless they clash.`
+                          ? `: it has ${many(status.own)} of its own, which clash with them.`
+                          : `: it has ${many(status.own)} of its own, so syncing adds a merge commit, unless they clash.`
                     }`}
               </h4>
               {status.commits.map((commit) => (
@@ -327,7 +365,7 @@ function ForkRow({ fork, compared, synced, most, open, auto, onToggle, onAuto, o
               ))}
               {status.new > status.commits.length && (
                 <p className="forks-more">
-                  and {status.new - status.commits.length} more ·{" "}
+                  {status.commits.length > 0 && <>and {many(status.new - status.commits.length)} more · </>}
                   <Button kind="link" onClick={() => openUrl(compareUrl)}>
                     See them on GitHub
                   </Button>

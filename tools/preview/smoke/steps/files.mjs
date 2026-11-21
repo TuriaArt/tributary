@@ -89,18 +89,43 @@ export default async function ({ page, folder, locks, preview, step, accessible,
       // Opened, it lists the original's new commits.
       await fonts.locator(".forks-name").click();
       await fonts.getByText("Kerning for the small sizes").waitFor({ timeout: 5000 });
-      // One syncs; another's own changes clash with its original's, and it says what to do.
+      // One syncs by itself.
       await view.getByRole("button", { name: "Sync maya-chen/pixel-fonts" }).click();
-      await fonts.locator(".forks-note.good", { hasText: "Synced" }).waitFor({ timeout: 5000 });
+      await fonts.locator(".forks-state.good", { hasText: "Synced" }).waitFor({ timeout: 5000 });
       await fonts.getByText("Synced: it moved straight on to the original's commits.").waitFor({ timeout: 5000 });
+      // Then the other two together: the button stays pressed, turning, until both are done,
+      // without going back to a count on the way.
+      const all = view.locator(".forks-top").getByRole("button");
+      await all.filter({ hasText: "Sync 2 behind" }).waitFor({ timeout: 5000 });
+      const seen = await page.evaluate(async () => {
+        const button = document.querySelector(".forks-top button");
+        button.click();
+        const states = [];
+        const start = performance.now();
+        while (performance.now() - start < 10_000) {
+          await new Promise((resolve) => setTimeout(resolve, 20));
+          states.push(`${button.disabled ? "off" : "on"} ${button.textContent}`);
+          if (!document.querySelector(".forks-view .spin")) break;
+        }
+        return states;
+      });
+      expect(
+        seen.length > 2 && seen.slice(0, -1).every((state) => state === "off Syncing…") && seen[seen.length - 1] === "off Sync",
+        `Sync all went ${JSON.stringify([...new Set(seen)])}`,
+      );
+      // One's own changes clash with its original's: it says so, and what to do.
       const lantern = view.getByRole("listitem", { name: "maya-chen/lantern-ui" });
-      await view.getByRole("button", { name: "Sync maya-chen/lantern-ui" }).click();
-      await lantern.locator(".forks-note.bad", { hasText: "Clashes" }).waitFor({ timeout: 5000 });
-      await lantern.locator(".forks-name").click();
+      const tavern = view.getByRole("listitem", { name: "maya-chen/tavern-assets" });
+      await tavern.locator(".forks-state.good", { hasText: "Synced" }).waitFor({ timeout: 5000 });
+      await view.locator(".forks-summary", { hasText: "4 forks of yours on GitHub · 1 behind its original" }).waitFor({ timeout: 5000 });
+      await lantern.getByRole("button", { name: "Clashes: what to do about maya-chen/lantern-ui" }).click();
       await lantern.getByText(/GitHub couldn't sync it by itself/).waitFor({ timeout: 5000 });
-      await accessible("your forks, after syncing two");
+      await accessible("your forks, after syncing three");
       const synced = await page.evaluate(() => window.__PREVIEW__.syncedForks);
-      expect(JSON.stringify(synced) === JSON.stringify(["maya-chen/pixel-fonts", "maya-chen/lantern-ui"]), `synced ${JSON.stringify(synced)}`);
+      expect(
+        JSON.stringify(synced) === JSON.stringify(["maya-chen/pixel-fonts", "maya-chen/lantern-ui", "maya-chen/tavern-assets"]),
+        `synced ${JSON.stringify(synced)}`,
+      );
       // Auto is remembered by the fork's name.
       await view.getByRole("switch", { name: "Sync maya-chen/tavern-assets by itself" }).click();
       const auto = await page.evaluate(() => JSON.parse(localStorage.getItem("tributary.forks.auto")));

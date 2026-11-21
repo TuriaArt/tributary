@@ -39,7 +39,7 @@
 /* Fork, its own and new commits, when it was updated, Auto, Sync. */
 .forks-row {
   display: grid;
-  grid-template-columns: minmax(170px, 1fr) 128px 96px 40px 96px;
+  grid-template-columns: minmax(170px, 1fr) 160px 96px 40px 112px;
   align-items: center;
   gap: var(--space-12);
   padding: var(--space-8) var(--space-16) var(--space-8) var(--space-8);
@@ -139,7 +139,7 @@
 /* Narrow (the details panel beside it): when each was updated makes way. */
 @container (max-width: 600px) {
   .forks-row {
-    grid-template-columns: minmax(150px, 1fr) 128px 40px 96px;
+    grid-template-columns: minmax(150px, 1fr) 160px 40px 112px;
   }
 
   .forks-updated {
@@ -157,6 +157,8 @@
   display: flex;
   flex: 1;
   align-items: center;
+  min-width: 0;
+  overflow: hidden;
   gap: var(--space-6);
   color: var(--text-muted);
   font-size: var(--type-xs);
@@ -167,7 +169,13 @@
   justify-content: flex-end;
 }
 
+/* Up to four characters (1.7k): longer counts are shortened, so they never reach the next column. */
+.forks-count {
+  flex: none;
+}
+
 .forks-bar {
+  flex: none;
   height: 8px;
   border-radius: var(--radius-xs);
 }
@@ -204,6 +212,31 @@
 .forks-action {
   display: flex;
   justify-content: flex-end;
+}
+
+/* How syncing went, with an icon: Syncing…, Synced, or a chip that opens the fork to say what
+   to do when it clashed or couldn't sync. */
+.forks-state {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+button.forks-state {
+  height: 21px;
+  padding: 0 var(--space-8);
+  border: 1px solid rgb(var(--warning-rgb) / 0.35);
+  border-radius: var(--radius-pill);
+  background: rgb(var(--warning-rgb) / 0.1);
+  color: var(--warning-soft-text);
+  font: inherit;
+  font-size: var(--type-sm);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+button.forks-state:hover {
+  background: rgb(var(--warning-rgb) / 0.18);
 }
 
 .forks-detail {
