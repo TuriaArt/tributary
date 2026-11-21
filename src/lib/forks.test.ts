@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Fork } from "../api";
-import { barWidth, describeForkRun, forkKey, listNames, outcomeText, parentKey, syncDue } from "./forks";
+import { barWidth, describeForkRun, forkKey, listNames, outcomeText, parentKey, shortCount, syncDue } from "./forks";
 
 const FORK: Fork = {
   owner: "rosa-bell",
@@ -66,5 +66,18 @@ describe("forks", () => {
     expect(barWidth(1, 41, 70)).toBe(6);
     expect(barWidth(0, 41, 70)).toBe(0);
     expect(barWidth(500, 41, 70)).toBe(70);
+  });
+
+  it("shortens counts that wouldn't fit beside a bar", () => {
+    expect(shortCount(0)).toBe("0");
+    expect(shortCount(999)).toBe("999");
+    expect(shortCount(1000)).toBe("1k");
+    expect(shortCount(1691)).toBe("1.7k");
+    expect(shortCount(2195)).toBe("2.2k");
+    expect(shortCount(9960)).toBe("10k");
+    expect(shortCount(17_400)).toBe("17k");
+    expect(shortCount(999_499)).toBe("999k");
+    expect(shortCount(999_500)).toBe("1M");
+    expect(shortCount(1_740_000)).toBe("1.7M");
   });
 });

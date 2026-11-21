@@ -79,3 +79,10 @@ export function barWidth(count: number, most: number, full: number): number {
   if (count <= 0 || most <= 0) return 0;
   return Math.max(6, Math.round((Math.min(count, most) / most) * full));
 }
+
+/** A count of commits short enough for beside a bar: 999, then 1.7k, 17k, 170k, then 1.7M. */
+export function shortCount(count: number): string {
+  if (count < 1000) return String(count);
+  const [value, unit] = count < 999_500 ? [count / 1000, "k"] : [count / 1_000_000, "M"];
+  return `${value < 9.95 ? Math.round(value * 10) / 10 : Math.round(value)}${unit}`;
+}
