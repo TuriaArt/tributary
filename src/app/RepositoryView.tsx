@@ -379,10 +379,13 @@ export function RepositoryView(props: Props) {
     />
   ) : null;
 
+  // Your forks aren't about this repository: while they're open, its side panels make way
+  // for them, and come back as they were when they close.
+  const sidebarShown = sidebarOpen && !props.forks.open;
   // The side panels slide open and closed (see usePresence).
   const sidebarPanel = usePresence(
-    sidebarOpen,
-    sidebarOpen ? (
+    sidebarShown,
+    sidebarShown ? (
       <Sidebar
         repoPath={snapshot.path}
         commits={snapshot.commits}
@@ -436,7 +439,7 @@ export function RepositoryView(props: Props) {
     ...(props.submodules.list.length > 0 ? [{ id: "submodules", label: "Submodules", icon: <SubmoduleIcon size={16} /> }] : []),
     ...(locks ? [{ id: "locks", label: "Locked files", icon: <LockIcon size={16} />, count: locks.length }] : []),
   ];
-  const detailsOpen = Boolean(props.request || comparing.request || selection.selected || selection.multi);
+  const detailsOpen = !props.forks.open && Boolean(props.request || comparing.request || selection.selected || selection.multi);
   const detailsPanel = usePresence(
     detailsOpen,
     props.request ? (
@@ -612,7 +615,7 @@ export function RepositoryView(props: Props) {
           {/* A search of everything lists what it found in the sidebar's place, as wide as it,
               so the history and the search box above it stay where they are. With no
               sidebar beside the history, the results go over it instead. */}
-          {searchResults && sidebarOpen && !strip.narrow ? (
+          {searchResults && sidebarShown && !strip.narrow ? (
             <>
               <div className="sidebar-frame search-results-frame" style={{ width: sidebarWidth }}>
                 {searchResults}
@@ -637,7 +640,7 @@ export function RepositoryView(props: Props) {
                 <ResizeHandle className="panel-handle" {...panelResize("sidebar")} />
               </>
             ))}
-          {searchResults && !(sidebarOpen && !strip.narrow) && (
+          {searchResults && !(sidebarShown && !strip.narrow) && (
             <div className="sidebar-over search-results-over" style={{ width: Math.max(sidebarWidth, 280), left: sidebarPanel.shown && strip.narrow ? undefined : 0 }}>
               {searchResults}
             </div>

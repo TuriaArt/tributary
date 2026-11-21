@@ -76,8 +76,12 @@ export default async function ({ page, folder, locks, preview, step, accessible,
       await page.getByRole("tab", { name: "Forks" }).click();
       await page.getByRole("switch", { name: "Your forks" }).click();
       await page.keyboard.press("Escape");
+      await page.locator(".sidebar-frame").waitFor({ timeout: 5000 });
       await page.getByRole("button", { name: "Your forks" }).click();
       const view = page.locator(".forks-view");
+      // They aren't about this repository: its side panels make way while they're open.
+      await page.locator(".sidebar-frame").waitFor({ state: "detached", timeout: 5000 });
+      await page.locator(".details-frame").waitFor({ state: "detached", timeout: 5000 });
       const fonts = view.getByRole("listitem", { name: "maya-chen/pixel-fonts" });
       await fonts.getByRole("img", { name: "0 of its own, 7 new" }).waitFor({ timeout: 10_000 });
       await view.locator(".forks-summary", { hasText: "4 forks of yours on GitHub · 3 behind their originals" }).waitFor({ timeout: 5000 });
@@ -104,6 +108,7 @@ export default async function ({ page, folder, locks, preview, step, accessible,
       await view.getByRole("switch", { name: "Sync maya-chen/tavern-assets by itself" }).click();
       await page.keyboard.press("Escape");
       await view.waitFor({ state: "detached", timeout: 5000 });
+      await page.locator(".sidebar-frame").waitFor({ timeout: 5000 });
     } finally {
       // As it was: your forks out of sight, and GitHub as before.
       await page.keyboard.press("Control+Comma");

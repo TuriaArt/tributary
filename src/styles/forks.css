@@ -6,6 +6,13 @@
   padding: var(--space-20) var(--space-24) var(--space-40);
 }
 
+/* The window to themselves (the side panels make way), but no wider than reads well. */
+.forks-top,
+.forks-table {
+  max-width: 1080px;
+  margin-inline: auto;
+}
+
 .forks-top {
   display: flex;
   align-items: center;
