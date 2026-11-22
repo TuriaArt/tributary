@@ -2591,7 +2591,7 @@
   "{0}Offer a tour when I come across something new": "{0}Предлагать тур, когда я встречаю что-то новое",
   "{0}Only commits on no branch ({1})": "{0}Только коммиты вне веток ({1})",
   "{0}Open it in a new tab": "{0}Открыть в новой вкладке",
-  "{0}Open repository…{1}": "{0}Открыть репозиторий…{1}",
+  "{0}Open repository…{1}": "{0}Открыть…{1}",
   "{0}Push it to {1}": "{0}Отправить его в {1}",
   "{0}Report on GitHub opens a bug report with it filled in, for you to read and send.": "{0}«Сообщить на GitHub» откроет заполненный отчёт об ошибке — прочитайте и отправьте его.",
   "{0}Restarting installs it, as soon as no git command is running, and your tabs open again where you were. Later, it installs when you quit Tributary.": "{0}Перезапуск установит его, как только не будет выполняющихся команд git, и ваши вкладки откроются там же. «Позже» — установится при выходе из Tributary.",
