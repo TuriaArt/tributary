@@ -4,17 +4,18 @@ import { useIssueTracker } from "../../lib/issues";
 import { PullRequestsContext } from "../../lib/pullRequests";
 import { openInBrowser } from "../../lib/weblinks";
 import { PullRequestIcon, TargetIcon } from "../Icons";
+import { t } from "../../lib/i18n";
 
 /** Sections the sidebar can show, in its order, for its Sections menu and Settings. */
 export const SIDEBAR_SECTIONS: { id: string; title: string; hint: string }[] = [
-  { id: "branches", title: "Branches", hint: "Yours, and the remotes' branches you haven't got" },
-  { id: "pullRequests", title: "Pull requests", hint: "The open ones on GitHub or GitLab" },
-  { id: "issues", title: "Issues", hint: "Yours, open, from the repository's issue tracker" },
-  { id: "tags", title: "Tags", hint: "" },
-  { id: "stashes", title: "Stashes", hint: "" },
-  { id: "worktrees", title: "Worktrees", hint: "When there's more than one" },
-  { id: "submodules", title: "Submodules", hint: "When there are some" },
-  { id: "locks", title: "Locked files", hint: "When the repository locks files with Git LFS" },
+  { id: "branches", title: t("Branches"), hint: t("Yours, and the remotes' branches you haven't got") },
+  { id: "pullRequests", title: t("Pull requests"), hint: t("The open ones on GitHub or GitLab") },
+  { id: "issues", title: t("Issues"), hint: t("Yours, open, from the repository's issue tracker") },
+  { id: "tags", title: t("Tags"), hint: "" },
+  { id: "stashes", title: t("Stashes"), hint: "" },
+  { id: "worktrees", title: t("Worktrees"), hint: t("When there's more than one") },
+  { id: "submodules", title: t("Submodules"), hint: t("When there are some") },
+  { id: "locks", title: t("Locked files"), hint: t("When the repository locks files with Git LFS") },
 ];
 
 /** The open pull (or merge) requests, newest first: a click shows one in the app. */
@@ -33,7 +34,7 @@ export function RequestList({ filter }: { filter: string }) {
             className={`sidebar-item sidebar-request${pr.draft ? " draft" : ""}`}
             role="button"
             tabIndex={0}
-            title={`#${pr.number} ${pr.title}\n${pr.draft ? "Draft · " : ""}${pr.author} · ${pr.branch}`}
+            title={`#${pr.number} ${pr.title}\n${pr.draft ? t("Draft · ") : ""}${pr.author} · ${pr.branch}`}
             onClick={() => lookup?.open(pr)}
             onKeyDown={(event) => event.key === "Enter" && lookup?.open(pr)}
           >
@@ -79,7 +80,7 @@ export function IssueList({ issues, error, filter }: { issues: Issue[]; error: s
             className="sidebar-item sidebar-issue"
             role="button"
             tabIndex={0}
-            title={`${issue.key} ${issue.title}${issue.status ? `\n${issue.status}` : ""}\nOpens in your browser`}
+            title={t("{0} {1}{2}\nOpens in your browser", issue.key, issue.title, issue.status ? `\n${issue.status}` : "")}
             onClick={() => openInBrowser(issue.url)}
             onKeyDown={(event) => event.key === "Enter" && openInBrowser(issue.url)}
           >

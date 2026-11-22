@@ -7,6 +7,7 @@ import { CheckIcon, ChevronRightIcon, CloseIcon, ForkIcon, RefreshIcon, WarningI
 import { Loader } from "./Loader";
 import { Button } from "./ui/Button";
 import { Switch } from "./ui/Switch";
+import { locale, t, tx } from "../lib/i18n";
 
 /** How many forks are compared with their originals at once. */
 const AT_ONCE = 4;
@@ -32,7 +33,7 @@ interface Props {
 
 const seconds = (iso: string | null | undefined) => (iso ? Date.parse(iso) / 1000 : NaN);
 /** A count in words, with its thousands apart: 2,195. */
-const many = (count: number) => count.toLocaleString("en-US");
+const many = (count: number) => count.toLocaleString(locale() ?? "en-US");
 /** Whether a sync brought the original's commits in. */
 const synced_ = (sync: ForkSync) => synced(sync.outcome);
 
@@ -163,50 +164,50 @@ export function ForksView({ auto, setAuto, every, onSignIn, openUrl, onClose }: 
 
   let body;
   if (!list) {
-    body = <Loader size={88} title="Looking for your forks" />;
+    body = <Loader size={88} title={t("Looking for your forks")} />;
   } else if (list.error) {
     body = (
       <div className="diff-message">
-        <strong>Couldn't list your forks</strong>
+        <strong>{t("Couldn't list your forks")}</strong>
         <span>{list.error}</span>
       </div>
     );
   } else if (!list.forks?.signedIn) {
     body = (
       <div className="diff-message">
-        <strong>Sign in to GitHub to see your forks</strong>
-        <span>Tributary asks GitHub which of your repositories are forks, and syncs them there.</span>
+        <strong>{t("Sign in to GitHub to see your forks")}</strong>
+        <span>{t("Tributary asks GitHub which of your repositories are forks, and syncs them there.")}</span>
         <Button kind="primary" onClick={onSignIn}>
-          Sign in to GitHub
+          {t("Sign in to GitHub")}
         </Button>
       </div>
     );
   } else if (forks.length === 0) {
-    body = <div className="diff-message muted">You have no forks on GitHub. When you fork a repository there, it shows here.</div>;
+    body = <div className="diff-message muted">{t("You have no forks on GitHub. When you fork a repository there, it shows here.")}</div>;
   } else {
-    const often = every === "off" ? "Auto is off in Settings → Forks" : `The ones with Auto on sync every ${every} while Tributary is open`;
+    const often = every === "off" ? t("Auto is off in Settings → Forks") : t("The ones with Auto on sync every {0} while Tributary is open", every);
     body = (
       <>
         <div className="forks-top">
           <p className="forks-summary">
-            {forks.length === 1 ? "1 fork of yours on GitHub" : `${forks.length} forks of yours on GitHub`}
-            {reading ? " · comparing them with their originals…" : ` · ${behind.length === 0 ? "all up to date" : `${behind.length} behind ${behind.length === 1 ? "its original" : "their originals"}`}`}
+            {forks.length === 1 ? t("1 fork of yours on GitHub") : t("{0} forks of yours on GitHub", forks.length)}
+            {reading ? t(" · comparing them with their originals…") : ` · ${behind.length === 0 ? t("all up to date") : behind.length === 1 ? t("1 behind its original") : t("{0} behind their originals", behind.length)}`}
             {` · ${often}.`}
           </p>
           <Button kind="primary" disabled={toSync.length === 0 || syncingAny || syncingAll} aria-busy={syncingAll} onClick={() => void syncAll()}>
             <RefreshIcon size={14} className={syncingAll ? "spin" : undefined} />
-            <span className="button-label">{syncingAll ? "Syncing…" : toSync.length > 1 ? `Sync ${toSync.length} behind` : "Sync"}</span>
+            <span className="button-label">{syncingAll ? t("Syncing…") : toSync.length > 1 ? t("Sync {0} behind", toSync.length) : t("Sync")}</span>
           </Button>
         </div>
         <div className="forks-table">
           <div className="forks-row forks-head" aria-hidden="true">
-            <span>Fork</span>
-            <span className="forks-head-bars">Its own · New</span>
-            <span className="forks-updated">Updated</span>
-            <span>Auto</span>
+            <span>{t("Fork")}</span>
+            <span className="forks-head-bars">{t("Its own · New")}</span>
+            <span className="forks-updated">{t("Updated")}</span>
+            <span>{t("Auto")}</span>
             <span />
           </div>
-          <div className="forks-list" role="list" aria-label="Your forks">
+          <div className="forks-list" role="list" aria-label={t("Your forks")}>
             {forks.map((fork) => (
               <ForkRow
                 key={forkKey(fork)}
@@ -229,16 +230,16 @@ export function ForksView({ auto, setAuto, every, onSignIn, openUrl, onClose }: 
   }
 
   return (
-    <section className="diff-view forks-view" aria-label="Your forks">
+    <section className="diff-view forks-view" aria-label={t("Your forks")}>
       <header className="diff-header">
         <div className="diff-title">
           <ForkIcon size={14} />
-          <span className="team-title">Your forks</span>
+          <span className="team-title">{t("Your forks")}</span>
         </div>
-        <Button kind="icon" onClick={() => setRound((n) => n + 1)} disabled={!list || syncingAny || syncingAll} title="Look again" aria-label="Look at your forks again">
+        <Button kind="icon" onClick={() => setRound((n) => n + 1)} disabled={!list || syncingAny || syncingAll} title={t("Look again")} aria-label={t("Look at your forks again")}>
           <RefreshIcon />
         </Button>
-        <Button kind="icon" onClick={onClose} title="Close (Esc)" aria-label="Close your forks">
+        <Button kind="icon" onClick={onClose} title={t("Close (Esc)")} aria-label={t("Close your forks")}>
           <CloseIcon />
         </Button>
       </header>
@@ -273,8 +274,7 @@ function ForkRow({ fork, compared, synced, most, open, auto, onToggle, onAuto, o
   if (synced?.running)
     action = (
       <span className="forks-note forks-state">
-        <RefreshIcon size={12} className="spin" />
-        Syncing…
+        {tx("{0}Syncing…", <RefreshIcon size={12} className="spin" />)}
       </span>
     );
   else if (result?.error || (result?.sync && !synced_(result.sync) && result.sync.outcome !== "upToDate"))
@@ -283,43 +283,42 @@ function ForkRow({ fork, compared, synced, most, open, auto, onToggle, onAuto, o
         className="forks-state bad"
         onClick={onToggle}
         aria-expanded={open}
-        aria-label={`${clashed ? "Clashes" : "Couldn't sync"}: what to do about ${name}`}
-        title={open ? undefined : "See what to do"}
+        aria-label={t("{0}: what to do about {1}", clashed ? t("Clashes") : t("Couldn't sync"), name)}
+        title={open ? undefined : t("See what to do")}
       >
         <WarningIcon size={12} />
-        <span className="button-label">{clashed ? "Clashes" : "Couldn't sync"}</span>
+        <span className="button-label">{clashed ? t("Clashes") : t("Couldn't sync")}</span>
       </button>
     );
   else if (result?.sync && synced_(result.sync))
     action = (
       <span className="forks-note forks-state good">
-        <CheckIcon size={12} />
-        Synced
+        {tx("{0}Synced", <CheckIcon size={12} />)}
       </span>
     );
   else if (status && status.new > 0)
     action = (
-      <Button kind="secondary" onClick={onSync} aria-label={`Sync ${name}`}>
-        Sync
+      <Button kind="secondary" onClick={onSync} aria-label={t("Sync {0}", name)}>
+        {t("Sync")}
       </Button>
     );
-  else if (status) action = <span className="forks-note">Up to date</span>;
+  else if (status) action = <span className="forks-note">{t("Up to date")}</span>;
   else action = <span className="forks-note">{compared?.error ? "" : "…"}</span>;
 
   return (
     <div className={`forks-item${open ? " open" : ""}`} role="listitem" aria-label={name}>
       <div className="forks-row">
-        <button className="forks-name" aria-expanded={open} onClick={onToggle} title={open ? "Hide the new commits" : "See the new commits"}>
+        <button className="forks-name" aria-expanded={open} onClick={onToggle} title={open ? t("Hide the new commits") : t("See the new commits")}>
           <ChevronRightIcon size={12} className="forks-chevron" />
           <span className="forks-names">
             <span className="forks-repo">{fork.name}</span>
             <span className="forks-from" title={`${fork.branch} from ${parentKey(fork)}`}>
-              <code className="forks-branch">{fork.branch}</code> from <b>{parentKey(fork)}</b>
+              {tx("{0} from {1}", <code className="forks-branch">{fork.branch}</code>, <b>{parentKey(fork)}</b>)}
             </span>
           </span>
         </button>
         {status ? (
-          <span className="forks-bars" role="img" aria-label={`${status.own} of its own, ${status.new} new`} title={`${status.own} of its own, ${status.new} new`}>
+          <span className="forks-bars" role="img" aria-label={t("{0} of its own, {1} new", status.own, status.new)} title={t("{0} of its own, {1} new", status.own, status.new)}>
             <span className="forks-half own">
               {status.own > 0 && (
                 <>
@@ -339,10 +338,10 @@ function ForkRow({ fork, compared, synced, most, open, auto, onToggle, onAuto, o
             </span>
           </span>
         ) : (
-          <span className="forks-note">{compared?.error ? "Couldn't compare" : "Comparing…"}</span>
+          <span className="forks-note">{compared?.error ? t("Couldn't compare") : t("Comparing…")}</span>
         )}
         <span className="forks-note forks-updated">{fork.pushed ? relativeTime(seconds(fork.pushed)) : ""}</span>
-        <Switch on={auto} onChange={onAuto} label={`Sync ${name} by itself`} />
+        <Switch on={auto} onChange={onAuto} label={t("Sync {0} by itself", name)} />
         <span className="forks-action">{action}</span>
       </div>
       {open && (
@@ -353,10 +352,10 @@ function ForkRow({ fork, compared, synced, most, open, auto, onToggle, onAuto, o
           {result?.sync && (result.sync.outcome === "conflict" || result.sync.outcome === "refused") && (
             <p className="forks-problem">
               {clashed
-                ? "GitHub couldn't sync it by itself: its own commits change the same lines as the original's. Sync it on GitHub, where you can choose what to do, or merge the original into it in a clone."
+                ? t("GitHub couldn't sync it by itself: its own commits change the same lines as the original's. Sync it on GitHub, where you can choose what to do, or merge the original into it in a clone.")
                 : result.sync.message}{" "}
               <Button kind="link" onClick={() => openUrl(fork.url)}>
-                Open it on GitHub
+                {t("Open it on GitHub")}
               </Button>
             </p>
           )}
@@ -364,13 +363,13 @@ function ForkRow({ fork, compared, synced, most, open, auto, onToggle, onAuto, o
             <>
               <h4 className="forks-detail-title">
                 {status.new === 0
-                  ? `It has all of ${parentKey(fork)}'s commits on ${fork.parent.branch}.`
-                  : `${status.new === 1 ? "1 new commit" : `${many(status.new)} new commits`} from ${parentKey(fork)}${
+                  ? t("It has all of {0}'s commits on {1}.", parentKey(fork), fork.parent.branch)
+                  : `${status.new === 1 ? t("1 new commit") : t("{0} new commits", many(status.new))} from ${parentKey(fork)}${
                       status.own === 0
-                        ? ": it has none of its own, so it moves straight on to them."
+                        ? t(": it has none of its own, so it moves straight on to them.")
                         : clashed
-                          ? `: it has ${many(status.own)} of its own, which clash with them.`
-                          : `: it has ${many(status.own)} of its own, so syncing adds a merge commit, unless they clash.`
+                          ? t(": it has {0} of its own, which clash with them.", many(status.own))
+                          : t(": it has {0} of its own, so syncing adds a merge commit, unless they clash.", many(status.own))
                     }`}
               </h4>
               {status.commits.map((commit) => (
@@ -382,9 +381,9 @@ function ForkRow({ fork, compared, synced, most, open, auto, onToggle, onAuto, o
               ))}
               {status.new > status.commits.length && (
                 <p className="forks-more">
-                  {status.commits.length > 0 && <>and {many(status.new - status.commits.length)} more · </>}
+                  {status.commits.length > 0 && <>{tx("and {0} more ·", many(status.new - status.commits.length))}{" "}</>}
                   <Button kind="link" onClick={() => openUrl(compareUrl)}>
-                    See them on GitHub
+                    {t("See them on GitHub")}
                   </Button>
                 </p>
               )}

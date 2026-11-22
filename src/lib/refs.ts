@@ -1,4 +1,5 @@
 import type { CommitRow, RefLabel } from "../api";
+import { t } from "./i18n";
 
 /** A label shown next to a commit. A local branch and its remote counterparts share one pill. */
 export interface RefPill {
@@ -64,11 +65,11 @@ export function refPills(refs: RefLabel[]): RefPill[] {
 }
 
 export function describePill(pill: RefPill): string {
-  if (pill.kind === "head") return "Detached HEAD";
-  if (pill.kind === "tag") return `Tag ${pill.name}`;
-  if (pill.kind === "stash") return `Stash ${pill.name}`;
+  if (pill.kind === "head") return t("Detached HEAD");
+  if (pill.kind === "tag") return t("Tag {0}", pill.name);
+  if (pill.kind === "stash") return t("Stash {0}", pill.name);
   const where = [pill.local ? "local" : null, ...pill.remotes].filter(Boolean).join(", ");
-  return `${pill.current ? "Checked out branch" : "Branch"} ${pill.name} (${where})`;
+  return `${pill.current ? t("Checked out branch") : t("Branch")} ${pill.name} (${where})`;
 }
 
 /** A branch, tag or stash, and the commit it points to. */

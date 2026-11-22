@@ -8,6 +8,7 @@ import { readSetting } from "../lib/settings";
 import type { Tab } from "../components/TabBar";
 import type { Busy } from "./constants";
 import { setWindowTitle } from "./window";
+import { t } from "../lib/i18n";
 
 export type LoadMode = "open" | "refresh" | "more";
 
@@ -100,7 +101,7 @@ export function useRepository({ setTabs, setActiveTab, firstParentOnly, events }
           return index < 0 ? [...tabs, tab] : tabs.map((t, i) => (i === index ? tab : t));
         });
         setActiveTab(next.path);
-        setWindowTitle(`${next.name} — Tributary`);
+        setWindowTitle(t("{0} — Tributary", next.name));
         setBusy(null);
         const full = await openRepository(path, limit, true, firstParent, readVisibility(next.path)).catch(() => null);
         if (current() && full?.worktree) setSnapshot(full);
@@ -140,7 +141,7 @@ export function useRepository({ setTabs, setActiveTab, firstParentOnly, events }
   const pick = useCallback(
     () =>
       whilePicking(async () => {
-        const path = await open({ directory: true, multiple: false, title: "Open a git repository" });
+        const path = await open({ directory: true, multiple: false, title: t("Open a git repository") });
         if (typeof path === "string") await load(path, "open");
       }),
     [whilePicking, load],
@@ -150,7 +151,7 @@ export function useRepository({ setTabs, setActiveTab, firstParentOnly, events }
   const create = useCallback(
     () =>
       whilePicking(async () => {
-        const path = await open({ directory: true, multiple: false, title: "Choose a folder for the new repository" });
+        const path = await open({ directory: true, multiple: false, title: t("Choose a folder for the new repository") });
         if (typeof path !== "string") return;
         const message = await initRepository(path);
         await load(path, "open");
@@ -168,7 +169,7 @@ export function useRepository({ setTabs, setActiveTab, firstParentOnly, events }
     blockFocusRefresh.current = false;
     latest.current.events.closed();
     latest.current.setActiveTab(null);
-    setWindowTitle("Tributary");
+    setWindowTitle(t("Tributary"));
   }, []);
 
   // Reopen your tabs (or the last repository) on launch.

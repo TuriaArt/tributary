@@ -1,4 +1,6 @@
 import type { SincePerson, SinceThen } from "../api";
+import { plural } from "./format";
+import { locale, pluralWord, t } from "./i18n";
 
 /** When you were last here, in words after "Since": "earlier today", "yesterday", "Tuesday", "12 Nov". */
 export function sinceWhen(at: number, now: number = Date.now()): string {
@@ -8,11 +10,11 @@ export function sinceWhen(at: number, now: number = Date.now()): string {
   };
   const days = Math.round((day(now) - day(at)) / 86_400_000);
   const date = new Date(at);
-  if (days <= 0) return "earlier today";
+  if (days <= 0) return t("earlier today");
   if (days === 1) return "yesterday";
-  if (days < 7) return date.toLocaleDateString("en-GB", { weekday: "long" });
+  if (days < 7) return date.toLocaleDateString(locale() ?? "en-GB", { weekday: "long" });
   const sameYear = date.getFullYear() === new Date(now).getFullYear();
-  return date.toLocaleDateString("en-GB", sameYear ? { day: "numeric", month: "short" } : { day: "numeric", month: "short", year: "numeric" });
+  return date.toLocaleDateString(locale() ?? "en-GB", sameYear ? { day: "numeric", month: "short" } : { day: "numeric", month: "short", year: "numeric" });
 }
 
 /** People's first names, unless two of them share one: then their whole names. */
@@ -27,10 +29,11 @@ function shortNames(people: SincePerson[]): string[] {
 export function peopleWords(people: SincePerson[], count: number): string {
   const names = shortNames(people.slice(0, 3));
   const others = Math.max(count, people.length) - names.length;
-  if (names.length === 0) return count === 1 ? "someone" : `${count} people`;
-  if (others > 0) return `${names.slice(0, 2).join(", ")} and ${others + names.length - 2} ${others + names.length - 2 === 1 ? "other" : "others"}`;
+  if (names.length === 0) return count === 1 ? t("someone") : t("{0} people", count);
+  const rest = others + names.length - 2;
+  if (others > 0) return rest === 1 ? t("{0} and 1 other", names.slice(0, 2).join(", ")) : t("{0} and {1} others", names.slice(0, 2).join(", "), rest);
   if (names.length === 1) return names[0];
-  return `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
+  return t("{0} and {1}", names.slice(0, -1).join(", "), names[names.length - 1]);
 }
 
 /** A remote branch's name without its remote when that's origin (or the only one): "main" for "origin/main". */
@@ -42,7 +45,7 @@ export function branchWords(branch: string, remotes: string[]): string {
 
 /** 1240 as "1,240". */
 export function countWords(count: number): string {
-  return count.toLocaleString("en-GB");
+  return count.toLocaleString(locale() ?? "en-GB");
 }
 
 /** The branches with news, the one you'd most want first: your own branch's remote, then main. */
@@ -97,35 +100,35 @@ export function sinceItems(branches: SinceThen[], remotes: string[]): SinceItem[
   const items: SinceItem[] = [];
   const named = branches.slice(0, MOST_BRANCHES);
   named.forEach((item, index) => {
-    const commits = `${countWords(item.commits)} new ${item.commits === 1 ? "commit" : "commits"}`;
+    const commits = `${countWords(item.commits)} ${pluralWord(item.commits, "new commit")}`;
     items.push({
       link: index === 0 ? commits : countWords(item.commits),
       to: item.was,
-      title: `Go to where you left off on ${branchWords(item.branch, remotes)}`,
-      rest: ` on ${branchWords(item.branch, remotes)} from ${peopleWords(item.people, item.peopleCount)}`,
+      title: t("Go to where you left off on {0}", branchWords(item.branch, remotes)),
+      rest: t(" on {0} from {1}", branchWords(item.branch, remotes), peopleWords(item.people, item.peopleCount)),
     });
   });
   const others = branches.slice(MOST_BRANCHES);
   if (others.length > 0) {
     const count = others.reduce((sum, item) => sum + item.commits, 0);
-    items.push({ link: countWords(count), to: others[0].was, title: `Go to where you left off on ${branchWords(others[0].branch, remotes)}`, rest: ` on ${others.length} more ${others.length === 1 ? "branch" : "branches"}` });
+    items.push({ link: countWords(count), to: others[0].was, title: t("Go to where you left off on {0}", branchWords(others[0].branch, remotes)), rest: t(" on {0} more {1}", others.length, pluralWord(others.length, "branch", "branches")) });
   }
   const merged = branches.flatMap((item) => item.merged.map((request) => ({ ...request, branch: item.branch })));
   const requests = merged.filter((request, index) => merged.findIndex((other) => other.sign === request.sign && other.number === request.number) === index);
   if (requests.length === 1) {
     const [request] = requests;
-    items.push({ link: `${request.sign}${request.number}`, to: request.commit, title: request.title, rest: ` merged into ${branchWords(request.branch, remotes)}` });
+    items.push({ link: `${request.sign}${request.number}`, to: request.commit, title: request.title, rest: t(" merged into {0}", branchWords(request.branch, remotes)) });
   } else if (requests.length > 1) {
-    const kind = requests.every((request) => request.sign === "!") ? "merge requests" : "pull requests";
-    items.push({ link: `${requests.length} ${kind}`, to: requests[0].commit, title: requests.map((request) => `${request.sign}${request.number} ${request.title}`).join("\n"), rest: " merged" });
+    const link = requests.every((request) => request.sign === "!") ? plural(requests.length, "merge request") : plural(requests.length, "pull request");
+    items.push({ link, to: requests[0].commit, title: requests.map((request) => `${request.sign}${request.number} ${request.title}`).join("\n"), rest: t(" merged") });
   }
   const changed = branches.flatMap((item) => item.changed);
   const files = changed.filter((file, index) => changed.findIndex((other) => other.path === file.path) === index);
   if (files.length === 1) {
     const [file] = files;
-    items.push({ link: file.path.split("/").pop() || file.path, to: file.commit, title: `${file.path}, changed by ${file.author}`, rest: ", which you've locked, changed" });
+    items.push({ link: file.path.split("/").pop() || file.path, to: file.commit, title: t("{0}, changed by {1}", file.path, file.author), rest: t(", which you've locked, changed") });
   } else if (files.length > 1) {
-    items.push({ link: `${files.length} files you've locked`, to: files[0].commit, title: files.map((file) => `${file.path}, changed by ${file.author}`).join("\n"), rest: " changed" });
+    items.push({ link: t("{0} files you've locked", files.length), to: files[0].commit, title: files.map((file) => t("{0}, changed by {1}", file.path, file.author)).join("\n"), rest: t(" changed") });
   }
   return items;
 }

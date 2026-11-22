@@ -1,5 +1,6 @@
 import type { Action, Running as Shown, WorktreeStatus } from "../api";
-import { plural } from "../lib/format";
+import { joinAnd, plural } from "../lib/format";
+import { t } from "../lib/i18n";
 
 /** What's loading. */
 export type Busy = { kind: "open"; path: string } | { kind: "refresh" } | { kind: "more" } | null;
@@ -47,5 +48,5 @@ export function discardLabel(action: Action, worktree: WorktreeStatus | null): s
   if (files.size === 0) return null;
   const folders = [...files].filter((path) => path.endsWith("/")).length;
   const what = [files.size > folders && plural(files.size - folders, "file"), folders > 0 && plural(folders, "new folder")];
-  return `Discarding ${what.filter(Boolean).join(" and ")}`;
+  return t("Discarding {0}", joinAnd(what.filter((part): part is string => Boolean(part))));
 }

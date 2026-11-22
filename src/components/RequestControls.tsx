@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { changeRequest, type RequestChange, type RequestDetails } from "../api";
 import { Button } from "./ui/Button";
+import { t } from "../lib/i18n";
 
 /**
  * Changing an open request besides reviewing and merging: ready for review or back to a
@@ -59,17 +60,17 @@ export function AskForReview({
             onCancel();
           }
         }}
-        placeholder={gitlab ? "Usernames, like maya, theo" : "Usernames or teams, like maya, @studio/art"}
-        aria-label="Who to ask"
+        placeholder={gitlab ? t("Usernames, like maya, theo") : t("Usernames or teams, like maya, @studio/art")}
+        aria-label={t("Who to ask")}
         autoFocus
         spellCheck={false}
         autoCapitalize="off"
       />
       <Button type="button" kind="link" onClick={onCancel} disabled={busy}>
-        Cancel
+        {t("Cancel")}
       </Button>
       <Button type="submit" kind="primary" disabled={busy || reviewers.length === 0}>
-        <span className="button-label">Ask</span>
+        <span className="button-label">{t("Ask")}</span>
       </Button>
     </form>
   );

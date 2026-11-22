@@ -6,14 +6,15 @@ import { useStoredState } from "../lib/settings";
 import { Dialog } from "./Dialog";
 import { CheckIcon, FolderIcon } from "./Icons";
 import { Button } from "./ui/Button";
+import { t, tx } from "../lib/i18n";
 
 /** Skip the introduction and go straight to choosing a file (Settings → General turns it back on). */
 export const SKIP_INTRO_KEY = "ignoreReason.skipIntro";
 
 const STEPS = [
-  { title: "Choose the file", text: "One that doesn't show in your changes, or one you aren't sure about." },
-  { title: "See the rule", text: "The exact line that leaves it out, and the file it's in: a .gitignore, .git/info/exclude or your own ignore file." },
-  { title: "Stage it anyway", text: "If it should be committed after all, without changing the rule for anything else." },
+  { title: t("Choose the file"), text: t("One that doesn't show in your changes, or one you aren't sure about.") },
+  { title: t("See the rule"), text: t("The exact line that leaves it out, and the file it's in: a .gitignore, .git/info/exclude or your own ignore file.") },
+  { title: t("Stage it anyway"), text: t("If it should be committed after all, without changing the rule for anything else.") },
 ];
 
 /**
@@ -45,7 +46,7 @@ export function IgnoreReasonDialog({
 
   const choose = async () => {
     setChoosing(true);
-    const picked = await openFile({ multiple: false, directory: false, title: "Which file is left out?", defaultPath: repoPath }).catch(() => null);
+    const picked = await openFile({ multiple: false, directory: false, title: t("Which file is left out?"), defaultPath: repoPath }).catch(() => null);
     setChoosing(false);
     if (typeof picked === "string") {
       setReason(null);
@@ -82,29 +83,27 @@ export function IgnoreReasonDialog({
     if (!intro) return null;
     return (
       <Dialog
-        title="Why is a file ignored?"
+        title={t("Why is a file ignored?")}
         className="ignore-window"
         closable
         onCancel={onClose}
         buttons={
           <>
             <label className="checkbox ignore-skip">
-              <input type="checkbox" checked={skipIntro} onChange={(event) => setSkipIntro(event.target.checked)} />
-              Don't show this again
+              {tx("{0}Don't show this again", <input type="checkbox" checked={skipIntro} onChange={(event) => setSkipIntro(event.target.checked)} />)}
             </label>
             <span className="spacer" />
             <Button kind="secondary" onClick={onClose}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button kind="primary" onClick={() => void choose()} disabled={choosing} autoFocus>
-              {choosing ? "Choosing…" : "Choose a file…"}
+              {choosing ? t("Choosing…") : t("Choose a file…")}
             </Button>
           </>
         }
       >
         <p className="ignore-lead">
-          Git leaves out files that match an <strong>ignore rule</strong>, so they never show in your changes and can't be committed by
-          accident. Pick one, and Tributary finds the rule that's responsible.
+          {tx("Git leaves out files that match an {0}, so they never show in your changes and can't be committed by accident. Pick one, and Tributary finds the rule that's responsible.", <strong>{t("ignore rule")}</strong>)}
         </p>
         <ol className="ignore-steps">
           {STEPS.map((step, index) => (
@@ -123,7 +122,7 @@ export function IgnoreReasonDialog({
   const rule = reason?.rule;
   return (
     <Dialog
-      title={!reason ? "Why is a file ignored?" : rule ? `Why ${name} is left out` : `${name} isn't ignored`}
+      title={!reason ? t("Why is a file ignored?") : rule ? t("Why {0} is left out", name) : t("{0} isn't ignored", name)}
       className="ignore-window"
       closable
       error={error}
@@ -131,11 +130,11 @@ export function IgnoreReasonDialog({
       buttons={
         <>
           <Button kind="secondary" onClick={() => void choose()} disabled={choosing}>
-            Choose another file…
+            {t("Choose another file…")}
           </Button>
           <span className="spacer" />
           <Button kind="secondary" onClick={onClose}>
-            Close
+            {t("Close")}
           </Button>
           {rule && !reason?.tracked && (
             <Button
@@ -146,14 +145,14 @@ export function IgnoreReasonDialog({
                 run({ kind: "stageIgnored", paths: [reason.path] });
               }}
             >
-              Stage it anyway
+              {t("Stage it anyway")}
             </Button>
           )}
         </>
       }
     >
       {!reason ? (
-        !error && <p className="muted">Looking…</p>
+        !error && <p className="muted">{t("Looking…")}</p>
       ) : (
         <div className="ignore-answer">
           <p className="ignore-file">
@@ -165,7 +164,7 @@ export function IgnoreReasonDialog({
               <figure className="ignore-rule-card">
                 <figcaption>
                   <span className="mono">{rule.source}</span>
-                  <span className="ignore-rule-line">line {rule.line}</span>
+                  <span className="ignore-rule-line">{tx("line {0}", rule.line)}</span>
                 </figcaption>
                 <pre className="mono">
                   <span className="ignore-gutter">{rule.line}</span>
@@ -174,16 +173,15 @@ export function IgnoreReasonDialog({
               </figure>
               <p className="ignore-note">
                 {reason.tracked
-                  ? "It's committed already, so the rule doesn't apply to it: its changes still show."
-                  : "This rule leaves it out. Staging it anyway commits it despite the rule, and from then on its changes show; the rule stays for everything else."}
+                  ? t("It's committed already, so the rule doesn't apply to it: its changes still show.")
+                  : t("This rule leaves it out. Staging it anyway commits it despite the rule, and from then on its changes show; the rule stays for everything else.")}
               </p>
             </>
           ) : (
             <div className="ignore-clear">
               <CheckIcon size={16} />
               <span>
-                No rule leaves it out.{" "}
-                {reason.tracked ? "It's committed, and its changes show like any other file's." : "When it changes, it shows in your uncommitted changes."}
+                {tx("No rule leaves it out. {0}", reason.tracked ? t("It's committed, and its changes show like any other file's.") : t("When it changes, it shows in your uncommitted changes."))}
               </span>
             </div>
           )}

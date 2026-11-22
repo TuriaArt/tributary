@@ -5,6 +5,7 @@ import type { Search, SearchMode } from "../app/useSearch";
 import { plural, relativeTime, shortId } from "../lib/format";
 import { BranchIcon, CloseIcon, CodeIcon, CommitIcon, FolderIcon, TagIcon, UserIcon } from "./Icons";
 import { Button } from "./ui/Button";
+import { t, tx } from "../lib/i18n";
 
 /** How many of each kind are listed before Show all. */
 const SHOWN = 3;
@@ -87,13 +88,13 @@ export function SearchResults({
   const groups: Group[] = [
     {
       kind: "messages",
-      title: "Messages",
+      title: t("Messages"),
       count: overview ? count(overview.messages.commits.length, overview.messages.truncated) : null,
       rows: overview ? commitRows(overview.messages.commits, <CommitIcon size={14} />) : [],
     },
     {
       kind: "refs",
-      title: "Branches and tags",
+      title: t("Branches and tags"),
       count: String(refs.length),
       rows: refs.map((ref) => (
         <button key={ref.name} className="search-result" onClick={() => onGo(ref.commit)}>
@@ -104,10 +105,10 @@ export function SearchResults({
     },
     {
       kind: "authors",
-      title: "Authors",
+      title: t("Authors"),
       count: overview ? String(overview.authors.length) : null,
       rows: (overview?.authors ?? []).map((author) => (
-        <button key={author.email + author.name} className="search-result" onClick={() => onKind("authors", author.email)} title={`Their commits: ${author.name} <${author.email}>`}>
+        <button key={author.email + author.name} className="search-result" onClick={() => onKind("authors", author.email)} title={t("Their commits: {0} <{1}>", author.name, author.email)}>
           <span className="search-result-icon">
             <UserIcon size={14} />
           </span>
@@ -120,16 +121,16 @@ export function SearchResults({
     },
     {
       kind: "hashes",
-      title: "Commit ids",
+      title: t("Commit ids"),
       count: overview ? String(overview.hashes.commits.length) : null,
       rows: overview ? commitRows(overview.hashes.commits, <CommitIcon size={14} />) : [],
     },
     {
       kind: "files",
-      title: "Files",
+      title: t("Files"),
       count: overview ? String(overview.files.length) : null,
       rows: (overview?.files ?? []).map((file) => (
-        <button key={file.path} className="search-result" onClick={() => onKind("files", file.path)} title={`The commits that changed ${file.path}`}>
+        <button key={file.path} className="search-result" onClick={() => onKind("files", file.path)} title={t("The commits that changed {0}", file.path)}>
           <span className="search-result-icon">
             <FolderIcon size={14} />
           </span>
@@ -140,7 +141,7 @@ export function SearchResults({
     },
     {
       kind: "code",
-      title: "Code",
+      title: t("Code"),
       count: code ? count(code.commits.length, code.truncated) : null,
       rows: code ? commitRows(code.commits, <CodeIcon size={14} />) : [],
     },
@@ -150,12 +151,12 @@ export function SearchResults({
   const total = groups.reduce((sum, group) => sum + group.rows.length, 0);
 
   return (
-    <aside className="search-results" aria-label={`What "${query}" matches`}>
+    <aside className="search-results" aria-label={t("What \"{0}\" matches", query)}>
       <header className="search-results-head">
         <span className="search-results-total">
-          {everything.searching && total === 0 ? "Searching…" : plural(total, "result")} for “{query}”
+          {tx("{0} for “{1}”", everything.searching && total === 0 ? t("Searching…") : plural(total, "result"), query)}
         </span>
-        <Button kind="icon" onClick={onClose} title="Close the results (Esc in the search box)" aria-label="Close the results">
+        <Button kind="icon" onClick={onClose} title={t("Close the results (Esc in the search box)")} aria-label={t("Close the results")}>
           <CloseIcon size={13} />
         </Button>
       </header>
@@ -164,10 +165,10 @@ export function SearchResults({
           <section key={group.kind} className="search-results-group" aria-label={group.title}>
             <h3 className="search-results-title">
               <span>{group.title}</span>
-              <span className="search-results-count">{group.count ?? "searching…"}</span>
+              <span className="search-results-count">{group.count ?? t("searching…")}</span>
               {group.rows.length > SHOWN && (
-                <button className="search-results-all" onClick={() => onKind(group.kind, query)} title={`Search ${group.title.toLowerCase()} alone, with the history showing just those`}>
-                  <span className="button-label">Show all {group.rows.length}</span>
+                <button className="search-results-all" onClick={() => onKind(group.kind, query)} title={t("Search {0} alone, with the history showing just those", group.title.toLowerCase())}>
+                  <span className="button-label">{tx("Show all {0}", group.rows.length)}</span>
                 </button>
               )}
             </h3>
@@ -176,7 +177,7 @@ export function SearchResults({
         ))}
         {none.length > 0 && (
           <p className="search-results-none">
-            Nothing in {none.map((group) => group.title.toLowerCase()).join(", ")}
+            {tx("Nothing in {0}", none.map((group) => group.title.toLowerCase()).join(", "))}
           </p>
         )}
       </div>

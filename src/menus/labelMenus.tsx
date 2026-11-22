@@ -21,6 +21,7 @@ import {
 import { worktreeOf, splitRemoteBranch, headSide, canResetTo, type MenuContext } from "./context";
 import { mergeItems, visibilityItems, webItems } from "./shared";
 import { stashMenu } from "./commitMenus";
+import { t } from "../lib/i18n";
 
 /** The action that checks out a branch label, or null when there's nothing to do. */
 export function checkoutFor(_ctx: MenuContext, pill: RefPill, commit: CommitRow): Action | null {
@@ -35,11 +36,11 @@ export function checkoutFor(_ctx: MenuContext, pill: RefPill, commit: CommitRow)
 /** Right-click on a branch or tag label. */
 export function pillMenu(ctx: MenuContext, pill: RefPill, commit: CommitRow): MenuItem[] {
   if (pill.kind === "stash") return stashMenu(ctx, commit);
-  if (pill.kind === "head") return [{ label: "Copy SHA", icon: <CopyIcon />, onSelect: () => copyText(commit.id) }];
+  if (pill.kind === "head") return [{ label: t("Copy SHA"), icon: <CopyIcon />, onSelect: () => copyText(commit.id) }];
   const { canChange, snapshot } = ctx;
   const checkout = checkoutFor(ctx, pill, commit);
   const highlight: MenuItem = {
-    label: `Highlight ${pill.name}'s history`,
+    label: t("Highlight {0}'s history", pill.name),
     icon: <EyeIcon />,
     separated: true,
     onSelect: () => ctx.focus(pill.name, commit.id),
@@ -50,7 +51,7 @@ export function pillMenu(ctx: MenuContext, pill: RefPill, commit: CommitRow): Me
     snapshot.headBranch && canResetTo(snapshot, commit)
       ? [
           {
-            label: `Hard reset ${snapshot.headBranch} to ${pill.name}…`,
+            label: t("Hard reset {0} to {1}…", snapshot.headBranch, pill.name),
             icon: <ResetIcon />,
             danger: true,
             separated: true,
@@ -64,7 +65,7 @@ export function pillMenu(ctx: MenuContext, pill: RefPill, commit: CommitRow): Me
     head && commit.id !== head.id
       ? [
           {
-            label: pill.kind === "tag" ? `What's changed in ${head.label} since ${pill.name}` : `Compare with ${head.label}`,
+            label: pill.kind === "tag" ? t("What's changed in {0} since {1}", head.label, pill.name) : t("Compare with {0}", head.label),
             icon: <CompareIcon />,
             onSelect: () =>
               pill.kind === "tag"
@@ -78,7 +79,7 @@ export function pillMenu(ctx: MenuContext, pill: RefPill, commit: CommitRow): Me
   if (stacked?.moved && stacked.old) {
     const old = stacked.old;
     compare.push({
-      label: pill.current ? `Move ${pill.name} onto the new ${stacked.on}` : `Move it onto the new ${stacked.on}: check ${pill.name} out first`,
+      label: pill.current ? t("Move {0} onto the new {1}", pill.name, stacked.on) : t("Move it onto the new {0}: check {1} out first", stacked.on, pill.name),
       icon: <RebaseIcon />,
       disabled: !ctx.canChange || !pill.current || snapshot.operation !== null,
       onSelect: () => ctx.run({ kind: "restack", onto: stacked.on, old }),
@@ -87,7 +88,7 @@ export function pillMenu(ctx: MenuContext, pill: RefPill, commit: CommitRow): Me
   // What changed when it was rebased, amended or force-pushed.
   if (pill.kind === "branch") {
     compare.push({
-      label: pill.local ? `What changed when ${pill.name} was rewritten…` : `What changed when ${pill.name} was force-pushed…`,
+      label: pill.local ? t("What changed when {0} was rewritten…", pill.name) : t("What changed when {0} was force-pushed…", pill.name),
       icon: <RebaseIcon />,
       onSelect: () => ctx.showRewrite({ branch: pill.name, base: null }),
     });
@@ -97,7 +98,7 @@ export function pillMenu(ctx: MenuContext, pill: RefPill, commit: CommitRow): Me
     const remote = snapshot.remotes.includes("origin") ? "origin" : (snapshot.remotes[0] ?? null);
     return [
       {
-        label: `Check out ${pill.name} (detached)`,
+        label: t("Check out {0} (detached)", pill.name),
         icon: <TagIcon />,
         disabled: !canChange || commit.id === snapshot.headCommit,
         onSelect: () => checkout && ctx.run(checkout),
@@ -106,7 +107,7 @@ export function pillMenu(ctx: MenuContext, pill: RefPill, commit: CommitRow): Me
       highlight,
       ...compare,
       {
-        label: `Release notes for ${pill.name}…`,
+        label: t("Release notes for {0}…", pill.name),
         icon: <NotesIcon />,
         onSelect: () => ctx.open({ kind: "releaseNotes", tag: pill.name }),
       },
@@ -115,7 +116,7 @@ export function pillMenu(ctx: MenuContext, pill: RefPill, commit: CommitRow): Me
       ...(remote
         ? [
             {
-              label: `Push ${pill.name} to ${remote}`,
+              label: t("Push {0} to {1}", pill.name, remote),
               icon: <PushIcon />,
               separated: true,
               disabled: !canChange,
@@ -124,7 +125,7 @@ export function pillMenu(ctx: MenuContext, pill: RefPill, commit: CommitRow): Me
           ]
         : []),
       {
-        label: `Delete tag ${pill.name}…`,
+        label: t("Delete tag {0}…", pill.name),
         icon: <TrashIcon />,
         danger: true,
         separated: !remote,
@@ -134,7 +135,7 @@ export function pillMenu(ctx: MenuContext, pill: RefPill, commit: CommitRow): Me
       ...(remote
         ? [
             {
-              label: `Delete ${pill.name} from ${remote}…`,
+              label: t("Delete {0} from {1}…", pill.name, remote),
               icon: <TrashIcon />,
               danger: true,
               disabled: !canChange,
@@ -143,7 +144,7 @@ export function pillMenu(ctx: MenuContext, pill: RefPill, commit: CommitRow): Me
           ]
         : []),
       ...reset,
-      { label: "Copy tag name", icon: <CopyIcon />, separated: true, onSelect: () => copyText(pill.name) },
+      { label: t("Copy tag name"), icon: <CopyIcon />, separated: true, onSelect: () => copyText(pill.name) },
     ];
   }
 
@@ -152,9 +153,9 @@ export function pillMenu(ctx: MenuContext, pill: RefPill, commit: CommitRow): Me
     const elsewhere = worktreeOf(ctx, pill.name);
     items.push(
       elsewhere
-        ? { label: `Open ${pill.name}'s worktree`, icon: <FolderIcon />, onSelect: () => ctx.openWorktree(elsewhere.path) }
+        ? { label: t("Open {0}'s worktree", pill.name), icon: <FolderIcon />, onSelect: () => ctx.openWorktree(elsewhere.path) }
         : {
-            label: pill.current ? `${pill.name} is checked out` : `Check out ${pill.name}`,
+            label: pill.current ? t("{0} is checked out", pill.name) : t("Check out {0}", pill.name),
             icon: <BranchIcon />,
             disabled: !canChange || pill.current,
             onSelect: () => checkout && ctx.run(checkout),
@@ -163,25 +164,25 @@ export function pillMenu(ctx: MenuContext, pill: RefPill, commit: CommitRow): Me
         ? []
         : [
             {
-              label: "Open in a new worktree…",
+              label: t("Open in a new worktree…"),
               icon: <FolderIcon />,
               disabled: !canChange,
               onSelect: () => ctx.open({ kind: "newWorktree", branch: pill.name, start: commit }),
             },
           ]),
       {
-        label: `Rename ${pill.name}…`,
+        label: t("Rename {0}…", pill.name),
         icon: <PencilIcon />,
         disabled: !canChange,
         onSelect: () => ctx.open({ kind: "rename", branch: pill.name }),
       },
       {
-        label: ctx.protectedBranches.includes(pill.name) ? `Unprotect ${pill.name}` : `Protect ${pill.name}`,
+        label: ctx.protectedBranches.includes(pill.name) ? t("Unprotect {0}", pill.name) : t("Protect {0}", pill.name),
         icon: <LockIcon />,
         onSelect: () => ctx.toggleProtected(pill.name),
       },
       {
-        label: ctx.protectedBranches.includes(pill.name) ? `Delete ${pill.name} (protected)` : `Delete ${pill.name}…`,
+        label: ctx.protectedBranches.includes(pill.name) ? t("Delete {0} (protected)", pill.name) : t("Delete {0}…", pill.name),
         icon: <TrashIcon />,
         danger: true,
         disabled: !canChange || pill.current || ctx.protectedBranches.includes(pill.name),
@@ -191,7 +192,7 @@ export function pillMenu(ctx: MenuContext, pill: RefPill, commit: CommitRow): Me
   } else {
     const { branch } = splitRemoteBranch(pill.name, snapshot.remotes);
     items.push({
-      label: ctx.localBranches.has(branch) ? `Check out ${branch}` : `Check out ${branch} (tracking ${pill.name})`,
+      label: ctx.localBranches.has(branch) ? t("Check out {0}", branch) : t("Check out {0} (tracking {1})", branch, pill.name),
       icon: <CloudIcon />,
       disabled: !canChange,
       onSelect: () => checkout && ctx.run(checkout),
@@ -205,7 +206,7 @@ export function pillMenu(ctx: MenuContext, pill: RefPill, commit: CommitRow): Me
     const { remote, branch } = splitRemoteBranch(name, snapshot.remotes);
     const guarded = ctx.protectedBranches.includes(branch);
     items.push({
-      label: guarded ? `Delete ${branch} from ${remote} (protected)` : `Delete ${branch} from ${remote}…`,
+      label: guarded ? t("Delete {0} from {1} (protected)", branch, remote) : t("Delete {0} from {1}…", branch, remote),
       icon: <TrashIcon />,
       danger: true,
       separated: i === 0,
@@ -215,7 +216,7 @@ export function pillMenu(ctx: MenuContext, pill: RefPill, commit: CommitRow): Me
   });
   if (!pill.current) items.push(...reset);
   items.push({
-    label: "Copy branch name",
+    label: t("Copy branch name"),
     icon: <CopyIcon />,
     separated: true,
     onSelect: () => copyText(pill.local ? pill.name : splitRemoteBranch(pill.name, snapshot.remotes).branch),
@@ -245,7 +246,7 @@ export function dropMenu(ctx: MenuContext, revision: string): MenuItem[] {
 export function deleteAnyway(branch: string) {
   return (error: AppError) =>
     error.kind?.kind === "notFullyMerged"
-      ? { label: "Delete anyway", action: { kind: "deleteBranch", name: branch, force: true } as Action }
+      ? { label: t("Delete anyway"), action: { kind: "deleteBranch", name: branch, force: true } as Action }
       : null;
 }
 

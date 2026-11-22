@@ -4,6 +4,7 @@ import type { Progress } from "../api";
 import { formatBytes } from "../lib/format";
 import { smoothPath } from "../lib/team";
 import { Button } from "./ui/Button";
+import { t, tx } from "../lib/i18n";
 
 interface Props {
   /** Like "Pulling". */
@@ -51,11 +52,11 @@ export function ProgressBars({ progress }: { progress: Progress | null }) {
         <div
           className="progress-track progress-files"
           role="progressbar"
-          aria-label="Files"
+          aria-label={t("Files")}
           aria-valuenow={files.done}
           aria-valuemin={0}
           aria-valuemax={files.total}
-          title={`${files.done.toLocaleString()} of ${files.total.toLocaleString()} files, ${(files.total - files.done).toLocaleString()} to go`}
+          title={t("{0} of {1} files, {2} to go", files.done.toLocaleString(), files.total.toLocaleString(), (files.total - files.done).toLocaleString())}
         >
           <div className="progress-fill progress-files-fill" style={{ width: `${Math.min(100, (files.done / files.total) * 100)}%` }} />
         </div>
@@ -98,13 +99,13 @@ function TransferPanel({ progress, history, anchor }: { progress: Progress; hist
           </svg>
           <span className="transfer-speed-figures">
             <strong>{formatBytes(progress.rate ?? rates[rates.length - 1])}/s</strong>
-            <span className="muted">fastest {formatBytes(top)}/s</span>
+            <span className="muted">{tx("fastest {0}/s", formatBytes(top))}</span>
           </span>
         </div>
       )}
       {progress.current && (
         <div className="transfer-row">
-          <span className="muted">Now</span>
+          <span className="muted">{t("Now")}</span>
           <span className="transfer-file" title={progress.current}>
             <span className="mono">{progress.current.split("/").pop()}</span>
             <span className="muted">{progress.current.split("/").slice(0, -1).join("/")}</span>
@@ -113,7 +114,7 @@ function TransferPanel({ progress, history, anchor }: { progress: Progress; hist
       )}
       {recent.length > 0 && (
         <div className="transfer-row">
-          <span className="muted">Just done</span>
+          <span className="muted">{t("Just done")}</span>
           <span className="transfer-recent">
             {recent.map((file) => (
               <span key={file} className="mono" title={file}>
@@ -125,7 +126,7 @@ function TransferPanel({ progress, history, anchor }: { progress: Progress; hist
       )}
       {progress.biggestLeft && (
         <div className="transfer-row">
-          <span className="muted">Biggest to come</span>
+          <span className="muted">{t("Biggest to come")}</span>
           <span className="transfer-file" title={progress.biggestLeft.name}>
             <span className="mono">{progress.biggestLeft.name.split("/").pop()}</span>
             <span className="transfer-size">{formatBytes(progress.biggestLeft.size)}</span>
@@ -134,7 +135,7 @@ function TransferPanel({ progress, history, anchor }: { progress: Progress; hist
       )}
       {progress.remaining !== undefined && (
         <div className="transfer-row">
-          <span className="muted">Left</span>
+          <span className="muted">{t("Left")}</span>
           <span>{timeLeft(progress.remaining)}</span>
         </div>
       )}
@@ -145,12 +146,12 @@ function TransferPanel({ progress, history, anchor }: { progress: Progress; hist
 
 /** "About 3 minutes", like the bar's text, without the "left". */
 function timeLeft(seconds: number): string {
-  if (seconds < 10) return "A few seconds";
-  if (seconds < 55) return `About ${Math.ceil(seconds / 5) * 5} seconds`;
-  if (seconds < 90) return "About a minute";
-  if (seconds < 3570) return `About ${Math.round(seconds / 60)} minutes`;
+  if (seconds < 10) return t("A few seconds");
+  if (seconds < 55) return t("About {0} seconds", Math.ceil(seconds / 5) * 5);
+  if (seconds < 90) return t("About a minute");
+  if (seconds < 3570) return t("About {0} minutes", Math.round(seconds / 60));
   const minutes = Math.round(seconds / 60);
-  return `About ${Math.floor(minutes / 60)} h ${minutes % 60} min`;
+  return t("About {0} h {1} min", Math.floor(minutes / 60), minutes % 60);
 }
 
 /** A thin bar under the toolbar while a fetch, pull, push or checkout runs. */
@@ -190,7 +191,7 @@ export function ProgressStrip({ label, progress, onCancel }: Props) {
       <ProgressBars progress={progress} />
       {onCancel && (
         <Button kind="secondary" size="small" onClick={onCancel}>
-          Cancel
+          {t("Cancel")}
         </Button>
       )}
       {hovered && detailed && progress && <TransferPanel progress={progress} history={history.current} anchor={hovered} />}

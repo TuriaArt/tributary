@@ -8,6 +8,7 @@ import { Dialog } from "./Dialog";
 import { Loader } from "./Loader";
 import { RunStateIcon } from "./RunStateIcon";
 import { Button } from "./ui/Button";
+import { t, tx } from "../lib/i18n";
 
 /** A failed check to say why of: its name, its page, and what it's part of. */
 export interface WhyCheck {
@@ -87,11 +88,11 @@ export function CheckWhy({ repoPath, check, openUrl, notify, onClose }: { repoPa
   };
 
   const failedAt = log?.step ? log.steps.findIndex((step) => step.name === log.step) : -1;
-  const said = [[check.workflow, check.trigger].filter(Boolean).join(", "), took(check) && `after ${took(check)}`, failedAt >= 0 && `at step ${failedAt + 1} of ${log!.steps.length}`].filter(Boolean).join(" · ");
+  const said = [[check.workflow, check.trigger].filter(Boolean).join(", "), took(check) && `after ${took(check)}`, failedAt >= 0 && t("at step {0} of {1}", failedAt + 1, log!.steps.length)].filter(Boolean).join(" · ");
 
   return (
     <Dialog
-      title={`${name} failed`}
+      title={t("{0} failed", name)}
       className="check-why"
       wide
       closable
@@ -100,25 +101,25 @@ export function CheckWhy({ repoPath, check, openUrl, notify, onClose }: { repoPa
       onCancel={onClose}
       buttons={
         <>
-          <Button kind="secondary" disabled={!log || log.lines.length === 0} onClick={() => log && copyText(log.lines.map((line) => line.text).join("\n")).then(() => notify("Copied the log"))}>
-            Copy log
+          <Button kind="secondary" disabled={!log || log.lines.length === 0} onClick={() => log && copyText(log.lines.map((line) => line.text).join("\n")).then(() => notify(t("Copied the log")))}>
+            {t("Copy log")}
           </Button>
           <Button kind="secondary" onClick={() => openUrl(check.url)} data-url={check.url}>
-            Open on {site}
+            {tx("Open on {0}", site)}
           </Button>
-          <Button kind="primary" disabled={busy || !log?.canRerun} onClick={rerun} title={log && !log.canRerun ? `Sign in to ${site} to run it again` : undefined}>
-            {busy ? "Asking…" : "Re-run job"}
+          <Button kind="primary" disabled={busy || !log?.canRerun} onClick={rerun} title={log && !log.canRerun ? t("Sign in to {0} to run it again", site) : undefined}>
+            {busy ? t("Asking…") : t("Re-run job")}
           </Button>
         </>
       }
     >
       {said && <p className="check-why-said">{said}</p>}
       {!log && !error ? (
-        <Loader title="Getting the log" size={64} inline />
+        <Loader title={t("Getting the log")} size={64} inline />
       ) : log ? (
         <>
           {log.steps.length > 0 && (
-            <ol className="check-why-steps" aria-label="Its steps">
+            <ol className="check-why-steps" aria-label={t("Its steps")}>
               {log.steps.map((step, index) => (
                 <li key={`${step.name}-${index}`} className={`${stepState(step.state)}${index === failedAt ? " failed-here" : ""}`}>
                   <RunStateIcon state={stepState(step.state)} size={13} />
@@ -128,8 +129,8 @@ export function CheckWhy({ repoPath, check, openUrl, notify, onClose }: { repoPa
             </ol>
           )}
           {log.lines.length > 0 && (
-            <div ref={lines} className="check-why-log" role="log" tabIndex={0} aria-label={log.step ? `The end of the log of ${log.step}` : "The end of the log"}>
-              {log.cut && <div className="check-why-cut">The lines before these are on its page on {site}.</div>}
+            <div ref={lines} className="check-why-log" role="log" tabIndex={0} aria-label={log.step ? t("The end of the log of {0}", log.step) : t("The end of the log")}>
+              {log.cut && <div className="check-why-cut">{tx("The lines before these are on its page on {0}.", site)}</div>}
               {log.lines.map((line, index) => (
                 <div key={index} className={`check-why-line ${line.kind}`}>
                   {line.text || " "}
@@ -148,7 +149,7 @@ export function CheckWhy({ repoPath, check, openUrl, notify, onClose }: { repoPa
 export function WhyChip() {
   return (
     <span className="check-why-chip" aria-hidden>
-      <span className="chip-text">Why?</span>
+      <span className="chip-text">{t("Why?")}</span>
     </span>
   );
 }

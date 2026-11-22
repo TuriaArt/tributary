@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { lfsLocks, type Lock, type Locks } from "../api";
+import { t } from "./i18n";
 
 /** Don't ask the server for locks more often than this, unless asked to. */
 const MIN_INTERVAL = 30_000;
@@ -55,5 +56,5 @@ export function useLfsLocks(path: string | null): LfsLocks {
 
 /** "you" or the owner's name. */
 export function lockOwner(lock: Lock): string {
-  return lock.mine ? "you" : lock.owner || "someone else";
+  return lock.mine ? "you" : lock.owner || t("someone else");
 }

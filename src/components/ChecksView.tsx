@@ -9,6 +9,7 @@ import { ChevronLeftIcon, ChevronRightIcon, CloseIcon, ExternalLinkIcon, Refresh
 import { Loader } from "./Loader";
 import { RunStateIcon as StateIcon } from "./RunStateIcon";
 import { Button } from "./ui/Button";
+import { t, tx } from "../lib/i18n";
 
 /** The commit whose checks are shown: a row of the list, or a pull request's latest commit. */
 export interface ChecksOf {
@@ -93,43 +94,43 @@ export function ChecksView({ repoPath, commit, onClose, openUrl, notify }: Props
   const empty = runs !== null && runs.runs.length === 0 && runs.others.length === 0;
 
   return (
-    <section className="diff-view request-view checks-view" aria-label={`Checks of ${commit.summary}`}>
+    <section className="diff-view request-view checks-view" aria-label={t("Checks of {0}", commit.summary)}>
       <header className="diff-header">
         <div className="diff-title" title={commit.summary}>
           <span className="request-number checks-view-id">{shortId(commit.id)}</span>
           <span className="request-title">{commit.summary}</span>
         </div>
-        <Button kind="icon" onClick={load} disabled={loading} title="Refresh" aria-label="Refresh the checks">
+        <Button kind="icon" onClick={load} disabled={loading} title={t("Refresh")} aria-label={t("Refresh the checks")}>
           <RefreshIcon size={14} />
         </Button>
         {runs?.canRerun && countStates(runs).some(([state]) => state === "failure") && (
-          <Button kind="outline" disabled={rerunning} onClick={rerun} title="Run the failed jobs again">
+          <Button kind="outline" disabled={rerunning} onClick={rerun} title={t("Run the failed jobs again")}>
             <RefreshIcon size={13} />
-            <span className="button-label">{rerunning ? "Asking…" : "Re-run failed"}</span>
+            <span className="button-label">{rerunning ? t("Asking…") : t("Re-run failed")}</span>
           </Button>
         )}
         {runs?.url && (
-          <Button kind="outline" onClick={() => openUrl(runs.url!)} title={`Open its checks on ${site}`} data-url={runs.url}>
+          <Button kind="outline" onClick={() => openUrl(runs.url!)} title={t("Open its checks on {0}", site)} data-url={runs.url}>
             <ExternalLinkIcon size={13} />
-            <span className="button-label">Open on {site}</span>
+            <span className="button-label">{tx("Open on {0}", site)}</span>
           </Button>
         )}
-        <Button kind="icon" onClick={onClose} title="Close (Esc)" aria-label="Close the checks">
+        <Button kind="icon" onClick={onClose} title={t("Close (Esc)")} aria-label={t("Close the checks")}>
           <CloseIcon />
         </Button>
       </header>
       <div className="diff-body request-body-scroll">
         {error && !runs ? (
           <div className="diff-message">
-            <strong>Couldn't get the checks</strong>
+            <strong>{t("Couldn't get the checks")}</strong>
             <span>{error}</span>
           </div>
         ) : !runs ? (
-          <Loader size={88} title="Getting the checks" />
+          <Loader size={88} title={t("Getting the checks")} />
         ) : empty ? (
           <div className="diff-message">
-            <strong>No checks</strong>
-            <span>{site} has no checks for this commit.</span>
+            <strong>{t("No checks")}</strong>
+            <span>{tx("{0} has no checks for this commit.", site)}</span>
           </div>
         ) : (
           <div className="checks-view-content">
@@ -140,7 +141,7 @@ export function ChecksView({ repoPath, commit, onClose, openUrl, notify }: Props
             {runs.others.length > 0 && (
               <section className="run-card">
                 <header className="run-head">
-                  <h3>Other checks</h3>
+                  <h3>{t("Other checks")}</h3>
                 </header>
                 <div className="run-others">
                   {runs.others.map((check, index) => {
@@ -188,7 +189,7 @@ function Summary({ runs, now }: { runs: CommitRuns; now: number }) {
         {time && (
           <span className="checks-summary-time">
             {time}
-            {going ? " so far" : ""}
+            {going ? t(" so far") : ""}
           </span>
         )}
       </div>
@@ -214,11 +215,11 @@ function RunCard({ run, now, openUrl }: { run: Run; now: number; openUrl: (url: 
         {time && (
           <span className="run-time">
             {time}
-            {state === "running" ? " so far" : ""}
+            {state === "running" ? t(" so far") : ""}
           </span>
         )}
         {run.url && (
-          <Button kind="icon" onClick={() => openUrl(run.url!)} title="Open this run" aria-label={`Open the ${run.name} run`} data-url={run.url}>
+          <Button kind="icon" onClick={() => openUrl(run.url!)} title={t("Open this run")} aria-label={t("Open the {0} run", run.name)} data-url={run.url}>
             <ExternalLinkIcon size={13} />
           </Button>
         )}
@@ -299,12 +300,12 @@ function RunGraph({ run, now, openUrl }: { run: Run; now: number; openUrl: (url:
   return (
     <div className="run-graph-frame">
       {more.left && (
-        <button className="run-graph-more left" onClick={() => scroll(-1)} title="Scroll to the jobs before" aria-label="Scroll to the jobs before">
+        <button className="run-graph-more left" onClick={() => scroll(-1)} title={t("Scroll to the jobs before")} aria-label={t("Scroll to the jobs before")}>
           <ChevronLeftIcon size={14} />
         </button>
       )}
       {more.right && (
-        <button className="run-graph-more right" onClick={() => scroll(1)} title="Scroll to the jobs after" aria-label="Scroll to the jobs after">
+        <button className="run-graph-more right" onClick={() => scroll(1)} title={t("Scroll to the jobs after")} aria-label={t("Scroll to the jobs after")}>
           <ChevronRightIcon size={14} />
         </button>
       )}
@@ -348,7 +349,7 @@ function GroupBox({ group, run, now, openUrl }: { group: JobGroup; run: Run; now
     <div className={`run-group ${groupState(group, run)}`} data-group={group.key}>
       <div className="run-group-head">
         <span className="run-group-name">{group.name}</span>
-        <span className="run-group-count">{group.jobs.length} jobs</span>
+        <span className="run-group-count">{tx("{0} jobs", group.jobs.length)}</span>
       </div>
       <div className="run-group-jobs">
         {group.jobs.map((job, index) => (
@@ -365,7 +366,7 @@ function JobRow({ name, job, run, now, openUrl }: { name: string; job: Job; run:
   const time = jobTime(job, now);
   const why = useWhy(job.name, state, job.url, { ...job, workflow: run.name, trigger: run.trigger });
   return (
-    <button className={`run-job ${state}`} onClick={why ?? (() => job.url && openUrl(job.url))} disabled={!job.url} title={why ? `${job.name}: why it failed` : job.url ? `${job.name}: open its page` : job.name} data-url={job.url ?? undefined}>
+    <button className={`run-job ${state}`} onClick={why ?? (() => job.url && openUrl(job.url))} disabled={!job.url} title={why ? t("{0}: why it failed", job.name) : job.url ? t("{0}: open its page", job.name) : job.name} data-url={job.url ?? undefined}>
       <span className="run-job-line">
         <StateIcon state={state} />
         <span className="run-job-name">{name}</span>
@@ -400,7 +401,7 @@ function JobCard({
   const said = time ?? (state === "waiting" ? "waiting" : state === "skipped" ? "skipped" : state === "queued" ? "queued" : "");
   const why = useWhy(name, state, url, about ?? {});
   return (
-    <button className={`run-card-job ${state}`} onClick={why ?? (() => url && openUrl(url))} disabled={!url} title={why ? `${name}: why it failed` : url ? `${name}: open its page` : name} data-url={url ?? undefined}>
+    <button className={`run-card-job ${state}`} onClick={why ?? (() => url && openUrl(url))} disabled={!url} title={why ? t("{0}: why it failed", name) : url ? t("{0}: open its page", name) : name} data-url={url ?? undefined}>
       <span className="run-job-line">
         <StateIcon state={state} />
         <span className="run-job-name">{name}</span>
@@ -419,7 +420,7 @@ function Steps({ job }: { job: Job }) {
   const shown = Math.min(job.steps, 40);
   const done = Math.round(progress * shown);
   return (
-    <span className="run-steps" title={`Step ${Math.min(job.stepsDone + 1, job.steps)} of ${job.steps}${job.step ? `: ${job.step}` : ""}`}>
+    <span className="run-steps" title={t("Step {0} of {1}{2}", Math.min(job.stepsDone + 1, job.steps), job.steps, job.step ? `: ${job.step}` : "")}>
       {job.step && <span className="run-step-name">{job.step}</span>}
       <span className="run-step-marks" style={{ gridTemplateColumns: `repeat(${shown}, 1fr)` }}>
         {Array.from({ length: shown }, (_, index) => (

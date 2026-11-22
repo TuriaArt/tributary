@@ -18,19 +18,20 @@ import { MarkdownField } from "./MarkdownField";
 import { Button } from "./ui/Button";
 import { Field } from "./ui/Field";
 import { Chip } from "./ui/Chip";
+import { t, tx } from "../lib/i18n";
 
 const METHODS: Record<MergeMethod, { label: string; hint: string }> = {
-  merge: { label: "Merge", hint: "Its commits as they are, joined by a merge commit." },
-  squash: { label: "Squash and merge", hint: "All its commits as one." },
-  rebase: { label: "Rebase and merge", hint: "Its commits replayed on top, one by one, without a merge commit." },
+  merge: { label: t("Merge"), hint: t("Its commits as they are, joined by a merge commit.") },
+  squash: { label: t("Squash and merge"), hint: t("All its commits as one.") },
+  rebase: { label: t("Rebase and merge"), hint: t("Its commits replayed on top, one by one, without a merge commit.") },
 };
 
 /** A review's verdict, as a tag beside its author's name. */
 const VERDICTS: Record<NonNullable<RequestComment["review"]>, string> = {
-  approved: "Approved",
-  changesRequested: "Asked for changes",
-  commented: "Reviewed",
-  requested: "Asked to review",
+  approved: t("Approved"),
+  changesRequested: t("Asked for changes"),
+  commented: t("Reviewed"),
+  requested: t("Asked to review"),
 };
 
 /** Merge a request on its site: how, the commit's message, and whether to delete its branch. */
@@ -48,7 +49,7 @@ export function MergeRequestDialog({
   onDone: (message: string) => void;
 }) {
   const [method, setMethod] = useState<MergeMethod>(methods[0] ?? "merge");
-  const noun = details.forge === "gitlab" ? "merge request" : "pull request";
+  const noun = details.forge === "gitlab" ? t("merge request") : t("pull request");
   const number = details.forge === "gitlab" ? `!${details.number}` : `#${details.number}`;
   const [title, setTitle] = useState(details.forge === "gitlab" ? "" : `${details.title} (${number})`);
   const [message, setMessage] = useState("");
@@ -57,11 +58,11 @@ export function MergeRequestDialog({
   const [error, setError] = useState<string | null>(null);
   const warning =
     details.mergeable === "conflicts"
-      ? `It conflicts with ${details.base}: the site will refuse to merge it until that's resolved.`
+      ? t("It conflicts with {0}: the site will refuse to merge it until that's resolved.", details.base)
       : details.mergeable === "blocked"
-        ? "Something the site requires is missing (approvals, passing checks…): it may refuse to merge it."
+        ? t("Something the site requires is missing (approvals, passing checks…): it may refuse to merge it.")
         : details.mergeable === "behind"
-          ? `It's behind ${details.base}: the site may want it brought up to date first.`
+          ? t("It's behind {0}: the site may want it brought up to date first.", details.base)
           : null;
   const merge = async () => {
     setRunning(true);
@@ -78,27 +79,27 @@ export function MergeRequestDialog({
   };
   return (
     <Dialog
-      title={`Merge ${noun} ${number}?`}
+      title={t("Merge {0} {1}?", noun, number)}
       error={error}
       busy={running}
       onCancel={onCancel}
       buttons={
         <>
           <Button kind="secondary" onClick={onCancel} disabled={running}>
-            Cancel
+            {t("Cancel")}
           </Button>
           <Button kind="primary" size="large" onClick={merge} disabled={running}>
-            {running ? "Merging…" : METHODS[method].label}
+            {running ? t("Merging…") : METHODS[method].label}
           </Button>
         </>
       }
     >
       <p>
-        <strong>{details.branch}</strong> goes into <strong>{details.base}</strong> on {details.forge === "gitlab" ? "GitLab" : "GitHub"}. Pull afterwards to get it here.
+        {tx("{0} goes into {1} on {2}. Pull afterwards to get it here.", <strong>{details.branch}</strong>, <strong>{details.base}</strong>, details.forge === "gitlab" ? "GitLab" : "GitHub")}
       </p>
       {warning && <p className="dialog-note-line warning">{warning}</p>}
       {methods.length > 1 && (
-        <div className="merge-methods" role="radiogroup" aria-label="How to merge it">
+        <div className="merge-methods" role="radiogroup" aria-label={t("How to merge it")}>
           {methods.map((each) => (
             <label key={each} className={`merge-method${method === each ? " selected" : ""}`}>
               <input type="radio" name="merge-method" checked={method === each} onChange={() => setMethod(each)} />
@@ -110,17 +111,16 @@ export function MergeRequestDialog({
       )}
       {method !== "rebase" && (
         <>
-          <Field label={method === "squash" ? "Commit summary" : "Merge commit summary"}>
-            <input className="text-input" value={title} onChange={(event) => setTitle(event.target.value)} placeholder="The site's usual one" spellCheck />
+          <Field label={method === "squash" ? t("Commit summary") : t("Merge commit summary")}>
+            <input className="text-input" value={title} onChange={(event) => setTitle(event.target.value)} placeholder={t("The site's usual one")} spellCheck />
           </Field>
-          <Field label="Description">
-            <textarea className="text-input request-body short" rows={3} value={message} onChange={(event) => setMessage(event.target.value)} placeholder="Optional" />
+          <Field label={t("Description")}>
+            <textarea className="text-input request-body short" rows={3} value={message} onChange={(event) => setMessage(event.target.value)} placeholder={t("Optional")} />
           </Field>
         </>
       )}
       <label className="checkbox">
-        <input type="checkbox" checked={deleteBranch} onChange={(event) => setDeleteBranch(event.target.checked)} />
-        Delete {details.branch} on the site afterwards
+        {tx("{0}Delete {1} on the site afterwards", <input type="checkbox" checked={deleteBranch} onChange={(event) => setDeleteBranch(event.target.checked)} />, details.branch)}
       </label>
     </Dialog>
   );
@@ -161,27 +161,27 @@ export function ReviewBox({
         rows={4}
         value={body}
         onChange={(event) => setBody(event.target.value)}
-        placeholder={yours ? "A note on your own changes" : "What you think of it; optional to approve"}
+        placeholder={yours ? t("A note on your own changes") : t("What you think of it; optional to approve")}
         autoFocus
-        aria-label="Your review"
+        aria-label={t("Your review")}
       />
       {error && <p className="review-error">{error}</p>}
       <div className="review-buttons">
         <Button kind="link" onClick={onCancel} disabled={running !== null}>
-          Cancel
+          {t("Cancel")}
         </Button>
         <span className="spacer" />
         <Button kind="outline" onClick={() => send("comment")} disabled={running !== null || !body.trim()}>
-          <span className="button-label">{running === "comment" ? "Sending…" : "Comment"}</span>
+          <span className="button-label">{running === "comment" ? t("Sending…") : t("Comment")}</span>
         </Button>
         {!yours && conversation.canRequestChanges && (
-          <Button kind="outline" className="review-changes" onClick={() => send("requestChanges")} disabled={running !== null || !body.trim()} title="Say what should change first">
-            <span className="button-label">{running === "requestChanges" ? "Sending…" : "Ask for changes"}</span>
+          <Button kind="outline" className="review-changes" onClick={() => send("requestChanges")} disabled={running !== null || !body.trim()} title={t("Say what should change first")}>
+            <span className="button-label">{running === "requestChanges" ? t("Sending…") : t("Ask for changes")}</span>
           </Button>
         )}
         {!yours && (
           <Button kind="primary" onClick={() => send("approve")} disabled={running !== null}>
-            {running === "approve" ? "Approving…" : "Approve"}
+            {running === "approve" ? t("Approving…") : t("Approve")}
           </Button>
         )}
       </div>
@@ -207,7 +207,7 @@ export function ConversationList({
   return (
     <>
       {conversation.comments.length === 0 ? (
-        <p className="muted request-empty">No comments yet.</p>
+        <p className="muted request-empty">{t("No comments yet.")}</p>
       ) : (
         <ol className="request-conversation">
           {conversation.comments.map((comment, index) => {
@@ -224,7 +224,7 @@ export function ConversationList({
                       repoPath={repoPath}
                       number={details.number}
                       thread={comment.thread}
-                      placeholder="Your reply"
+                      placeholder={t("Your reply")}
                       onDone={(message) => {
                         setReplying(null);
                         onDone(message);
@@ -233,7 +233,7 @@ export function ConversationList({
                     />
                   ) : (
                     <Button kind="link" className="request-reply" onClick={() => setReplying(comment.thread)}>
-                      Reply
+                      {t("Reply")}
                     </Button>
                   ))}
               </li>
@@ -242,7 +242,7 @@ export function ConversationList({
         </ol>
       )}
       {conversation.you && (
-        <CommentBox repoPath={repoPath} number={details.number} thread={null} placeholder="Add a comment" onDone={onDone} />
+        <CommentBox repoPath={repoPath} number={details.number} thread={null} placeholder={t("Add a comment")} onDone={onDone} />
       )}
     </>
   );
@@ -336,18 +336,18 @@ export function CommentBox({
         }}
         placeholder={placeholder}
         autoFocus={thread !== null}
-        aria-label={thread ? "Your reply" : "Your comment"}
+        aria-label={thread ? t("Your reply") : t("Your comment")}
       />
       {error && <p className="review-error">{error}</p>}
       <div className="review-buttons">
         {onCancel && (
           <Button kind="link" onClick={onCancel} disabled={running}>
-            Cancel
+            {t("Cancel")}
           </Button>
         )}
         <span className="spacer" />
         <Button kind="primary" onClick={send} disabled={running || !body.trim()}>
-          {running ? "Sending…" : thread ? "Reply" : "Comment"}
+          {running ? t("Sending…") : thread ? t("Reply") : t("Comment")}
         </Button>
       </div>
     </div>

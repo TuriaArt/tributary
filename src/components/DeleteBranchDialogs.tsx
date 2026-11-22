@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { Action, AppError } from "../api";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { LostCommitsNote } from "./Safety";
+import { t, tx } from "../lib/i18n";
 
 /** Delete a local branch, saying first exactly which commits would be lost. */
 export function DeleteBranchDialog({
@@ -22,9 +23,9 @@ export function DeleteBranchDialog({
   return (
     <ConfirmDialog
       repoPath={repoPath}
-      title={`Delete ${branch}?`}
-      confirmLabel="Delete branch"
-      busyLabel="Deleting…"
+      title={t("Delete {0}?", branch)}
+      confirmLabel={t("Delete branch")}
+      busyLabel={t("Deleting…")}
       danger
       action={{ kind: "deleteBranch", name: branch, force: checked }}
       retryFor={retryFor}
@@ -61,16 +62,16 @@ export function DeleteRemoteBranchDialog({
   return (
     <ConfirmDialog
       repoPath={repoPath}
-      title={`Delete ${branch} from ${remote}?`}
-      confirmLabel="Delete from remote"
-      busyLabel="Deleting…"
+      title={t("Delete {0} from {1}?", branch, remote)}
+      confirmLabel={t("Delete from remote")}
+      busyLabel={t("Deleting…")}
       danger
       action={{ kind: "deleteRemoteBranch", name }}
       onCancel={onCancel}
       onDone={onDone}
     >
       <p>
-        <strong>{name}</strong> will be removed from the remote, for everyone who uses it. Local branches are kept.
+        {tx("{0} will be removed from the remote, for everyone who uses it. Local branches are kept.", <strong>{name}</strong>)}
       </p>
       <LostCommitsNote repoPath={repoPath} reference={`refs/remotes/${name}`} name={name} />
     </ConfirmDialog>

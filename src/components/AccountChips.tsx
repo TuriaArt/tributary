@@ -3,6 +3,7 @@ import { GITLAB_COM, type Accounts, type Forge } from "../app/useAccounts";
 import { Avatar } from "./Avatar";
 import { ContextMenu } from "./ContextMenu";
 import { UserIcon, WarningIcon } from "./Icons";
+import { t } from "../lib/i18n";
 
 interface Props {
   accounts: Accounts;
@@ -52,7 +53,7 @@ export function AccountChips({ accounts, onSignIn }: Props) {
           <button
             key={chip.forge}
             className="account-chip on"
-            title={`Signed in to ${chip.name} as ${chip.login}${chip.fullName ? ` (${chip.fullName})` : ""}`}
+            title={t("Signed in to {0} as {1}{2}", chip.name, chip.login, chip.fullName ? ` (${chip.fullName})` : "")}
             onClick={(event) => {
               const rect = event.currentTarget.getBoundingClientRect();
               setMenu({ forge: chip.forge, x: rect.left, y: rect.bottom + 4 });
@@ -65,7 +66,7 @@ export function AccountChips({ accounts, onSignIn }: Props) {
         ) : (
           <button key={chip.forge} className={`account-chip${chip.rejected ? " rejected" : ""}`} onClick={() => onSignIn(chip.forge)} disabled={chip.checking}>
             {chip.rejected ? <WarningIcon size={13} /> : <UserIcon size={13} />}
-            <span>{chip.checking ? `${chip.name}…` : chip.rejected ? `Sign in to ${chip.name} again` : `Sign in to ${chip.name}`}</span>
+            <span>{chip.checking ? `${chip.name}…` : chip.rejected ? t("Sign in to {0} again", chip.name) : t("Sign in to {0}", chip.name)}</span>
           </button>
         ),
       )}
@@ -75,12 +76,12 @@ export function AccountChips({ accounts, onSignIn }: Props) {
           y={menu.y}
           onClose={() => setMenu(null)}
           items={[
-            { label: "Sign in as someone else…", icon: <UserIcon />, onSelect: () => onSignIn(menu.forge) },
+            { label: t("Sign in as someone else…"), icon: <UserIcon />, onSelect: () => onSignIn(menu.forge) },
             {
-              label: `Sign out of ${menu.forge === "github" ? "GitHub" : gitlabName}`,
+              label: t("Sign out of {0}", menu.forge === "github" ? "GitHub" : gitlabName),
               danger: true,
               separated: true,
-              detail: "Git forgets the token too, so it asks again when you push",
+              detail: t("Git forgets the token too, so it asks again when you push"),
               onSelect: () => accounts.signOut(menu.forge),
             },
           ]}

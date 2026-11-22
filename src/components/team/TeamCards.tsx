@@ -9,6 +9,7 @@ import { AreaTrend } from "./AreaTrend";
 import { DayTip, Divergence, Overlap, RingedAvatar, YouTag, type TeamData } from "./parts";
 import { HotspotsCard, KindBar, KindsCard, LinesCard, PunchCard, RequestsCard } from "./TeamStats";
 import { Chip } from "../ui/Chip";
+import { t, tx } from "../../lib/i18n";
 
 export function TeamCards({ team, work, requests, days, now, colorOf, isYou, yoursOn, lockOwners, tip, onShowBranch, onShowPerson }: TeamData) {
   const today = days[days.length - 1];
@@ -36,17 +37,14 @@ export function TeamCards({ team, work, requests, days, now, colorOf, isYou, you
             <span className="team-hero-number">{total.toLocaleString()}</span>
             <span className="team-hero-text">
               <span>
-                commits in the last {team.days} days
-                {changed !== null && (
-                  <span className={`team-change ${changed > 0 ? "up" : changed < 0 ? "down" : ""}`} title={`${plural(team.previous.length, "commit")} in the ${team.days} days before`}>
-                    {changed > 0 ? "+" : changed < 0 ? "−" : ""}
-                    {Math.abs(changed)}% vs the {team.days} days before
+                {tx("commits in the last {0} days{1}", team.days, changed !== null && (
+                  <span className={`team-change ${changed > 0 ? "up" : changed < 0 ? "down" : ""}`} title={t("{0} in the {1} days before", plural(team.previous.length, "commit"), team.days)}>
+                    {tx("{0}{1}% vs the {2} days before", changed > 0 ? "+" : changed < 0 ? "−" : "", Math.abs(changed), team.days)}
                   </span>
-                )}
+                ))}
               </span>
               <span className="muted">
-                {team.mainCommits.toLocaleString()} on <span className="mono">{team.main}</span>
-                {team.branches.length > 0 && `, ${(total - team.mainCommits).toLocaleString()} on ${plural(team.branches.length, "branch", "branches")}`}
+                {tx("{0} on {1}{2}", team.mainCommits.toLocaleString(), <span className="mono">{team.main}</span>, team.branches.length > 0 && t(", {0} on {1}", (total - team.mainCommits).toLocaleString(), plural(team.branches.length, "branch", "branches")))}
               </span>
             </span>
           </div>
@@ -59,10 +57,10 @@ export function TeamCards({ team, work, requests, days, now, colorOf, isYou, you
         </div>
         <div className="team-hero-chart">
           <div className="team-hero-chart-head">
-            <span>Commits per day</span>
+            <span>{t("Commits per day")}</span>
             {totals[busiestDay] > 0 && (
               <span className="muted">
-                Busiest: {dayLabel(days[busiestDay], today)}, {plural(totals[busiestDay], "commit")}
+                {tx("Busiest: {0}, {1}", dayLabel(days[busiestDay], today), plural(totals[busiestDay], "commit"))}
               </span>
             )}
           </div>
@@ -72,14 +70,13 @@ export function TeamCards({ team, work, requests, days, now, colorOf, isYou, you
             top={Math.max(1, ...totals, ...before)}
             color="var(--accent)"
             height={112}
-            label={`Commits per day over the last ${team.days} days`}
+            label={t("Commits per day over the last {0} days", team.days)}
             tip={tip}
             describe={(index) => (
               <>
                 <DayTip label={dayLabel(days[index], today)} entries={people.map((entry) => ({ ...entry, count: entry.daily[index] }))} />
                 <span className="team-tip-row muted">
-                  <span className="team-ghost-key" />
-                  the period before<span className="team-tip-value">{before[index]}</span>
+                  {tx("{0}the period before{1}", <span className="team-ghost-key" />, <span className="team-tip-value">{before[index]}</span>)}
                 </span>
               </>
             )}
@@ -106,11 +103,11 @@ export function TeamCards({ team, work, requests, days, now, colorOf, isYou, you
         </div>
       )}
 
-      <h3 className="team-section-title">People</h3>
+      <h3 className="team-section-title">{t("People")}</h3>
       <ul className="team-card-grid">
         {people.map(({ person, color, daily }) => (
           <li key={person.email}>
-            <button className="team-person-card" onClick={() => onShowPerson(person)} title={`Highlight ${person.name}'s commits`}>
+            <button className="team-person-card" onClick={() => onShowPerson(person)} title={t("Highlight {0}'s commits", person.name)}>
               <span className="team-person-card-head">
                 <RingedAvatar person={person} color={color} size={36} />
                 <span className="team-person-card-name">
@@ -118,7 +115,7 @@ export function TeamCards({ team, work, requests, days, now, colorOf, isYou, you
                     {person.name}
                     {isYou(person.email) && <YouTag />}
                   </span>
-                  <span className="muted">last {relativeTime(person.latest, now / 1000)}</span>
+                  <span className="muted">{tx("last {0}", relativeTime(person.latest, now / 1000))}</span>
                 </span>
                 <span className="team-person-card-count">
                   {person.commits.toLocaleString()}
@@ -130,16 +127,16 @@ export function TeamCards({ team, work, requests, days, now, colorOf, isYou, you
                 top={busiestPerson}
                 color={color}
                 height={52}
-                label={`${person.name}'s commits per day`}
+                label={t("{0}'s commits per day", person.name)}
                 tip={tip}
                 describe={(index) => <strong>{`${dayLabel(days[index], today)} · ${plural(daily[index], "commit")}`}</strong>}
               />
               <span className="team-rhythm">
                 <span>
-                  Active on <strong>{rhythm(daily).active}</strong> {rhythm(daily).active === 1 ? "day" : "days"}
+                  {tx("Active on {0} {1}", <strong>{rhythm(daily).active}</strong>, rhythm(daily).active === 1 ? "day" : "days")}
                 </span>
                 <span>
-                  <strong>{rhythm(daily).streak}</strong> in a row at most
+                  {tx("{0} in a row at most", <strong>{rhythm(daily).streak}</strong>)}
                 </span>
                 {workOf(person.email) && (workOf(person.email)?.added ?? 0) + (workOf(person.email)?.removed ?? 0) > 0 && (
                   <span>
@@ -163,11 +160,11 @@ export function TeamCards({ team, work, requests, days, now, colorOf, isYou, you
 
       {team.branches.length > 0 && (
         <>
-          <h3 className="team-section-title">Branches in progress</h3>
+          <h3 className="team-section-title">{t("Branches in progress")}</h3>
           <ul className="team-card-grid">
             {team.branches.map((branch) => (
               <li key={branch.name}>
-                <button className="team-branch-card" onClick={() => onShowBranch(branch)} title={`Highlight ${branch.name}'s history`}>
+                <button className="team-branch-card" onClick={() => onShowBranch(branch)} title={t("Highlight {0}'s history", branch.name)}>
                   <span className="team-branch-card-head">
                     <BranchIcon size={14} />
                     <span className="team-branch-card-name mono">{withoutRemote(branch.name)}</span>
@@ -194,7 +191,7 @@ export function TeamCards({ team, work, requests, days, now, colorOf, isYou, you
 
       {lockOwners && lockOwners.length > 0 && (
         <>
-          <h3 className="team-section-title">Locked files</h3>
+          <h3 className="team-section-title">{t("Locked files")}</h3>
           <ul className="team-card-grid">
             {lockOwners.map(([owner, held]) => (
               <li key={owner} className="team-lock-card">
@@ -208,7 +205,7 @@ export function TeamCards({ team, work, requests, days, now, colorOf, isYou, you
                     .slice(0, 5)
                     .map((lock) => baseName(lock.path))
                     .join("\n")}
-                  {held.length > 5 && `\nand ${held.length - 5} more`}
+                  {held.length > 5 && t("\nand {0} more", held.length - 5)}
                 </span>
               </li>
             ))}

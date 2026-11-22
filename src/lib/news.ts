@@ -1,5 +1,6 @@
 import type { CommitRow, RepoSnapshot } from "../api";
 import { ancestors } from "./graph";
+import { t } from "./i18n";
 
 /** Commits that arrived on a remote branch with a fetch. */
 export interface News {
@@ -71,7 +72,7 @@ export function describeNews(news: News): string {
     news.authors.length === 1
       ? news.authors[0]
       : news.authors.length === 2
-        ? `${news.authors[0]} and ${news.authors[1]}`
-        : `${news.authors[0]}, ${news.authors[1]} and ${news.authors.length - 2} more`;
-  return `${news.count === 1 ? "A new commit" : `${news.count} new commits`} on ${news.branch} from ${people}`;
+        ? t("{0} and {1}", news.authors[0], news.authors[1])
+        : t("{0}, {1} and {2} more", news.authors[0], news.authors[1], news.authors.length - 2);
+  return t("{0} on {1} from {2}", news.count === 1 ? t("A new commit") : t("{0} new commits", news.count), news.branch, people);
 }

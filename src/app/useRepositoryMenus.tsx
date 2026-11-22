@@ -19,6 +19,7 @@ import type { CompareRequest } from "./useComparison";
 import type { Highlight } from "./useHighlight";
 import type { RepositorySettings } from "./useRepositorySettings";
 import type { RepoError } from "./useRepository";
+import { t } from "../lib/i18n";
 
 interface Options {
   snapshot: RepoSnapshot;
@@ -115,7 +116,7 @@ export function useRepositoryMenus({
     showHistory: (file) => highlight.showHistory(file).catch((e) => setError({ message: String(e) })),
     locks: lfs.locks ? lfs.byPath : null,
     checks: checks,
-    reveal: (path) => revealItemInDir(joinPath(snapshot.path, path)).catch(() => notify({ text: `${baseName(path)} isn't in the working tree` })),
+    reveal: (path) => revealItemInDir(joinPath(snapshot.path, path)).catch(() => notify({ text: t("{0} isn't in the working tree", baseName(path)) })),
     editor: openApps.editor,
     openInEditor: (path) => openApps.editor && openInApp(openApps.editor.id, snapshot.path, path).catch((e) => notify({ text: String(e) })),
     showChanges,
@@ -124,7 +125,7 @@ export function useRepositoryMenus({
   const worktreeContext: WorktreeMenuContext = {
     canChange,
     open: openTab,
-    reveal: (path) => revealItemInDir(path).catch(() => notify({ text: `${path} isn't there any more` })),
+    reveal: (path) => revealItemInDir(path).catch(() => notify({ text: t("{0} isn't there any more", path) })),
     remove: (worktree) => openDialog({ kind: "removeWorktree", worktree }),
     prune: () => act({ kind: "pruneWorktrees" }),
   };
@@ -133,7 +134,7 @@ export function useRepositoryMenus({
     open: (submodule) => openTab(joinPath(snapshot.path, submodule.path)),
     update: updateSubmodules,
     stage: (path) => act({ kind: "stage", paths: [path] }),
-    reveal: (submodule) => revealItemInDir(joinPath(snapshot.path, submodule.path)).catch(() => notify({ text: `${submodule.path} isn't there` })),
+    reveal: (submodule) => revealItemInDir(joinPath(snapshot.path, submodule.path)).catch(() => notify({ text: t("{0} isn't there", submodule.path) })),
   };
   // The toolbar's Open menu.
   const openMenu = () =>

@@ -10,6 +10,7 @@ import { FileKindIcon } from "./FileKindIcon";
 import { BranchIcon, CheckIcon, FetchIcon, HistoryIcon, LockIcon, PullIcon, PushIcon, ShelfIcon, ViewIcon, WarningIcon } from "./Icons";
 import type { CommitDraft } from "./worktree/CommitBox";
 import { Button } from "./ui/Button";
+import { t, tx } from "../lib/i18n";
 
 interface Props {
   snapshot: RepoSnapshot;
@@ -98,27 +99,27 @@ export function SimpleView({ snapshot, ahead, behind, running, act, locks, check
   const send = () => void act({ kind: "push", force: false });
 
   const status = !snapshot.upstream
-    ? { text: "Not on the server yet", tone: "warning" }
+    ? { text: t("Not on the server yet"), tone: "warning" }
     : behind > 0
-      ? { text: `${plural(behind, "update")} to get`, tone: "accent" }
+      ? { text: t("{0} to get", plural(behind, "update")), tone: "accent" }
       : ahead > 0
-        ? { text: `${plural(ahead, "change")} to send`, tone: "accent" }
-        : { text: "Up to date", tone: "good" };
+        ? { text: t("{0} to send", plural(ahead, "change")), tone: "accent" }
+        : { text: t("Up to date"), tone: "good" };
   const othersLocks = (locks.locks?.locks ?? []).filter((lock) => !lock.mine).slice(0, 6);
   const recent = snapshot.commits.filter((commit) => commit.kind !== "worktree" && commit.kind !== "stash").slice(0, 6);
 
   return (
     <div className="simple-view">
       <header className="simple-header" data-tour="simple-header">
-        <label className="simple-branch" title="The branch you're working on">
+        <label className="simple-branch" title={t("The branch you're working on")}>
           <BranchIcon size={15} />
           <select
             value={snapshot.headBranch ?? ""}
             disabled={busy || !canChange || localBranches.length < 2}
             onChange={(event) => void act({ kind: "checkoutBranch", name: event.target.value })}
-            aria-label="Branch"
+            aria-label={t("Branch")}
           >
-            {!snapshot.headBranch && <option value="">No branch</option>}
+            {!snapshot.headBranch && <option value="">{t("No branch")}</option>}
             {localBranches.map((branch) => (
               <option key={branch} value={branch}>
                 {branch}
@@ -133,36 +134,35 @@ export function SimpleView({ snapshot, ahead, behind, running, act, locks, check
         <span className="spacer" />
         <Button kind="outline" onClick={() => openDialog({ kind: "shelves" })}>
           <ShelfIcon size={14} />
-          <span className="button-label">Shelves</span>
+          <span className="button-label">{t("Shelves")}</span>
         </Button>
         <Button kind="outline" onClick={() => openDialog({ kind: "localHistory" })}>
           <HistoryIcon size={14} />
-          <span className="button-label">Local history</span>
+          <span className="button-label">{t("Local history")}</span>
         </Button>
-        <Button kind="outline" onClick={onFullView} title="Branches, the commit graph and everything else">
+        <Button kind="outline" onClick={onFullView} title={t("Branches, the commit graph and everything else")}>
           <ViewIcon size={14} />
-          <span className="button-label">Full view</span>
+          <span className="button-label">{t("Full view")}</span>
         </Button>
       </header>
 
       <div className="simple-columns">
         <section className="simple-card simple-changes" data-tour="simple-changes">
           <div className="simple-card-head">
-            <h2>My changes</h2>
+            <h2>{t("My changes")}</h2>
             <span className="simple-count">{files.length > 0 ? plural(files.length, "file") : ""}</span>
           </div>
           {files.length === 0 ? (
             <div className="simple-empty">
               {ahead > 0 ? (
                 <>
-                  <p>{plural(ahead, "change")} saved here but not sent to the team yet.</p>
+                  <p>{tx("{0} saved here but not sent to the team yet.", plural(ahead, "change"))}</p>
                   <Button kind="primary" size="large" onClick={send} disabled={busy || !canChange}>
-                    <PushIcon size={15} />
-                    Send {ahead === 1 ? "it" : "them"}
+                    {ahead === 1 ? tx("{0}Send it", <PushIcon size={15} />) : tx("{0}Send them", <PushIcon size={15} />)}
                   </Button>
                 </>
               ) : (
-                <p>No changes. Files you change in your project show up here, to submit for the team.</p>
+                <p>{t("No changes. Files you change in your project show up here, to submit for the team.")}</p>
               )}
             </div>
           ) : (
@@ -182,30 +182,29 @@ export function SimpleView({ snapshot, ahead, behind, running, act, locks, check
                       {other && (
                         <span
                           className="simple-badge warning"
-                          title={`${other.author} changed it on ${other.branch} too, ${relativeTime(other.time)}: talk before you both submit`}
+                          title={t("{0} changed it on {1} too, {2}: talk before you both submit", other.author, other.branch, relativeTime(other.time))}
                         >
-                          {other.author.split(" ")[0]} changed it too
+                          {tx("{0} changed it too", other.author.split(" ")[0])}
                         </span>
                       )}
                       {large.has(file.path) && (
-                        <span className="simple-badge warning" title="It's big and not stored with Git LFS: everyone who clones downloads every version of it">
-                          Big file
+                        <span className="simple-badge warning" title={t("It's big and not stored with Git LFS: everyone who clones downloads every version of it")}>
+                          {t("Big file")}
                         </span>
                       )}
                       {lock ? (
-                        <span className={`simple-badge ${lock.mine ? "mine" : "danger"}`} title={lock.mine ? "You hold its lock" : `${lock.owner} holds its lock: your changes can't be submitted`}>
+                        <span className={`simple-badge ${lock.mine ? "mine" : "danger"}`} title={lock.mine ? t("You hold its lock") : t("{0} holds its lock: your changes can't be submitted", lock.owner)}>
                           <LockIcon size={11} />
-                          {lock.mine ? "Locked by you" : `Locked by ${lock.owner}`}
+                          {lock.mine ? t("Locked by you") : t("Locked by {0}", lock.owner)}
                         </span>
                       ) : lockable.has(file.path) ? (
                         <button
                           className="simple-badge lock-it"
                           disabled={busy || !canChange}
-                          title="Lock it, so nobody else changes it at the same time"
+                          title={t("Lock it, so nobody else changes it at the same time")}
                           onClick={() => void act({ kind: "lockFiles", paths: [file.path] })}
                         >
-                          <LockIcon size={11} />
-                          Lock
+                          {tx("{0}Lock", <LockIcon size={11} />)}
                         </button>
                       ) : null}
                     </li>
@@ -217,15 +216,15 @@ export function SimpleView({ snapshot, ahead, behind, running, act, locks, check
                   className="text-input"
                   value={draft.summary}
                   onChange={(event) => setDraft({ ...draft, summary: event.target.value })}
-                  placeholder="What did you change?"
-                  aria-label="What you changed"
+                  placeholder={t("What did you change?")}
+                  aria-label={t("What you changed")}
                 />
                 <textarea
                   className="text-input"
                   value={draft.description}
                   onChange={(event) => setDraft({ ...draft, description: event.target.value })}
-                  placeholder="More about it, if it helps (optional)"
-                  aria-label="More about it"
+                  placeholder={t("More about it, if it helps (optional)")}
+                  aria-label={t("More about it")}
                   rows={2}
                 />
               </div>
@@ -233,8 +232,8 @@ export function SimpleView({ snapshot, ahead, behind, running, act, locks, check
                 <p className="simple-warning">
                   <WarningIcon size={13} />
                   {lockedByOthers.length === 1
-                    ? `${baseName(lockedByOthers[0].path)} is locked by ${locks.byPath.get(lockedByOthers[0].path)?.owner}: leave it out, or ask them to unlock it.`
-                    : `${plural(lockedByOthers.length, "file")} are locked by someone else: leave them out, or ask for them to be unlocked.`}
+                    ? t("{0} is locked by {1}: leave it out, or ask them to unlock it.", baseName(lockedByOthers[0].path), locks.byPath.get(lockedByOthers[0].path)?.owner)
+                    : t("{0} are locked by someone else: leave them out, or ask for them to be unlocked.", plural(lockedByOthers.length, "file"))}
                 </p>
               )}
               <div className="simple-submit">
@@ -242,10 +241,9 @@ export function SimpleView({ snapshot, ahead, behind, running, act, locks, check
                   kind="primary" size="large"
                   onClick={() => void submit()}
                   disabled={busy || !canChange || chosen.length === 0 || !draft.summary.trim() || lockedByOthers.length > 0}
-                  title="Commit these files and send them to the team"
+                  title={t("Commit these files and send them to the team")}
                 >
-                  <PushIcon size={15} />
-                  Submit {plural(chosen.length, "file")}
+                  {tx("{0}Submit {1}", <PushIcon size={15} />, plural(chosen.length, "file"))}
                 </Button>
               </div>
             </>
@@ -255,33 +253,31 @@ export function SimpleView({ snapshot, ahead, behind, running, act, locks, check
         <div className="simple-side">
           <section className="simple-card simple-latest" data-tour="simple-latest">
             <div className="simple-card-head">
-              <h2>Get latest</h2>
+              <h2>{t("Get latest")}</h2>
               <Button kind="link" onClick={() => void act({ kind: "fetch" })} disabled={busy || !snapshot.upstream}>
-                <FetchIcon size={13} />
-                Check now
+                {tx("{0}Check now", <FetchIcon size={13} />)}
               </Button>
             </div>
             <p className="simple-latest-text">
               {!snapshot.upstream
-                ? "This branch isn't on the server yet: submitting sends it."
+                ? t("This branch isn't on the server yet: submitting sends it.")
                 : behind > 0
-                  ? `${plural(behind, "update")}${from.length > 0 ? ` from ${from.slice(0, 3).join(", ")}${from.length > 3 ? " and others" : ""}` : ""}.`
-                  : "You have everything the team has sent."}
-              {snapshot.lastFetched ? <span className="simple-muted"> Checked {relativeTime(snapshot.lastFetched)}.</span> : null}
+                  ? `${plural(behind, "update")}${from.length > 0 ? t(" from {0}", `${from.slice(0, 3).join(", ")}${from.length > 3 ? t(" and others") : ""}`) : ""}.`
+                  : t("You have everything the team has sent.")}
+              {snapshot.lastFetched ? <span className="simple-muted">{" "}{tx("Checked {0}.", relativeTime(snapshot.lastFetched))}</span> : null}
             </p>
             <Button kind="primary" size="large" className="simple-get" onClick={() => void act({ kind: "pull" })} disabled={busy || !canChange || !snapshot.upstream}>
-              <PullIcon size={16} />
-              Get latest
+              {tx("{0}Get latest", <PullIcon size={16} />)}
             </Button>
           </section>
 
           <section className="simple-card" data-tour="simple-team">
             <div className="simple-card-head">
-              <h2>The team</h2>
+              <h2>{t("The team")}</h2>
             </div>
             {othersLocks.length > 0 && (
               <>
-                <h3 className="simple-subhead">Working on</h3>
+                <h3 className="simple-subhead">{t("Working on")}</h3>
                 <ul className="simple-locks">
                   {othersLocks.map((lock) => (
                     <li key={lock.id}>
@@ -293,7 +289,7 @@ export function SimpleView({ snapshot, ahead, behind, running, act, locks, check
                 </ul>
               </>
             )}
-            <h3 className="simple-subhead">Lately</h3>
+            <h3 className="simple-subhead">{t("Lately")}</h3>
             <ul className="simple-recent">
               {recent.map((commit) => (
                 <li key={commit.id}>

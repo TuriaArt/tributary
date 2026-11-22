@@ -4,8 +4,9 @@ import type { TrackerSetting } from "../lib/issues";
 import { useRepoSetting } from "../lib/repoPrefs";
 import type { SettingRow } from "./SettingsDialog";
 import { Button } from "./ui/Button";
+import { t } from "../lib/i18n";
 
-const NAMES: Record<TrackerKind, string> = { github: "GitHub issues", gitlab: "GitLab issues", jira: "Jira", linear: "Linear" };
+const NAMES: Record<TrackerKind, string> = { github: t("GitHub issues"), gitlab: t("GitLab issues"), jira: "Jira", linear: "Linear" };
 
 /**
  * The repository's issue tracker, in its settings: its remote's own issues, Jira or Linear
@@ -46,16 +47,16 @@ export function useIssueRows(path: string, automatic: Tracker | null): SettingRo
   const rows: SettingRow[] = [
     {
       kind: "select",
-      label: "Issue tracker",
-      hint: "Issue keys in commit messages and branch names (like FEAST-12, or #12) link to their issues, commit details show their titles, and a new branch can start from one of your issues.",
+      label: t("Issue tracker"),
+      hint: t("Issue keys in commit messages and branch names (like FEAST-12, or #12) link to their issues, commit details show their titles, and a new branch can start from one of your issues."),
       value: choice,
       options: [
-        { value: "auto", label: automatic ? `${NAMES[automatic.kind]} (the remote's own)` : "None (the remote has no issues)" },
-        { value: "github", label: "GitHub issues" },
-        { value: "gitlab", label: "GitLab issues" },
+        { value: "auto", label: automatic ? t("{0} (the remote's own)", NAMES[automatic.kind]) : t("None (the remote has no issues)") },
+        { value: "github", label: t("GitHub issues") },
+        { value: "gitlab", label: t("GitLab issues") },
         { value: "jira", label: "Jira" },
         { value: "linear", label: "Linear" },
-        { value: "off", label: "None" },
+        { value: "off", label: t("None") },
       ],
       set: choose,
     },
@@ -63,8 +64,8 @@ export function useIssueRows(path: string, automatic: Tracker | null): SettingRo
   if (chosen && !own) {
     rows.push({
       kind: "custom",
-      label: chosen.kind === "github" ? "Signed in with your GitHub account" : "Signed in with git's token for GitLab",
-      hint: chosen.kind === "github" ? "Settings, Accounts. Without it, issues in private repositories can't be read." : "The token git keeps for your GitLab server, as for merge requests.",
+      label: chosen.kind === "github" ? t("Signed in with your GitHub account") : t("Signed in with git's token for GitLab"),
+      hint: chosen.kind === "github" ? t("Settings, Accounts. Without it, issues in private repositories can't be read.") : t("The token git keeps for your GitLab server, as for merge requests."),
       content: null,
     });
     return rows;
@@ -85,8 +86,8 @@ export function useIssueRows(path: string, automatic: Tracker | null): SettingRo
   rows.push(
     {
       kind: "custom",
-      label: jira ? "Jira's address" : "Linear workspace",
-      hint: jira ? "Like https://studio.atlassian.net, or your own Jira server." : "The name in your Linear addresses: linear.app/studio is studio.",
+      label: jira ? t("Jira's address") : t("Linear workspace"),
+      hint: jira ? t("Like https://studio.atlassian.net, or your own Jira server.") : t("The name in your Linear addresses: linear.app/studio is studio."),
       content: (
         <input
           className="text-input settings-input"
@@ -95,14 +96,14 @@ export function useIssueRows(path: string, automatic: Tracker | null): SettingRo
           placeholder={jira ? "https://studio.atlassian.net" : "studio"}
           spellCheck={false}
           autoCapitalize="off"
-          aria-label={jira ? "Jira's address" : "Linear workspace"}
+          aria-label={jira ? t("Jira's address") : t("Linear workspace")}
         />
       ),
     },
     {
       kind: "custom",
-      label: jira ? "Projects" : "Teams",
-      hint: `Their keys, like ${jira ? "FEAST" : "ENG"}: only these count as issues (others look the same, like UTF-8). Empty for any.`,
+      label: jira ? t("Projects") : t("Teams"),
+      hint: t("Their keys, like {0}: only these count as issues (others look the same, like UTF-8). Empty for any.", jira ? "FEAST" : "ENG"),
       content: (
         <input
           className="text-input settings-input"
@@ -110,7 +111,7 @@ export function useIssueRows(path: string, automatic: Tracker | null): SettingRo
           onChange={(event) => setDraft({ ...draft, keys: event.target.value })}
           placeholder={jira ? "FEAST, ART" : "ENG"}
           spellCheck={false}
-          aria-label={jira ? "Project keys" : "Team keys"}
+          aria-label={jira ? t("Project keys") : t("Team keys")}
         />
       ),
     },
@@ -119,7 +120,7 @@ export function useIssueRows(path: string, automatic: Tracker | null): SettingRo
       label: "",
       content: (
         <Button kind="primary" onClick={save} disabled={!changed || !draft.site.trim()}>
-          Save
+          {t("Save")}
         </Button>
       ),
     },
@@ -128,8 +129,8 @@ export function useIssueRows(path: string, automatic: Tracker | null): SettingRo
   if (status?.signedIn) {
     rows.push({
       kind: "custom",
-      label: `Signed in to ${NAMES[own.kind]} as ${status.user ?? "you"}`,
-      hint: "The key is kept by git's credential helper, not by Tributary.",
+      label: t("Signed in to {0} as {1}", NAMES[own.kind], status.user ?? "you"),
+      hint: t("The key is kept by git's credential helper, not by Tributary."),
       content: (
         <Button
           kind="outline"
@@ -141,7 +142,7 @@ export function useIssueRows(path: string, automatic: Tracker | null): SettingRo
             setBusy(false);
           }}
         >
-          <span className="button-label">Sign out</span>
+          <span className="button-label">{t("Sign out")}</span>
         </Button>
       ),
     });
@@ -149,10 +150,10 @@ export function useIssueRows(path: string, automatic: Tracker | null): SettingRo
   }
   rows.push({
     kind: "custom",
-    label: `Sign in to ${NAMES[own.kind]}`,
+    label: t("Sign in to {0}", NAMES[own.kind]),
     hint: jira
-      ? "Jira Cloud: your email and an API token (id.atlassian.com, Security, API tokens). Your own Jira server: no email, and a personal access token. It's checked with Jira, then kept by git's credential helper."
-      : "A personal API key (Linear's Settings, Security & access). It's checked with Linear, then kept by git's credential helper.",
+      ? t("Jira Cloud: your email and an API token (id.atlassian.com, Security, API tokens). Your own Jira server: no email, and a personal access token. It's checked with Jira, then kept by git's credential helper.")
+      : t("A personal API key (Linear's Settings, Security & access). It's checked with Linear, then kept by git's credential helper."),
     content: (
       <form
         className="remote-form"
@@ -177,7 +178,7 @@ export function useIssueRows(path: string, automatic: Tracker | null): SettingRo
             placeholder="you@studio.com"
             autoCapitalize="off"
             spellCheck={false}
-            aria-label="Jira email"
+            aria-label={t("Jira email")}
           />
         )}
         <input
@@ -185,13 +186,13 @@ export function useIssueRows(path: string, automatic: Tracker | null): SettingRo
           type="password"
           value={signIn.token}
           onChange={(event) => setSignIn({ ...signIn, token: event.target.value })}
-          placeholder={jira ? "API token" : "lin_api_…"}
-          aria-label={jira ? "Jira API token" : "Linear API key"}
+          placeholder={jira ? t("API token") : "lin_api_…"}
+          aria-label={jira ? t("Jira API token") : t("Linear API key")}
         />
         {error && <p className="review-error">{error}</p>}
         <div className="remote-form-buttons">
           <Button type="submit" kind="primary" disabled={busy || !signIn.token.trim()}>
-            {busy ? "Checking…" : "Sign in"}
+            {busy ? t("Checking…") : t("Sign in")}
           </Button>
         </div>
       </form>

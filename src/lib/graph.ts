@@ -1,4 +1,5 @@
 import type { CommitRow } from "../api";
+import { t } from "./i18n";
 
 /** Ids of the loaded commits reachable from `start` (including it), following parents. */
 export function ancestors(start: string | null | undefined, byId: Map<string, CommitRow>): Set<string> {
@@ -32,12 +33,12 @@ export function rewritable(
   byId: Map<string, CommitRow>,
 ): CommitRow[] | string {
   const branch = snapshot.headBranch;
-  if (!branch) return "check out a branch first";
-  if (commit.id === snapshot.headCommit) return `${branch} has nothing after this commit`;
-  if (!headHistory.has(commit.id)) return `not part of ${branch}`;
+  if (!branch) return t("check out a branch first");
+  if (commit.id === snapshot.headCommit) return t("{0} has nothing after this commit", branch);
+  if (!headHistory.has(commit.id)) return t("not part of {0}", branch);
   const before = ancestors(commit.id, byId);
   const after = snapshot.commits.filter((c) => headHistory.has(c.id) && !before.has(c.id));
-  if (after.some((c) => c.parents.length > 1)) return "the commits after it include merges";
+  if (after.some((c) => c.parents.length > 1)) return t("the commits after it include merges");
   return after;
 }
 

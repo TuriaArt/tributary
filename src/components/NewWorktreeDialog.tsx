@@ -6,6 +6,7 @@ import { folderSlug, joinPath, parentFolder } from "../lib/paths";
 import { Dialog } from "./Dialog";
 import { Button } from "./ui/Button";
 import { Field } from "./ui/Field";
+import { t, tx } from "../lib/i18n";
 
 interface Props {
   repoPath: string;
@@ -43,7 +44,7 @@ export function NewWorktreeDialog({ repoPath, repoName, branches, worktrees, bra
   const path = joinPath(parent, folder.trim());
 
   const choose = async () => {
-    const picked = await open({ directory: true, multiple: false, defaultPath: parent, title: "Put the worktree in which folder?" }).catch(() => null);
+    const picked = await open({ directory: true, multiple: false, defaultPath: parent, title: t("Put the worktree in which folder?") }).catch(() => null);
     if (typeof picked === "string") setParent(picked);
   };
 
@@ -62,22 +63,22 @@ export function NewWorktreeDialog({ repoPath, repoName, branches, worktrees, bra
 
   return (
     <Dialog
-      title="New worktree"
+      title={t("New worktree")}
       error={error}
       busy={running}
       onCancel={onCancel}
       buttons={
         <>
           <Button kind="secondary" onClick={onCancel} disabled={running}>
-            Cancel
+            {t("Cancel")}
           </Button>
           <Button kind="primary" onClick={create} disabled={running || !name || !folder.trim() || Boolean(busyElsewhere)}>
-            {running ? "Creating…" : "Create worktree"}
+            {running ? t("Creating…") : t("Create worktree")}
           </Button>
         </>
       }
     >
-      <p>A worktree is another folder with another branch checked out. It shares this repository's history, so you can work on two branches at once.</p>
+      <p>{t("A worktree is another folder with another branch checked out. It shares this repository's history, so you can work on two branches at once.")}</p>
       <form
         className="dialog-form"
         onSubmit={(event) => {
@@ -85,12 +86,12 @@ export function NewWorktreeDialog({ repoPath, repoName, branches, worktrees, bra
           create();
         }}
       >
-        <Field label="Branch">
+        <Field label={t("Branch")}>
           <input
             className="text-input"
             value={branch}
             onChange={(event) => setBranch(event.target.value)}
-            placeholder="A branch to check out, or a name for a new one"
+            placeholder={t("A branch to check out, or a name for a new one")}
             spellCheck={false}
             autoCapitalize="off"
             autoCorrect="off"
@@ -102,20 +103,20 @@ export function NewWorktreeDialog({ repoPath, repoName, branches, worktrees, bra
           {!name
             ? " "
             : busyElsewhere
-              ? `${name} is already checked out in ${busyElsewhere.path}.`
+              ? t("{0} is already checked out in {1}.", name, busyElsewhere.path)
               : existing
-                ? `Checks out the branch ${name}.`
-                : `Makes the new branch ${name} at ${shortId(start.id)} ${start.summary}.`}
+                ? t("Checks out the branch {0}.", name)
+                : t("Makes the new branch {0} at {1} {2}.", name, shortId(start.id), start.summary)}
         </p>
-        <Field group label="In">
+        <Field group label={t("In")}>
           <div className="field-row">
             <input className="text-input" value={parent} readOnly onClick={choose} disabled={running} />
             <Button type="button" kind="secondary" onClick={choose} disabled={running}>
-              Choose…
+              {t("Choose…")}
             </Button>
           </div>
         </Field>
-        <Field label="Folder name">
+        <Field label={t("Folder name")}>
           <input
             className="text-input"
             value={folder}
@@ -128,8 +129,7 @@ export function NewWorktreeDialog({ repoPath, repoName, branches, worktrees, bra
           />
         </Field>
         <label className="checkbox">
-          <input type="checkbox" checked={openIt} onChange={(event) => setOpenIt(event.target.checked)} disabled={running} />
-          Open it in a new tab
+          {tx("{0}Open it in a new tab", <input type="checkbox" checked={openIt} onChange={(event) => setOpenIt(event.target.checked)} disabled={running} />)}
         </label>
         <button type="submit" hidden />
       </form>

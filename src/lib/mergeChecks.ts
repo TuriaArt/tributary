@@ -2,6 +2,7 @@
 // and said in a few words for menus.
 import { mergeCheck, type MergeCheck } from "../api";
 import { plural } from "./format";
+import { t } from "./i18n";
 
 /** Answers are kept this long: a menu opened again soon after doesn't ask again. */
 const KEEP_FOR = 30_000;
@@ -29,22 +30,22 @@ export function checkMerge(repo: string, from: string, into: string | null, at: 
 export function conflictText(check: MergeCheck): string {
   const [first] = check.conflicts;
   const name = first ? first.slice(first.lastIndexOf("/") + 1) : "";
-  if (check.conflictCount <= 1) return `conflicts in ${name}`;
-  return `conflicts in ${name} and ${plural(check.conflictCount - 1, "more file")}`;
+  if (check.conflictCount <= 1) return t("conflicts in {0}", name);
+  return t("conflicts in {0} and {1}", name, plural(check.conflictCount - 1, "more file"));
 }
 
 /** A few words on how a merge (or a rebase onto it) would go, or null when git couldn't tell. */
 export function describeMergeCheck(check: MergeCheck, kind: "merge" | "rebase"): { text: string; tone: "good" | "bad" | "quiet" } | null {
   switch (check.outcome) {
     case "upToDate":
-      return { text: kind === "merge" ? "Already merged: nothing to bring in" : "Already on top of it: nothing to rebase", tone: "quiet" };
+      return { text: kind === "merge" ? t("Already merged: nothing to bring in") : t("Already on top of it: nothing to rebase"), tone: "quiet" };
     case "fastForward":
-      return { text: `Moves forward ${plural(check.incoming, "commit")}: no conflicts`, tone: "good" };
+      return { text: t("Moves forward {0}: no conflicts", plural(check.incoming, "commit")), tone: "good" };
     case "clean":
-      return { text: kind === "merge" ? `${plural(check.incoming, "commit")}, no conflicts` : `${plural(check.outgoing, "commit")} to replay, no conflicts expected`, tone: "good" };
+      return { text: kind === "merge" ? t("{0}, no conflicts", plural(check.incoming, "commit")) : t("{0} to replay, no conflicts expected", plural(check.outgoing, "commit")), tone: "good" };
     case "conflicts": {
       const text = conflictText(check);
-      return { text: kind === "merge" ? text[0].toUpperCase() + text.slice(1) : `May stop at ${text}`, tone: "bad" };
+      return { text: kind === "merge" ? text[0].toUpperCase() + text.slice(1) : t("May stop at {0}", text), tone: "bad" };
     }
     default:
       return null;

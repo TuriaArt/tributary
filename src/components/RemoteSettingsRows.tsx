@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { remotes as listRemotes, type Action, type RemoteInfo } from "../api";
 import type { SettingRow } from "./SettingsDialog";
 import { Button } from "./ui/Button";
+import { t } from "../lib/i18n";
 
 /** A remote being changed: its name and addresses as typed. */
 interface Editing {
@@ -41,7 +42,7 @@ export function useRemoteRows(path: string, run: (action: Action) => Promise<boo
     return ok;
   };
 
-  if (!remotes) return [{ kind: "loading", label: "Reading the remotes" }];
+  if (!remotes) return [{ kind: "loading", label: t("Reading the remotes") }];
 
   const saveEdit = async (remote: RemoteInfo, draft: Editing["draft"]) => {
     const name = draft.name.trim();
@@ -55,7 +56,7 @@ export function useRemoteRows(path: string, run: (action: Action) => Promise<boo
 
   const rows: SettingRow[] = [];
   if (remotes.length === 0) {
-    rows.push({ kind: "custom", label: "No remotes yet", hint: "Add one to fetch from it and push to it, like the repository on GitHub.", content: null });
+    rows.push({ kind: "custom", label: t("No remotes yet"), hint: t("Add one to fetch from it and push to it, like the repository on GitHub."), content: null });
   }
   for (const remote of remotes) {
     if (editing?.name === remote.name) {
@@ -63,8 +64,8 @@ export function useRemoteRows(path: string, run: (action: Action) => Promise<boo
       const set = (change: Partial<Editing["draft"]>) => setEditing({ ...editing, draft: { ...draft, ...change } });
       rows.push({
         kind: "custom",
-        label: `Edit ${remote.name}`,
-        hint: remote.hasCredentials ? "Its address has a password or token in it, which isn't shown. Change the address to replace it." : undefined,
+        label: t("Edit {0}", remote.name),
+        hint: remote.hasCredentials ? t("Its address has a password or token in it, which isn't shown. Change the address to replace it.") : undefined,
         content: (
           <form
             className="remote-form"
@@ -73,22 +74,22 @@ export function useRemoteRows(path: string, run: (action: Action) => Promise<boo
               void saveEdit(remote, draft);
             }}
           >
-            <input className="text-input settings-input" value={draft.name} onChange={(event) => set({ name: event.target.value })} spellCheck={false} aria-label="Name" placeholder="Name" />
-            <input className="text-input settings-input" value={draft.url} onChange={(event) => set({ url: event.target.value })} spellCheck={false} aria-label="Address" placeholder="https://github.com/team/app.git" autoFocus />
+            <input className="text-input settings-input" value={draft.name} onChange={(event) => set({ name: event.target.value })} spellCheck={false} aria-label={t("Name")} placeholder={t("Name")} />
+            <input className="text-input settings-input" value={draft.url} onChange={(event) => set({ url: event.target.value })} spellCheck={false} aria-label={t("Address")} placeholder="https://github.com/team/app.git" autoFocus />
             <input
               className="text-input settings-input"
               value={draft.pushUrl}
               onChange={(event) => set({ pushUrl: event.target.value })}
               spellCheck={false}
-              aria-label="Push address"
-              placeholder="Push address (optional: the same one)"
+              aria-label={t("Push address")}
+              placeholder={t("Push address (optional: the same one)")}
             />
             <div className="remote-form-buttons">
               <Button type="button" kind="outline" onClick={() => setEditing(null)} disabled={busy}>
-                <span className="button-label">Cancel</span>
+                <span className="button-label">{t("Cancel")}</span>
               </Button>
               <Button type="submit" kind="primary" disabled={busy || !draft.name.trim() || !draft.url.trim()}>
-                Save
+                {t("Save")}
               </Button>
             </div>
           </form>
@@ -99,13 +100,13 @@ export function useRemoteRows(path: string, run: (action: Action) => Promise<boo
     rows.push({
       kind: "custom",
       label: remote.name,
-      hint: [remote.url, remote.pushUrl && `Pushes to ${remote.pushUrl}`, remote.hasCredentials && "(with a saved password or token)"].filter(Boolean).join(" · "),
+      hint: [remote.url, remote.pushUrl && t("Pushes to {0}", remote.pushUrl), remote.hasCredentials && t("(with a saved password or token)")].filter(Boolean).join(" · "),
       content:
         removing === remote.name ? (
           <div className="remote-buttons">
-            <span className="remote-confirm">Its remote branches go too.</span>
+            <span className="remote-confirm">{t("Its remote branches go too.")}</span>
             <Button kind="outline" onClick={() => setRemoving(null)} disabled={busy}>
-              <span className="button-label">Keep</span>
+              <span className="button-label">{t("Keep")}</span>
             </Button>
             <Button
               kind="danger"
@@ -115,7 +116,7 @@ export function useRemoteRows(path: string, run: (action: Action) => Promise<boo
                 void apply([{ kind: "removeRemote", name: remote.name }]);
               }}
             >
-              Remove
+              {t("Remove")}
             </Button>
           </div>
         ) : (
@@ -124,12 +125,12 @@ export function useRemoteRows(path: string, run: (action: Action) => Promise<boo
               kind="outline"
               disabled={busy}
               onClick={() => setEditing({ name: remote.name, draft: { name: remote.name, url: remote.url, pushUrl: remote.pushUrl ?? "" } })}
-              aria-label={`Edit ${remote.name}`}
+              aria-label={t("Edit {0}", remote.name)}
             >
-              <span className="button-label">Edit…</span>
+              <span className="button-label">{t("Edit…")}</span>
             </Button>
-            <Button kind="outline" disabled={busy} onClick={() => setRemoving(remote.name)} aria-label={`Remove ${remote.name}`}>
-              <span className="button-label">Remove…</span>
+            <Button kind="outline" disabled={busy} onClick={() => setRemoving(remote.name)} aria-label={t("Remove {0}", remote.name)}>
+              <span className="button-label">{t("Remove…")}</span>
             </Button>
           </div>
         ),
@@ -140,8 +141,8 @@ export function useRemoteRows(path: string, run: (action: Action) => Promise<boo
   };
   rows.push({
     kind: "custom",
-    label: "Add a remote",
-    hint: "Its branches show up after the next fetch.",
+    label: t("Add a remote"),
+    hint: t("Its branches show up after the next fetch."),
     content: (
       <form
         className="remote-form"
@@ -156,7 +157,7 @@ export function useRemoteRows(path: string, run: (action: Action) => Promise<boo
           onChange={(event) => setAdding({ ...adding, name: event.target.value })}
           placeholder={remotes.some((remote) => remote.name === "origin") ? "upstream" : "origin"}
           spellCheck={false}
-          aria-label="New remote's name"
+          aria-label={t("New remote's name")}
         />
         <input
           className="text-input settings-input"
@@ -164,11 +165,11 @@ export function useRemoteRows(path: string, run: (action: Action) => Promise<boo
           onChange={(event) => setAdding({ ...adding, url: event.target.value })}
           placeholder="https://github.com/team/app.git"
           spellCheck={false}
-          aria-label="New remote's address"
+          aria-label={t("New remote's address")}
         />
         <div className="remote-form-buttons">
           <Button type="submit" kind="primary" disabled={busy || !adding.name.trim() || !adding.url.trim()}>
-            Add remote
+            {t("Add remote")}
           </Button>
         </div>
       </form>

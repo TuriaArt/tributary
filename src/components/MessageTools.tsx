@@ -2,6 +2,7 @@ import type { CommitRow, Identity } from "../api";
 import { coAuthorCandidates, recentMessages, type Person } from "../lib/commitMessage";
 import type { MenuItem } from "./ContextMenu";
 import { HistoryIcon, UserIcon } from "./Icons";
+import { t } from "../lib/i18n";
 
 interface Props {
   commits: CommitRow[];
@@ -27,10 +28,10 @@ export function MessageTools({ commits, you, onUseMessage, onAddCoAuthor, openMe
             360,
           )
         }
-        title="Start from one of your recent commit messages"
+        title={t("Start from one of your recent commit messages")}
       >
         <HistoryIcon size={12} />
-        <span className="button-label">Recent messages</span>
+        <span className="button-label">{t("Recent messages")}</span>
       </button>
       <button
         className="message-tool"
@@ -42,10 +43,10 @@ export function MessageTools({ commits, you, onUseMessage, onAddCoAuthor, openMe
             360,
           )
         }
-        title="Credit someone who worked on this with you"
+        title={t("Credit someone who worked on this with you")}
       >
         <UserIcon size={12} />
-        <span className="button-label">Add co-author</span>
+        <span className="button-label">{t("Add co-author")}</span>
       </button>
     </div>
   );

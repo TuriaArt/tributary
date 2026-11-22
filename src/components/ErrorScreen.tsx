@@ -8,6 +8,7 @@ import { isMac, isWindows } from "../lib/platform";
 import { describeProblem, keepProblem } from "../lib/problems";
 import { openInBrowser } from "../lib/weblinks";
 import { Button } from "./ui/Button";
+import { t, tx } from "../lib/i18n";
 
 /** The bug report form's System for this computer. */
 export const thisSystem = (): ReportSystem => (isMac ? "macOS" : isWindows ? "Windows" : "Linux");
@@ -70,29 +71,28 @@ export function ErrorScreen({ problem, log }: { problem: string; log: string | n
   return (
     <div className="error-screen" role="alert">
       <div className="error-screen-card">
-        <h1>Something went wrong</h1>
-        <p>An error stopped the window. Your repositories and changes aren't affected: load the window again to carry on.</p>
+        <h1>{t("Something went wrong")}</h1>
+        <p>{t("An error stopped the window. Your repositories and changes aren't affected: load the window again to carry on.")}</p>
         <pre className="error-screen-details" tabIndex={0}>
           {headline}
         </pre>
         <p className="error-screen-note">
-          {log ? "It's been saved with the problem reports. " : ""}
-          Report on GitHub opens a bug report with it filled in, for you to read and send.
+          {tx("{0}Report on GitHub opens a bug report with it filled in, for you to read and send.", log ? t("It's been saved with the problem reports. ") : "")}
         </p>
         <div className="error-screen-buttons">
           {log && (
             <Button kind="secondary" onClick={() => void revealItemInDir(log).catch(() => {})}>
-              Show Problem Reports
+              {t("Show Problem Reports")}
             </Button>
           )}
           <Button kind="secondary" onClick={() => void copy()}>
-            {copied ? "Copied" : "Copy Details"}
+            {copied ? t("Copied") : t("Copy Details")}
           </Button>
-          <Button kind="secondary" onClick={() => void reportOnGitHub(problem)} title="A new bug report on GitHub, filled in, to read and send there">
-            Report on GitHub
+          <Button kind="secondary" onClick={() => void reportOnGitHub(problem)} title={t("A new bug report on GitHub, filled in, to read and send there")}>
+            {t("Report on GitHub")}
           </Button>
           <Button kind="primary" onClick={() => window.location.reload()} autoFocus>
-            Reload
+            {t("Reload")}
           </Button>
         </div>
       </div>

@@ -5,6 +5,7 @@ import { ancestors } from "../lib/graph";
 import { baseName } from "../lib/paths";
 import { stepThrough } from "../lib/search";
 import type { Focus } from "./constants";
+import { t } from "../lib/i18n";
 
 const sameAuthor = (commit: CommitRow, name: string, email: string) =>
   email ? commit.authorEmail.toLowerCase() === email.toLowerCase() : commit.authorName === name;
@@ -59,8 +60,8 @@ export function useHighlight({ repoPath, commits, byId, indexById, selectedIndex
       else
         notify(
           history.ids.length
-            ? `None of the commits that changed ${baseName(history.path)} are loaded`
-            : `No commits changed ${baseName(history.path)}`,
+            ? t("None of the commits that changed {0} are loaded", baseName(history.path))
+            : t("No commits changed {0}", baseName(history.path)),
         );
     },
     [repoPath, indexById, select, notify],
@@ -74,7 +75,7 @@ export function useHighlight({ repoPath, commits, byId, indexById, selectedIndex
         directory,
         multiple: false,
         defaultPath: repoPath,
-        title: directory ? "Show the history of a folder" : "Show the history of a file",
+        title: directory ? t("Show the history of a folder") : t("Show the history of a file"),
       });
       if (typeof picked === "string") await showHistory(directory ? `${picked}/` : picked);
     });

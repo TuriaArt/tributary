@@ -4,6 +4,7 @@ import { withAlpha } from "../lib/colors";
 import { shownStops, type Tour, type TourId } from "../lib/tours";
 import { DownloadIcon, RevertIcon, SparkleIcon, TeamIcon, ViewIcon } from "./Icons";
 import { Button } from "./ui/Button";
+import { t, tx } from "../lib/i18n";
 
 /** Each tour's picture, and its graph colour (by place in the palette). */
 export const TOUR_LOOKS: Record<TourId, { icon: (size: number) => ReactNode; lane: number }> = {
@@ -202,27 +203,26 @@ export function TourOverlay({ tour, onClose, onNever }: Props) {
           <span style={{ width: `${((at + 1) / stops.length) * 100}%` }} />
         </div>
         <span className="tour-eyebrow">
-          {TOUR_LOOKS[tour.id].icon(12)}
-          {tour.title} · {at + 1} of {stops.length}
+          {tx("{0}{1} · {2} of {3}", TOUR_LOOKS[tour.id].icon(12), tour.title, at + 1, stops.length)}
         </span>
         <h3>{stop.title}</h3>
         <p>{stop.text}</p>
         <div className="tour-buttons">
           <Button kind="link" className="tour-skip" onClick={onClose}>
-            {last ? "Close" : "Skip tour"}
+            {last ? t("Close") : t("Skip tour")}
           </Button>
           <span className="spacer" />
           {at > 0 && (
             <Button kind="secondary" onClick={() => setAt(at - 1)}>
-              Back
+              {t("Back")}
             </Button>
           )}
           <Button kind="primary" onClick={() => (last ? onClose() : setAt(at + 1))} autoFocus>
-            {last ? "Done" : "Next"}
+            {last ? t("Done") : t("Next")}
           </Button>
         </div>
         <Button kind="link" className="tour-never" onClick={onNever}>
-          Don't show tours again
+          {t("Don't show tours again")}
         </Button>
       </div>
     </div>
@@ -243,19 +243,19 @@ export function TourOffer({ tour, onStart, onLater, onNever }: { tour: Tour; onS
     <div className="tour-offer" role="status" style={{ "--tour-color": color, "--tour-soft": withAlpha(color, 0.18) } as CSSProperties}>
       <span className="tour-offer-tile">{TOUR_LOOKS[tour.id].icon(16)}</span>
       <div className="tour-offer-text">
-        <strong>{tour.id === "start" ? "New here? A quick tour" : `${tour.title}: a quick tour`}</strong>
+        <strong>{tour.id === "start" ? t("New here? A quick tour") : t("{0}: a quick tour", tour.title)}</strong>
         <span>
-          {tour.summary}, in {tour.stops.length} stops (about {minutes} minute{minutes === 1 ? "" : "s"}).
+          {tx("{0}, in {1} stops (about {2} minute{3}).", tour.summary, tour.stops.length, minutes, minutes === 1 ? "" : "s")}
         </span>
         <div className="tour-offer-buttons">
           <Button kind="primary" onClick={onStart}>
-            Show me
+            {t("Show me")}
           </Button>
           <Button kind="secondary" onClick={onLater}>
-            Not now
+            {t("Not now")}
           </Button>
           <Button kind="link" onClick={onNever}>
-            Don't show tours again
+            {t("Don't show tours again")}
           </Button>
         </div>
       </div>

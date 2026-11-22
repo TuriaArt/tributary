@@ -3,6 +3,7 @@ import type { SinceLastHere } from "../app/useSinceLastHere";
 import { sinceItems, sinceWhen } from "../lib/sinceHere";
 import { ClockIcon, CloseIcon } from "./Icons";
 import { Button } from "./ui/Button";
+import { t, tx } from "../lib/i18n";
 
 interface Props {
   since: SinceLastHere;
@@ -24,8 +25,7 @@ export function SinceBanner({ since, remotes, onGo, onDismiss }: Props) {
     <div className="notice-banner info since-banner" role="status">
       <ClockIcon size={14} />
       <span>
-        Since {sinceWhen(since.at)}:{" "}
-        {items.map((item, index) => (
+        {tx("Since {0}: {1}", sinceWhen(since.at), items.map((item, index) => (
           <Fragment key={index}>
             {index > 0 && <span className="since-dot"> · </span>}
             <button className="link-button since-link" title={item.title} onClick={() => onGo(item.to)}>
@@ -33,9 +33,9 @@ export function SinceBanner({ since, remotes, onGo, onDismiss }: Props) {
             </button>
             {item.rest}
           </Fragment>
-        ))}
+        )))}
       </span>
-      <Button kind="icon" onClick={onDismiss} aria-label="Dismiss" title="Dismiss">
+      <Button kind="icon" onClick={onDismiss} aria-label={t("Dismiss")} title={t("Dismiss")}>
         <CloseIcon size={14} />
       </Button>
     </div>

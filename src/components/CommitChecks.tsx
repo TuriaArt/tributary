@@ -11,6 +11,7 @@ import { SlidingText } from "./SlidingText";
 import { ExternalLinkIcon, WorkflowIcon } from "./Icons";
 import { RunStateIcon } from "./RunStateIcon";
 import { Button } from "./ui/Button";
+import { t } from "../lib/i18n";
 
 export type State = "failure" | "pending" | "success" | "cancelled" | "skipped";
 export const stateOf = (check: RequestCheck): State => check.state ?? "skipped";
@@ -87,14 +88,14 @@ export function CommitChecks({ shown: found, onShow }: { shown: CommitChecksShow
   const showAll = all.on && all.id === found.id;
   const setShowAll = (on: boolean) => setAll({ id: found.id, on });
   const shown = showAll ? sorted : notable.slice(0, FIRST);
-  const jobs = checks.site === "GitLab" ? "jobs" : "checks";
+  const gitlab = checks.site === "GitLab";
   const more = showAll || shown.length < sorted.length;
   const again = checks.canRerun && failed > 0;
 
   return (
     <section className="details-section commit-checks">
       <div className="details-section-head">
-        <h3>{checks.site === "GitLab" ? "Pipeline" : "Checks"}</h3>
+        <h3>{checks.site === "GitLab" ? t("Pipeline") : t("Checks")}</h3>
         <SiteChip site={checks.site} />
       </div>
       <ChecksSummary checks={sorted} gitlab={checks.site === "GitLab"} onShow={onShow} />
@@ -109,12 +110,12 @@ export function CommitChecks({ shown: found, onShow }: { shown: CommitChecksShow
         <div className="commit-checks-links">
           {more && (
             <Button kind="link" onClick={() => setShowAll(!showAll)}>
-              {showAll ? "Show fewer" : `Show all ${sorted.length} ${jobs}`}
+              {showAll ? t("Show fewer") : gitlab ? t("Show all {0} jobs", sorted.length) : t("Show all {0} checks", sorted.length)}
             </Button>
           )}
           {again && (
             <Button kind="link" disabled={busy} onClick={rerun}>
-              {busy ? "Asking…" : "Re-run failed"}
+              {busy ? t("Asking…") : t("Re-run failed")}
             </Button>
           )}
         </div>
@@ -140,7 +141,7 @@ function ChecksSummary({ checks, gitlab, onShow }: { checks: RequestCheck[]; git
           <RunStateIcon state={state} size={14} />
         </span>
         <span className="site-item-text commit-checks-headline">{checksHeadline(counts, gitlab)}</span>
-        {onShow && <SectionButton onClick={onShow} icon={<WorkflowIcon size={12} />} label="Open" title="Open the checks, each run as a graph of its jobs" />}
+        {onShow && <SectionButton onClick={onShow} icon={<WorkflowIcon size={12} />} label={t("Open")} title={t("Open the checks, each run as a graph of its jobs")} />}
         <span className="site-item-under commit-checks-counts">{[...counts].map(([what, n]) => `${n} ${WORDS[what]}`).join(", ")}</span>
       </div>
       <div className="check-pips" aria-hidden>
@@ -172,11 +173,11 @@ export function CheckLine({ check, time }: { check: RequestCheck; time: string |
   return (
     <li className={`commit-check ${state}`}>
       {why ? (
-        <button className="commit-check-row" onClick={why} data-url={check.url} title={`${checkName(check.name)}: why it failed`}>
+        <button className="commit-check-row" onClick={why} data-url={check.url} title={t("{0}: why it failed", checkName(check.name))}>
           {content}
         </button>
       ) : check.url ? (
-        <button className="commit-check-row" onClick={() => openInBrowser(check.url!)} data-url={check.url} title={`${checkName(check.name)}: open its page`}>
+        <button className="commit-check-row" onClick={() => openInBrowser(check.url!)} data-url={check.url} title={t("{0}: open its page", checkName(check.name))}>
           {content}
         </button>
       ) : (

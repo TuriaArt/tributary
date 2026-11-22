@@ -30,6 +30,7 @@ import type { ContextMenuState } from "./useMenus";
 import type { Overlays } from "./useOverlays";
 import type { Preferences } from "./usePreferences";
 import { ThemeContext } from "./useAppearance";
+import { t } from "../lib/i18n";
 
 interface Props {
   overlays: Overlays;
@@ -157,7 +158,7 @@ export function AppOverlays(props: Props) {
           onCancel={() => hide("signIn")}
           onDone={(account) => {
             hide("signIn");
-            notify({ text: `Signed in to GitHub as ${account.login}` });
+            notify({ text: t("Signed in to GitHub as {0}", account.login) });
             accounts.recheck();
             void askAgainForMissingAvatars();
             props.onSignedIn();
@@ -171,7 +172,7 @@ export function AppOverlays(props: Props) {
           onCancel={() => hide("gitlabSignIn")}
           onDone={(account, host) => {
             hide("gitlabSignIn");
-            notify({ text: `Signed in to ${host === GITLAB_COM ? "GitLab" : host} as ${account.username}` });
+            notify({ text: t("Signed in to {0} as {1}", host === GITLAB_COM ? "GitLab" : host, account.username) });
             gitlab.setHost(host);
             accounts.recheck();
             void askAgainForMissingAvatars();
@@ -185,7 +186,7 @@ export function AppOverlays(props: Props) {
           extra={{ Zoom: `${Math.round(preferences.zoom * 100)}%`, Webview: navigator.userAgent }}
           onCopied={() => {
             hide("diagnostics");
-            notify({ text: "Copied the diagnostics" });
+            notify({ text: t("Copied the diagnostics") });
           }}
           onClose={() => hide("diagnostics")}
         />
@@ -218,7 +219,7 @@ export function AppOverlays(props: Props) {
       {props.dropping && (
         <div className="drop-overlay">
           <FolderIcon size={28} />
-          <span>Drop a folder to open it</span>
+          <span>{t("Drop a folder to open it")}</span>
         </div>
       )}
       {props.toast && <Toast toast={props.toast} onDone={props.hideToast} />}

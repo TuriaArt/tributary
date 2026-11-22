@@ -4,6 +4,7 @@ import { shortId } from "../lib/format";
 import { Dialog } from "./Dialog";
 import { Button } from "./ui/Button";
 import { Field } from "./ui/Field";
+import { t, tx } from "../lib/i18n";
 
 interface Props {
   repoPath: string;
@@ -33,10 +34,10 @@ export function TagDialog({ repoPath, target, remote, onCancel, onDone }: Props)
       if (push && remote) {
         try {
           await runAction(repoPath, { kind: "pushTag", name: tag, remote });
-          result = `${result} and pushed it to ${remote}`;
+          result = t("{0} and pushed it to {1}", result, remote);
         } catch (e) {
           // The tag exists now; say why pushing it didn't work.
-          setError(`Created tag ${tag}, but pushing it failed:\n\n${String(e)}`);
+          setError(t("Created tag {0}, but pushing it failed:\n\n{1}", tag, String(e)));
           setRunning(false);
           return;
         }
@@ -50,23 +51,23 @@ export function TagDialog({ repoPath, target, remote, onCancel, onDone }: Props)
 
   return (
     <Dialog
-      title="New tag"
+      title={t("New tag")}
       error={error}
       busy={running}
       onCancel={onCancel}
       buttons={
         <>
           <Button kind="secondary" onClick={onCancel} disabled={running}>
-            Cancel
+            {t("Cancel")}
           </Button>
           <Button kind="primary" onClick={create} disabled={running || !name.trim()}>
-            {running ? "Creating…" : "Create tag"}
+            {running ? t("Creating…") : t("Create tag")}
           </Button>
         </>
       }
     >
       <p>
-        On <span className="mono">{shortId(target.id)}</span> {target.summary}
+        {tx("On {0} {1}", <span className="mono">{shortId(target.id)}</span>, target.summary)}
       </p>
       <form
         className="dialog-form"
@@ -75,7 +76,7 @@ export function TagDialog({ repoPath, target, remote, onCancel, onDone }: Props)
           create();
         }}
       >
-        <Field label="Name">
+        <Field label={t("Name")}>
           <input
             className="text-input"
             value={name}
@@ -90,19 +91,18 @@ export function TagDialog({ repoPath, target, remote, onCancel, onDone }: Props)
             autoFocus
           />
         </Field>
-        <Field label="Message (optional)">
+        <Field label={t("Message (optional)")}>
           <textarea
             className="text-input"
             rows={3}
             value={message}
             onChange={(event) => setMessage(event.target.value)}
-            placeholder="With a message, the tag is annotated: it records who made it and when."
+            placeholder={t("With a message, the tag is annotated: it records who made it and when.")}
           />
         </Field>
         {remote && (
           <label className="checkbox">
-            <input type="checkbox" checked={push} onChange={(event) => setPush(event.target.checked)} />
-            Push it to {remote}
+            {tx("{0}Push it to {1}", <input type="checkbox" checked={push} onChange={(event) => setPush(event.target.checked)} />, remote)}
           </label>
         )}
         <button type="submit" hidden />

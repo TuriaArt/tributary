@@ -1,17 +1,18 @@
 import type { OtherChange, Overlap } from "../api";
 import { baseName } from "./paths";
-import { relativeTime } from "./format";
+import { plural, relativeTime } from "./format";
+import { pluralWord, t } from "./i18n";
 
 /** "origin/art/lighting, by Rosa Bell 2 days ago". */
 export function describeChange(change: OtherChange, now?: number): string {
-  return `${change.branch}, by ${change.author} ${relativeTime(change.time, now)}`;
+  return t("{0}, by {1} {2}", change.branch, change.author, relativeTime(change.time, now));
 }
 
 /** For a file's mark: where else it changed, and what that means. */
 export function overlapTitle(overlap: Overlap, now?: number): string {
-  const where = overlap.elsewhere.map((change) => `Also changed on ${describeChange(change, now)}`).join("\n");
+  const where = overlap.elsewhere.map((change) => t("Also changed on {0}", describeChange(change, now))).join("\n");
   return `${where}\n${
-    overlap.unmergeable ? "It can't be merged: one version will have to win." : "Git can usually merge both changes."
+    overlap.unmergeable ? t("It can't be merged: one version will have to win.") : t("Git can usually merge both changes.")
   }`;
 }
 
@@ -24,14 +25,14 @@ export function overlapHeadline(overlaps: Overlap[], now?: number): string {
   if (overlaps.length === 1) {
     const [only] = overlaps;
     const latest = only.elsewhere[0];
-    const others = only.elsewhere.length > 1 ? ` (and ${only.elsewhere.length - 1} more ${only.elsewhere.length === 2 ? "branch" : "branches"})` : "";
-    return `${baseName(only.path)} was also changed on ${describeChange(latest, now)}${others}.`;
+    const others = only.elsewhere.length > 1 ? t(" (and {0} more {1})", only.elsewhere.length - 1, pluralWord(only.elsewhere.length - 1, "branch", "branches")) : "";
+    return t("{0} was also changed on {1}{2}.", baseName(only.path), describeChange(latest, now), others);
   }
   if (assets.length > 0) {
-    const files = assets.length === 1 ? `${baseName(assets[0].path)} and ${overlaps.length - 1} more` : `${overlaps.length} files`;
-    return `${files} you're changing were also changed on other branches.`;
+    const files = assets.length === 1 ? t("{0} and {1} more", baseName(assets[0].path), overlaps.length - 1) : plural(overlaps.length, "file");
+    return t("{0} you're changing were also changed on other branches.", files);
   }
-  return `${overlaps.length} files you're changing were also changed on other branches.`;
+  return t("{0} files you're changing were also changed on other branches.", overlaps.length);
 }
 
 /** Another branch, and the files you're changing that it also changed. */
@@ -80,7 +81,8 @@ export function byBranch(overlaps: Overlap[]): BranchOverlap[] {
 
 /** "Rosa Bell", "Rosa Bell and Theo Park", "Rosa Bell, Theo Park and 2 others". */
 export function people(names: string[]): string {
-  if (names.length <= 2) return names.join(" and ");
+  if (names.length <= 1) return names.join("");
+  if (names.length === 2) return t("{0} and {1}", names[0], names[1]);
   const others = names.length - 2;
-  return `${names[0]}, ${names[1]} and ${others} ${others === 1 ? "other" : "others"}`;
+  return others === 1 ? t("{0}, {1} and 1 other", names[0], names[1]) : t("{0}, {1} and {2} others", names[0], names[1], others);
 }

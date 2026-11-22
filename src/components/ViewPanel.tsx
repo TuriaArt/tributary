@@ -3,6 +3,7 @@ import { ACCENTS, CI_DOTS, CURVE_STYLES, DEFAULT_APPEARANCE, LANE_PALETTES, type
 import type { ColumnOptions } from "./CommitList";
 import { CheckIcon, GearIcon } from "./Icons";
 import { Switch } from "./ui/Switch";
+import { t } from "../lib/i18n";
 
 interface Props {
   /**
@@ -26,15 +27,15 @@ interface Props {
 }
 
 const THEMES: { value: ThemeChoice; label: string }[] = [
-  { value: "system", label: "System" },
-  { value: "light", label: "Light" },
-  { value: "dark", label: "Dark" },
+  { value: "system", label: t("System") },
+  { value: "light", label: t("Light") },
+  { value: "dark", label: t("Dark") },
 ];
 
-const BENDS: Record<CurveStyle, string> = { mixed: "Mixed", round: "Round", smooth: "Smooth", tight: "Tight", sweep: "Sweep" };
+const BENDS: Record<CurveStyle, string> = { mixed: t("Mixed"), round: t("Round"), smooth: t("Smooth"), tight: t("Tight"), sweep: t("Sweep") };
 
 /** How a dot on the graph shows its checks (Settings → Appearance shows each). */
-const CI_DOT_NAMES: Record<CiDots, string> = { beside: "Beside", ringed: "Ringed", halo: "Halo", filled: "Filled" };
+const CI_DOT_NAMES: Record<CiDots, string> = { beside: t("Beside"), ringed: t("Ringed"), halo: t("Halo"), filled: t("Filled") };
 
 /** One of a few choices, as a row of buttons. */
 function Segmented<T extends string>({ label, value, options, onChange }: { label: string; value: T; options: { value: T; label: string }[]; onChange: (value: T) => void }) {
@@ -118,16 +119,16 @@ export function ViewPanel(props: Props) {
     );
   };
   return (
-    <div ref={panel} className="view-panel" style={place} role="dialog" aria-label="View">
+    <div ref={panel} className="view-panel" style={place} role="dialog" aria-label={t("View")}>
       <section>
-        <h3>Look</h3>
+        <h3>{t("Look")}</h3>
         <div className="view-row">
-          <span>Theme</span>
-          <Segmented label="Theme" value={look.theme} options={THEMES} onChange={(theme) => change({ theme })} />
+          <span>{t("Theme")}</span>
+          <Segmented label={t("Theme")} value={look.theme} options={THEMES} onChange={(theme) => change({ theme })} />
         </div>
         <div className="view-row">
-          <span>Accent</span>
-          <div className="view-accents" role="group" aria-label="Accent colour">
+          <span>{t("Accent")}</span>
+          <div className="view-accents" role="group" aria-label={t("Accent colour")}>
             {ACCENTS.slice(0, 8).map((accent) => (
               <button
                 key={accent.color}
@@ -143,30 +144,30 @@ export function ViewPanel(props: Props) {
         </div>
       </section>
       <section>
-        <h3>Graph</h3>
+        <h3>{t("Graph")}</h3>
         <div className="view-row">
-          <span>Commits as</span>
+          <span>{t("Commits as")}</span>
           <Segmented
-            label="Commits as"
+            label={t("Commits as")}
             value={look.nodes}
             options={[
-              { value: "authors", label: "Pictures" },
-              { value: "dots", label: "Dots" },
+              { value: "authors", label: t("Pictures") },
+              { value: "dots", label: t("Dots") },
             ]}
             onChange={(nodes) => change({ nodes })}
           />
         </div>
         <div className="view-row">
-          <span>Checks</span>
-          <Segmented label="Checks on dots" value={look.ciDots} options={CI_DOTS.map((value) => ({ value, label: CI_DOT_NAMES[value] }))} onChange={(ciDots) => change({ ciDots })} />
+          <span>{t("Checks")}</span>
+          <Segmented label={t("Checks on dots")} value={look.ciDots} options={CI_DOTS.map((value) => ({ value, label: CI_DOT_NAMES[value] }))} onChange={(ciDots) => change({ ciDots })} />
         </div>
         <div className="view-row">
-          <span>Lines bend</span>
-          <Segmented label="Lines bend" value={look.curves} options={CURVE_STYLES.slice(0, 3).map((value) => ({ value, label: BENDS[value] }))} onChange={(curves) => change({ curves })} />
+          <span>{t("Lines bend")}</span>
+          <Segmented label={t("Lines bend")} value={look.curves} options={CURVE_STYLES.slice(0, 3).map((value) => ({ value, label: BENDS[value] }))} onChange={(curves) => change({ curves })} />
         </div>
         <div className="view-row">
-          <span>Colours</span>
-          <div className="view-palettes" role="group" aria-label="Lane colours">
+          <span>{t("Colours")}</span>
+          <div className="view-palettes" role="group" aria-label={t("Lane colours")}>
             {palettes.map((name) => (
               <button key={name} className={`view-palette${look.lanes === name ? " on" : ""}`} aria-pressed={look.lanes === name} title={name} onClick={() => change({ lanes: name })}>
                 {LANE_PALETTES[name][props.theme].slice(0, 5).map((color) => (
@@ -178,35 +179,35 @@ export function ViewPanel(props: Props) {
         </div>
       </section>
       <section>
-        <h3>Commit list</h3>
+        <h3>{t("Commit list")}</h3>
         <div className="view-row">
-          <span>Columns</span>
+          <span>{t("Columns")}</span>
           <div className="view-chips">
-            {column("author", "Author")}
-            {column("date", "Date")}
+            {column("author", t("Author"))}
+            {column("date", t("Date"))}
             {column("sha", "SHA")}
             {column("checks", "CI")}
           </div>
         </div>
         <div className="view-row">
-          <span>Rows</span>
+          <span>{t("Rows")}</span>
           <Segmented
-            label="Rows"
+            label={t("Rows")}
             value={props.dense ? "compact" : "roomy"}
             options={[
-              { value: "roomy", label: "Roomy" },
-              { value: "compact", label: "Compact" },
+              { value: "roomy", label: t("Roomy") },
+              { value: "compact", label: t("Compact") },
             ]}
             onChange={(rows) => props.setDense(rows === "compact")}
           />
         </div>
         <label className="view-row view-switch">
-          <span>Day separators</span>
-          <Switch label="Day separators" on={props.daySeparators} onChange={props.setDaySeparators} />
+          <span>{t("Day separators")}</span>
+          <Switch label={t("Day separators")} on={props.daySeparators} onChange={props.setDaySeparators} />
         </label>
         <label className="view-row view-switch">
-          <span>Branches sidebar</span>
-          <Switch label="Branches sidebar" on={props.sidebarOpen} onChange={props.setSidebarOpen} />
+          <span>{t("Branches sidebar")}</span>
+          <Switch label={t("Branches sidebar")} on={props.sidebarOpen} onChange={props.setSidebarOpen} />
         </label>
       </section>
       <button
@@ -217,7 +218,7 @@ export function ViewPanel(props: Props) {
         }}
       >
         <GearIcon size={13} />
-        <span className="button-label">More in Settings</span>
+        <span className="button-label">{t("More in Settings")}</span>
       </button>
     </div>
   );

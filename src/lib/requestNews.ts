@@ -1,5 +1,6 @@
 import type { PullRequest, RequestCheck, RequestConversation, RequestDetails } from "../api";
 import { requestNumber } from "./pullRequests";
+import { t } from "./i18n";
 
 /** What was known of a pull request the last time it was looked at. */
 export interface RequestSeen {
@@ -32,25 +33,31 @@ export function describeRequestNews(pr: PullRequest, before: RequestSeen, now: R
   const number = requestNumber(pr);
   const news: string[] = [];
   if (before.state !== now.state && (now.state === "merged" || now.state === "closed")) {
-    news.push(`${number} was ${now.state}`);
+    news.push(now.state === "merged" ? t("{0} was merged", number) : t("{0} was closed", number));
   }
   const you = conversation?.you?.toLowerCase();
   const fresh = (conversation?.comments ?? []).filter((comment) => !before.comments.has(comment.id) && comment.author.toLowerCase() !== you);
   for (const review of fresh.filter((comment) => comment.review)) {
-    const what = review.review === "approved" ? "approved" : review.review === "changesRequested" ? "asked for changes on" : "reviewed";
-    news.push(`${review.author} ${what} ${number}`);
+    news.push(
+      review.review === "approved"
+        ? t("{0} approved {1}", review.author, number)
+        : review.review === "changesRequested"
+          ? t("{0} asked for changes on {1}", review.author, number)
+          : t("{0} reviewed {1}", review.author, number),
+    );
   }
   const comments = fresh.filter((comment) => !comment.review);
   if (comments.length === 1) {
     const [comment] = comments;
-    news.push(`${comment.author} ${comment.reply ? "replied on" : "commented on"} ${number}${comment.path ? ` (${comment.path.split("/").pop()})` : ""}`);
+    const where = comment.path ? ` (${comment.path.split("/").pop()})` : "";
+    news.push(comment.reply ? t("{0} replied on {1}{2}", comment.author, number, where) : t("{0} commented on {1}{2}", comment.author, number, where));
   } else if (comments.length > 1) {
     const people = [...new Set(comments.map((comment) => comment.author))];
-    news.push(`${comments.length} new comments on ${number} from ${people.length > 2 ? `${people.slice(0, 2).join(", ")} and others` : people.join(" and ")}`);
+    news.push(t("{0} new comments on {1} from {2}", comments.length, number, people.length > 2 ? t("{0} and others", people.slice(0, 2).join(", ")) : people.length === 2 ? t("{0} and {1}", people[0], people[1]) : people[0]));
   }
-  const checks = pr.forge === "gitlab" ? "pipeline" : "checks";
-  if (now.checks === "failure" && before.checks !== "failure") news.push(`${number}'s ${checks} failed`);
-  else if (now.checks === "success" && before.checks === "pending") news.push(`${number}'s ${checks} passed`);
+  const gitlab = pr.forge === "gitlab";
+  if (now.checks === "failure" && before.checks !== "failure") news.push(gitlab ? t("{0}'s pipeline failed", number) : t("{0}'s checks failed", number));
+  else if (now.checks === "success" && before.checks === "pending") news.push(gitlab ? t("{0}'s pipeline passed", number) : t("{0}'s checks passed", number));
   return news;
 }
 

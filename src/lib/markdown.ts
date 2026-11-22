@@ -1,3 +1,4 @@
+import { t } from "./i18n";
 /**
  * Markdown, as GitHub and GitLab write it in pull requests and comments, read into
  * blocks and inline pieces for React to show (never as HTML, so nothing in it can run).
@@ -266,7 +267,7 @@ export function parseInline(text: string): Inline[] {
       }
     }
     if (c === "!" && (found = rest.match(/^!\[([^\]]*)\]\(\s*<?([^)\s>]+)>?(?:\s+"[^"]*")?\s*\)/))) {
-      push({ kind: "link", href: found[2], children: [{ kind: "text", text: found[1] || "Image" }] });
+      push({ kind: "link", href: found[2], children: [{ kind: "text", text: found[1] || t("Image") }] });
       i += found[0].length;
       continue;
     }

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { isMac } from "../lib/platform";
 import { Dialog } from "./Dialog";
+import { t, tx } from "../lib/i18n";
 
 /** Keys pressed together, as keycaps, like ["Ctrl", "Shift", "R"]; or a word for the mouse, like "Double-click". */
 type Keys = string[];
@@ -18,10 +19,10 @@ interface Group {
   items: Shortcut[];
 }
 
-const MOD = isMac ? "⌘" : "Ctrl";
-const SHIFT = isMac ? "⇧" : "Shift";
-const ALT = isMac ? "⌥" : "Alt";
-const CTRL = isMac ? "⌃" : "Ctrl";
+const MOD = isMac ? "⌘" : t("Ctrl");
+const SHIFT = isMac ? "⇧" : t("Shift");
+const ALT = isMac ? "⌥" : t("Alt");
+const CTRL = isMac ? "⌃" : t("Ctrl");
 /** Shift with the main modifier, in the platform's order: ⇧⌘R on a Mac, Ctrl+Shift+R elsewhere. */
 const shifted = (key: string): Keys => (isMac ? [SHIFT, MOD, key] : [MOD, SHIFT, key]);
 
@@ -30,65 +31,65 @@ const GROUPS: Group[] = [
   {
     name: "Anywhere",
     items: [
-      { keys: [[MOD, "K"]], what: "Command palette" },
-      { keys: [[MOD, "F"]], what: "Search commits (Enter, Shift+Enter: the next or previous match)" },
-      { keys: [[MOD, "G"]], what: "Go to a commit by its id, a branch, a tag or a day" },
-      { keys: [[MOD, "O"]], what: "Open a repository" },
-      { keys: [[MOD, ","]], what: "Settings" },
-      { keys: [[MOD, "R"], ["F5"]], what: "Refresh" },
-      { keys: [[MOD, "+"], [MOD, "−"], [MOD, "0"]], what: "Zoom in, zoom out, actual size" },
-      { keys: [["?"]], what: "This list" },
+      { keys: [[MOD, "K"]], what: t("Command palette") },
+      { keys: [[MOD, "F"]], what: t("Search commits (Enter, Shift+Enter: the next or previous match)") },
+      { keys: [[MOD, "G"]], what: t("Go to a commit by its id, a branch, a tag or a day") },
+      { keys: [[MOD, "O"]], what: t("Open a repository") },
+      { keys: [[MOD, ","]], what: t("Settings") },
+      { keys: [[MOD, "R"], ["F5"]], what: t("Refresh") },
+      { keys: [[MOD, "+"], [MOD, "−"], [MOD, "0"]], what: t("Zoom in, zoom out, actual size") },
+      { keys: [["?"]], what: t("This list") },
     ],
   },
   {
     name: "Tabs",
     items: [
-      { keys: [[MOD, "T"]], what: "New tab: open, clone or create a repository" },
-      { keys: [[MOD, "W"]], what: "Close the tab" },
-      { keys: [shifted("R")], what: "Reopen the tab closed last, in its place" },
-      { keys: [[MOD, "1"], [MOD, "9"]], join: "…", what: "Switch to a tab (the first to the ninth)" },
-      { keys: [[CTRL, SHIFT, "PgUp"], [CTRL, SHIFT, "PgDn"]], what: "Move the tab left or right" },
+      { keys: [[MOD, "T"]], what: t("New tab: open, clone or create a repository") },
+      { keys: [[MOD, "W"]], what: t("Close the tab") },
+      { keys: [shifted("R")], what: t("Reopen the tab closed last, in its place") },
+      { keys: [[MOD, "1"], [MOD, "9"]], join: "…", what: t("Switch to a tab (the first to the ninth)") },
+      { keys: [[CTRL, SHIFT, "PgUp"], [CTRL, SHIFT, "PgDn"]], what: t("Move the tab left or right") },
     ],
   },
   {
     name: "Panels",
     items: [
-      { keys: [[MOD, "B"]], what: "The branch sidebar" },
-      { keys: [shifted("L")], what: "The activity log: the git commands Tributary ran" },
-      { keys: [shifted("T")], what: "Team activity: who's been working on what" },
-      { keys: [shifted("O")], what: "View options: theme, graph, columns, rows" },
-      { keys: [["Esc"]], what: "Stop highlighting, clear the selection, close the details" },
+      { keys: [[MOD, "B"]], what: t("The branch sidebar") },
+      { keys: [shifted("L")], what: t("The activity log: the git commands Tributary ran") },
+      { keys: [shifted("T")], what: t("Team activity: who's been working on what") },
+      { keys: [shifted("O")], what: t("View options: theme, graph, columns, rows") },
+      { keys: [[t("Esc")]], what: t("Stop highlighting, clear the selection, close the details") },
     ],
   },
   {
     name: "Commits and changes",
     items: [
-      { keys: [["↑"], ["↓"], ["PgUp"], ["PgDn"], ["Home"], ["End"]], what: "Move through commits" },
-      { keys: [[SHIFT, "↑"], [SHIFT, "↓"]], what: "Select a range of commits (or Shift+click)" },
-      { keys: [[MOD, "click"]], what: "Add a commit to the selection, or take it out" },
-      { keys: [[MOD, "Enter"]], what: "Commit, in the commit message box" },
-      { keys: [["Enter"]], what: "Show a changed file's changes" },
-      { keys: [["["], ["]"]], what: "The previous or next file's changes" },
+      { keys: [["↑"], ["↓"], ["PgUp"], ["PgDn"], [t("Home")], [t("End")]], what: t("Move through commits") },
+      { keys: [[SHIFT, "↑"], [SHIFT, "↓"]], what: t("Select a range of commits (or Shift+click)") },
+      { keys: [[MOD, "click"]], what: t("Add a commit to the selection, or take it out") },
+      { keys: [[MOD, t("Enter")]], what: t("Commit, in the commit message box") },
+      { keys: [[t("Enter")]], what: t("Show a changed file's changes") },
+      { keys: [["["], ["]"]], what: t("The previous or next file's changes") },
     ],
   },
   {
     name: "With the mouse",
     items: [
-      { keys: [["Double-click"]], on: "a branch label", what: "Check out the branch" },
-      { keys: [[ALT, "click"]], on: "a branch label", what: "Highlight the branch's history" },
-      { keys: [["Drag"]], on: "a branch label onto a commit", what: "Merge or rebase" },
-      { keys: [["Drag"]], on: "a commit onto a branch label", what: "Cherry-pick it onto that branch" },
-      { keys: [["Click"]], on: "a commit's CI dot", what: "Its checks, each run as a graph" },
-      { keys: [["Right-click"]], on: "the column headings", what: "Choose the columns, and how dates show" },
+      { keys: [[t("Double-click")]], on: t("a branch label"), what: t("Check out the branch") },
+      { keys: [[ALT, "click"]], on: t("a branch label"), what: t("Highlight the branch's history") },
+      { keys: [[t("Drag")]], on: t("a branch label onto a commit"), what: t("Merge or rebase") },
+      { keys: [[t("Drag")]], on: t("a commit onto a branch label"), what: t("Cherry-pick it onto that branch") },
+      { keys: [[t("Click")]], on: t("a commit's CI dot"), what: t("Its checks, each run as a graph") },
+      { keys: [[t("Right-click")]], on: t("the column headings"), what: t("Choose the columns, and how dates show") },
     ],
   },
   {
     name: "Menus and lists",
     items: [
-      ...(isMac ? [] : [{ keys: [["F10"]], what: "The menu bar (← → move between its menus)" }]),
-      { keys: [["↑"], ["↓"], ["Home"], ["End"]], what: "Move through a menu, or press a letter (Enter picks, Esc closes)" },
-      { keys: [["←"], ["→"]], what: "Move between tabs, on a tab (Enter switches, Delete closes)" },
-      { keys: [["↑"], ["↓"]], what: "Move through the sidebar (← → fold and unfold folders)" },
+      ...(isMac ? [] : [{ keys: [["F10"]], what: t("The menu bar (← → move between its menus)") }]),
+      { keys: [["↑"], ["↓"], [t("Home")], [t("End")]], what: t("Move through a menu, or press a letter (Enter picks, Esc closes)") },
+      { keys: [["←"], ["→"]], what: t("Move between tabs, on a tab (Enter switches, Delete closes)") },
+      { keys: [["↑"], ["↓"]], what: t("Move through the sidebar (← → fold and unfold folders)") },
     ],
   },
 ];
@@ -132,25 +133,25 @@ export function ShortcutsDialog({ onClose }: { onClose: () => void }) {
     (group) => group.items.length > 0 && (words.length > 0 || !only || group.name === only),
   );
   return (
-    <Dialog title="Keyboard shortcuts" className="shortcuts-window" closable onCancel={onClose} buttons={null}>
+    <Dialog title={t("Keyboard shortcuts")} className="shortcuts-window" closable onCancel={onClose} buttons={null}>
       <input
         className="text-input shortcuts-find"
-        placeholder="Find a shortcut, like “tab” or “Ctrl+G”"
+        placeholder={t("Find a shortcut, like “tab” or “Ctrl+G”")}
         value={query}
         onChange={(event) => setQuery(event.target.value)}
         autoFocus
-        aria-label="Find a shortcut"
+        aria-label={t("Find a shortcut")}
       />
       <div className="shortcuts-split">
-        <nav className="shortcuts-nav" aria-label="Groups of shortcuts">
+        <nav className="shortcuts-nav" aria-label={t("Groups of shortcuts")}>
           {[null, ...GROUPS.map((group) => group.name)].map((name) => (
             <button key={name ?? "all"} className={!words.length && only === name ? "on" : undefined} aria-pressed={!words.length && only === name} onClick={() => setOnly(name)}>
-              <span className="button-label">{name ?? "All"}</span>
+              <span className="button-label">{name ?? t("All")}</span>
             </button>
           ))}
         </nav>
         {/* Focusable, so the list can be scrolled from the keyboard when it's taller than the window. */}
-        <div className="shortcuts-body" tabIndex={0} role="region" aria-label="The shortcuts">
+        <div className="shortcuts-body" tabIndex={0} role="region" aria-label={t("The shortcuts")}>
           {shown.map((group) => (
             <section key={group.name} className="shortcuts-group">
               <h3>{group.name}</h3>
@@ -162,7 +163,7 @@ export function ShortcutsDialog({ onClose }: { onClose: () => void }) {
               ))}
             </section>
           ))}
-          {shown.length === 0 && <p className="shortcuts-none">No shortcut has “{query.trim()}”.</p>}
+          {shown.length === 0 && <p className="shortcuts-none">{tx("No shortcut has “{0}”.", query.trim())}</p>}
         </div>
       </div>
     </Dialog>

@@ -7,6 +7,7 @@ import type { ToastMessage } from "../components/Toast";
 import { splitRemoteBranch, type OpenDialog } from "../menus";
 import { discardLabel, LONG_ACTION, PROGRESS_DELAY, type Running } from "./constants";
 import type { LoadMode, RepoError } from "./useRepository";
+import { t } from "../lib/i18n";
 
 export interface ActOptions {
   /** Don't show the message (or its undo) when it works. */
@@ -123,7 +124,7 @@ export function useActions({ snapshot, load, protectedHead, openDialog, setError
       let stopListening: (() => void) | undefined;
       let showTimer: number | undefined;
       if (info.running) {
-        setProgress(() => ({ label: label ?? "Working", value: null, visible: false, cancellable: info.cancellable }));
+        setProgress(() => ({ label: label ?? t("Working"), value: null, visible: false, cancellable: info.cancellable }));
         showTimer = window.setTimeout(() => setProgress((current) => current && { ...current, visible: true }), PROGRESS_DELAY);
         stopListening = await onProgress((value, path) => {
           // Another repository's, or a clone's.
@@ -147,10 +148,10 @@ export function useActions({ snapshot, load, protectedHead, openDialog, setError
       // A long one, finished while you were elsewhere: say so.
       if (info.running && Date.now() - started > LONG_ACTION && !document.hasFocus() && !cancelled) {
         const files = (last as Progress | null)?.files;
-        const count = files && files.total > 1 ? ` · ${files.total.toLocaleString()} Git LFS files` : "";
+        const count = files && files.total > 1 ? t(" · {0} Git LFS files", files.total.toLocaleString()) : "";
         const minutes = Math.round((Date.now() - started) / 60_000);
-        const took = minutes >= 1 ? ` in ${minutes} min` : "";
-        void notifySystem(before.name, failure ? `Didn't finish: ${failure.message.split("\n")[0]}` : `${outcome?.message ?? "Done"}${count}${took}`);
+        const took = minutes >= 1 ? t(" in {0} min", minutes) : "";
+        void notifySystem(before.name, failure ? t("Didn't finish: {0}", failure.message.split("\n")[0]) : `${outcome?.message ?? t("Done")}${count}${took}`);
       }
       // You went to another repository while it ran: it's reloaded when you're back there
       // (and what follows an action waits for then), and a message says how it went. Its
@@ -159,7 +160,7 @@ export function useActions({ snapshot, load, protectedHead, openDialog, setError
         const later = waiting.current.get(before.path) ?? [];
         later.push(() => after(action, info.remote, outcome));
         waiting.current.set(before.path, later);
-        const text = cancelled ? "Cancelled" : (failure?.message.split("\n")[0] ?? outcome?.message ?? "Done");
+        const text = cancelled ? t("Cancelled") : (failure?.message.split("\n")[0] ?? outcome?.message ?? t("Done"));
         notify({ text: `${before.name}: ${text}` });
         if (outcome?.message) callbacks.current.record?.(before.path, outcome.message, action, outcome.undo ?? null);
         return failure === null;
@@ -170,16 +171,16 @@ export function useActions({ snapshot, load, protectedHead, openDialog, setError
       after(action, info.remote, outcome);
 
       if (cancelled) {
-        notify({ text: "Cancelled" });
+        notify({ text: t("Cancelled") });
         return false;
       }
       if (failure || !outcome) {
-        const message = failure?.message ?? "Something went wrong";
+        const message = failure?.message ?? t("Something went wrong");
         const why = failure?.kind ?? null;
         // A sync stopped before pulling into a branch rewritten since it was pushed: what
         // it needs is a force push, which is asked for.
         if (why?.kind === "rewritten") {
-          openDialog({ kind: "forcePush", reason: `Sync stopped. ${message}` });
+          openDialog({ kind: "forcePush", reason: t("Sync stopped. {0}", message) });
           return false;
         }
         const retry: Action | undefined =
@@ -204,14 +205,14 @@ export function useActions({ snapshot, load, protectedHead, openDialog, setError
         const branch = local && before.upstream ? splitRemoteBranch(before.upstream.name, before.remotes).branch : local;
         const gitlab = pullRequest.includes("merge_requests");
         notify({
-          text: message ?? "Pushed",
+          text: message ?? t("Pushed"),
           action: {
-            label: gitlab ? "Create merge request" : "Create pull request",
+            label: gitlab ? t("Create merge request") : t("Create pull request"),
             onClick: () => (branch ? openDialog({ kind: "createPullRequest", branch, local, url: pullRequest }) : openInBrowser(pullRequest)),
           },
         });
       } else if (!options.quiet && message) {
-        notify({ text: message, action: undo ? { label: "Undo", onClick: () => act(undo, { confirmed: true }) } : undefined });
+        notify({ text: message, action: undo ? { label: t("Undo"), onClick: () => act(undo, { confirmed: true }) } : undefined });
       }
       return true;
     },
@@ -221,7 +222,7 @@ export function useActions({ snapshot, load, protectedHead, openDialog, setError
   /** A dialog did its own action: show its message, with an undo, and reload. */
   const finished = useCallback(
     (message: string, undo: Action | undefined, refresh: () => void) => {
-      callbacks.current.notify({ text: message, action: undo ? { label: "Undo", onClick: () => act(undo, { confirmed: true }) } : undefined });
+      callbacks.current.notify({ text: message, action: undo ? { label: t("Undo"), onClick: () => act(undo, { confirmed: true }) } : undefined });
       refresh();
     },
     [act],

@@ -4,6 +4,7 @@ import { shortId } from "../lib/format";
 import { Avatar } from "./Avatar";
 import { CherryIcon, CloseIcon, CompareIcon, CopyIcon, RevertIcon } from "./Icons";
 import { Button } from "./ui/Button";
+import { t, tx } from "../lib/i18n";
 
 interface Props {
   /** The selected commits, in list order (newest first). */
@@ -21,14 +22,14 @@ interface Props {
 export function MultiSelectPanel({ commits, branch, canChange, onCherryPick, onRevert, onClose, onCompare }: Props) {
   const merges = commits.filter((commit) => commit.parents.length > 1).length;
   const stashes = commits.some((commit) => commit.kind !== "commit");
-  const blocked = merges > 0 ? "Merge commits can only be cherry-picked or reverted one at a time." : stashes ? "Stashes can't be cherry-picked this way." : null;
+  const blocked = merges > 0 ? t("Merge commits can only be cherry-picked or reverted one at a time.") : stashes ? t("Stashes can't be cherry-picked this way.") : null;
   const disabled = !canChange || !branch || blocked !== null;
   return (
-    <aside className="details" aria-label="Selected commits">
+    <aside className="details" aria-label={t("Selected commits")}>
       <header className="details-header">
-        <span className="details-label">{commits.length} commits selected</span>
+        <span className="details-label">{tx("{0} commits selected", commits.length)}</span>
         <span className="spacer" />
-        <Button kind="icon" onClick={onClose} title="Clear the selection (Esc)" aria-label="Clear the selection">
+        <Button kind="icon" onClick={onClose} title={t("Clear the selection (Esc)")} aria-label={t("Clear the selection")}>
           <CloseIcon />
         </Button>
       </header>
@@ -37,31 +38,30 @@ export function MultiSelectPanel({ commits, branch, canChange, onCherryPick, onR
           {onCompare && (
             <Button kind="outline" onClick={onCompare}>
               <CompareIcon size={14} />
-              <span className="button-label">Compare these two</span>
+              <span className="button-label">{t("Compare these two")}</span>
             </Button>
           )}
           <Button kind="outline" onClick={onCherryPick} disabled={disabled}>
             <CherryIcon size={14} />
             <span className="button-label">
-              Cherry-pick {commits.length} onto {branch ?? "HEAD"}
+              {tx("Cherry-pick {0} onto {1}", commits.length, branch ?? "HEAD")}
             </span>
           </Button>
           <Button kind="outline" onClick={onRevert} disabled={disabled}>
             <RevertIcon size={14} />
-            <span className="button-label">Revert {commits.length}</span>
+            <span className="button-label">{tx("Revert {0}", commits.length)}</span>
           </Button>
           <Button
             kind="outline"
             onClick={() => copyText(commits.map((commit) => commit.id).join("\n"))}
           >
             <CopyIcon size={14} />
-            <span className="button-label">Copy SHAs</span>
+            <span className="button-label">{t("Copy SHAs")}</span>
           </Button>
         </div>
         {blocked && <p className="hint">{blocked}</p>}
         <p className="hint">
-          Cherry-picking applies them oldest first; reverting undoes them newest first. Shift-click to select a range,{" "}
-          {navigator.userAgent.includes("Mac") ? "⌘" : "Ctrl"}-click to add or remove one.
+          {tx("Cherry-picking applies them oldest first; reverting undoes them newest first. Shift-click to select a range, {0}-click to add or remove one.", navigator.userAgent.includes("Mac") ? "⌘" : t("Ctrl"))}
         </p>
         <ul className="selected-commits">
           {commits.map((commit) => (

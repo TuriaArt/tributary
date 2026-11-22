@@ -4,6 +4,7 @@ import { openInBrowser } from "../lib/weblinks";
 import { Dialog } from "./Dialog";
 import { Button } from "./ui/Button";
 import { Field } from "./ui/Field";
+import { t, tx } from "../lib/i18n";
 
 /** GitHub's page for making a classic token that can read and push private repositories. */
 export const NEW_TOKEN_URL = "https://github.com/settings/tokens/new?description=Tributary&scopes=repo";
@@ -35,31 +36,30 @@ export function GitHubSignInDialog({ status, onCancel, onDone }: Props) {
 
   return (
     <Dialog
-      title="Sign in to GitHub"
+      title={t("Sign in to GitHub")}
       error={error}
       busy={running !== null}
       onCancel={onCancel}
       buttons={
         <>
           <Button kind="secondary" onClick={onCancel} disabled={running !== null}>
-            Cancel
+            {t("Cancel")}
           </Button>
           <Button kind="primary" onClick={() => signIn("token")} disabled={running !== null || !token.trim()}>
-            {running === "token" ? "Checking…" : "Sign in"}
+            {running === "token" ? t("Checking…") : t("Sign in")}
           </Button>
         </>
       }
     >
       <p>
-        With your GitHub sign-in, Tributary shows pull requests and their checks for private repositories too, and git uses it to
-        push. Git's credential helper keeps it, not Tributary.
+        {t("With your GitHub sign-in, Tributary shows pull requests and their checks for private repositories too, and git uses it to push. Git's credential helper keeps it, not Tributary.")}
       </p>
       {status?.browserSignIn && (
         <div className="sign-in-browser">
           <Button kind="outline" onClick={() => signIn("browser")} disabled={running !== null}>
-            <span className="button-label">{running === "browser" ? "Waiting for the browser…" : "Sign in with browser"}</span>
+            <span className="button-label">{running === "browser" ? t("Waiting for the browser…") : t("Sign in with browser")}</span>
           </Button>
-          <span className="hint">With Git Credential Manager.</span>
+          <span className="hint">{t("With Git Credential Manager.")}</span>
         </div>
       )}
       <form
@@ -69,7 +69,7 @@ export function GitHubSignInDialog({ status, onCancel, onDone }: Props) {
           signIn("token");
         }}
       >
-        <Field label={status?.browserSignIn ? "Or a personal access token" : "Personal access token"}>
+        <Field label={status?.browserSignIn ? t("Or a personal access token") : t("Personal access token")}>
           <input
             className="text-input"
             type="password"
@@ -78,7 +78,7 @@ export function GitHubSignInDialog({ status, onCancel, onDone }: Props) {
               setToken(event.target.value);
               setError(null);
             }}
-            placeholder="ghp_… or github_pat_…"
+            placeholder={t("ghp_… or github_pat_…")}
             spellCheck={false}
             autoCapitalize="off"
             autoCorrect="off"
@@ -88,19 +88,15 @@ export function GitHubSignInDialog({ status, onCancel, onDone }: Props) {
           />
         </Field>
         <p className="hint">
-          <Button type="button" kind="link" onClick={() => openInBrowser(NEW_TOKEN_URL)} data-url={NEW_TOKEN_URL}>
-            Make a token on GitHub
-          </Button>{" "}
-          with the “repo” scope. A fine-grained token works too, with read and write access to contents and read access to pull
-          requests and commit statuses.
+          {tx("{0} with the “repo” scope. A fine-grained token works too, with read and write access to contents and read access to pull requests and commit statuses.", <Button type="button" kind="link" onClick={() => openInBrowser(NEW_TOKEN_URL)} data-url={NEW_TOKEN_URL}>
+            {t("Make a token on GitHub")}
+          </Button>)}
         </p>
         {status && !status.canKeepToken && (
           <p className="hint warning">
-            Git has no credential helper, so there's nowhere safe to keep a token.{" "}
-            <Button type="button" kind="link" onClick={() => openInBrowser(CREDENTIAL_MANAGER_URL)} data-url={CREDENTIAL_MANAGER_URL}>
-              Install Git Credential Manager
-            </Button>{" "}
-            first.
+            {tx("Git has no credential helper, so there's nowhere safe to keep a token. {0} first.", <Button type="button" kind="link" onClick={() => openInBrowser(CREDENTIAL_MANAGER_URL)} data-url={CREDENTIAL_MANAGER_URL}>
+              {t("Install Git Credential Manager")}
+            </Button>)}
           </p>
         )}
         <button type="submit" hidden />

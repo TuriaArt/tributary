@@ -3,6 +3,7 @@ import { reflog, type ReflogEntry } from "../api";
 import { relativeTime, shortId } from "../lib/format";
 import { Dialog } from "./Dialog";
 import { Button } from "./ui/Button";
+import { t, tx } from "../lib/i18n";
 
 interface Props {
   repoPath: string;
@@ -21,20 +22,20 @@ export function describeReflog(message: string): { action: string; detail: strin
   const kind = colon > 0 ? message.slice(0, colon) : message;
   const detail = colon > 0 ? message.slice(colon + 2) : "";
   const names: Record<string, string> = {
-    commit: "Commit",
-    "commit (amend)": "Amend",
-    "commit (initial)": "First commit",
-    "commit (merge)": "Merge commit",
-    checkout: "Checkout",
-    reset: "Reset",
-    merge: "Merge",
-    pull: "Pull",
-    "pull --rebase": "Pull (rebase)",
-    "cherry-pick": "Cherry-pick",
-    revert: "Revert",
-    clone: "Clone",
+    commit: t("Commit"),
+    "commit (amend)": t("Amend"),
+    "commit (initial)": t("First commit"),
+    "commit (merge)": t("Merge commit"),
+    checkout: t("Checkout"),
+    reset: t("Reset"),
+    merge: t("Merge"),
+    pull: t("Pull"),
+    "pull --rebase": t("Pull (rebase)"),
+    "cherry-pick": t("Cherry-pick"),
+    revert: t("Revert"),
+    clone: t("Clone"),
   };
-  const action = names[kind] ?? (kind.startsWith("rebase") ? "Rebase" : kind[0]?.toUpperCase() + kind.slice(1));
+  const action = names[kind] ?? (kind.startsWith("rebase") ? t("Rebase") : kind[0]?.toUpperCase() + kind.slice(1));
   return { action, detail };
 }
 
@@ -66,31 +67,28 @@ export function RecoverDialog({ repoPath, isLoaded, truncated, onCancel, onShow,
 
   return (
     <Dialog
-      title="Recover commits"
+      title={t("Recover commits")}
       wide
       error={error}
       onCancel={onCancel}
       buttons={
         <>
           <label className="checkbox small dialog-note">
-            <input type="checkbox" checked={onlyLost} onChange={(event) => setOnlyLost(event.target.checked)} />
-            Only commits on no branch ({lostCount})
+            {tx("{0}Only commits on no branch ({1})", <input type="checkbox" checked={onlyLost} onChange={(event) => setOnlyLost(event.target.checked)} />, lostCount)}
           </label>
           <Button kind="secondary" onClick={onCancel}>
-            Close
+            {t("Close")}
           </Button>
         </>
       }
     >
       <p className="hint">
-        Everything that moved HEAD here (commits, checkouts, resets, rebases…), newest first, from git's reflog. A commit
-        that's on no branch any more can get a branch again.
-        {truncated && " Only the loaded history is checked, so older commits may show as on no branch."}
+        {tx("Everything that moved HEAD here (commits, checkouts, resets, rebases…), newest first, from git's reflog. A commit that's on no branch any more can get a branch again.{0}", truncated && t(" Only the loaded history is checked, so older commits may show as on no branch."))}
       </p>
       {entries === null ? (
-        !error && <p className="hint">Reading…</p>
+        !error && <p className="hint">{t("Reading…")}</p>
       ) : shown.length === 0 ? (
-        <p className="hint">{onlyLost ? "Every commit here is on a branch." : "Nothing recorded yet."}</p>
+        <p className="hint">{onlyLost ? t("Every commit here is on a branch.") : t("Nothing recorded yet.")}</p>
       ) : (
         <ul className="recover-list">
           {shown.map((entry) => {
@@ -111,16 +109,16 @@ export function RecoverDialog({ repoPath, isLoaded, truncated, onCancel, onShow,
                   </div>
                   <div className="recover-commit">
                     <span className="mono">{shortId(entry.id)}</span> {entry.summary}
-                    {!loaded && <span className="recover-lost">on no branch</span>}
+                    {!loaded && <span className="recover-lost">{t("on no branch")}</span>}
                   </div>
                 </div>
                 {loaded ? (
                   <Button kind="outline" onClick={() => onShow(entry.id)}>
-                    <span className="button-label">Show</span>
+                    <span className="button-label">{t("Show")}</span>
                   </Button>
                 ) : (
                   <Button kind="outline" onClick={() => onCreateBranch(entry)}>
-                    <span className="button-label">Create branch…</span>
+                    <span className="button-label">{t("Create branch…")}</span>
                   </Button>
                 )}
               </li>

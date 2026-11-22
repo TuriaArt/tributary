@@ -1,5 +1,6 @@
 import type { DiffLine, Hunk } from "../api";
 import type { Piece } from "./syntax";
+import { t } from "./i18n";
 
 /**
  * Pictures written into text files: `data:` URLs in CSS, HTML, SVG, JSON or Markdown, and
@@ -176,7 +177,7 @@ export type Folded = Piece & { picture?: EmbeddedPicture };
 
 /** "PNG picture · 250 bytes": what a folded picture says instead of its letters. */
 export function pictureLabel(picture: EmbeddedPicture, bytes: (count: number) => string): string {
-  return `${pictureFormat(picture.type)} picture · ${bytes(picture.bytes)}`;
+  return t("{0} picture · {1}", pictureFormat(picture.type), bytes(picture.bytes));
 }
 
 /**

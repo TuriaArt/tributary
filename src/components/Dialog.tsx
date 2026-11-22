@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, type KeyboardEvent, type ReactNode 
 import { animate } from "../lib/motion";
 import { CloseIcon } from "./Icons";
 import { Button } from "./ui/Button";
+import { t } from "../lib/i18n";
 
 interface Props {
   title: string;
@@ -110,7 +111,7 @@ export function Dialog({ title, children, buttons, error, errorAction, busy, wid
       >
         <h2>{title}</h2>
         {closable && (
-          <Button kind="icon" className="dialog-close" onClick={onCancel} disabled={busy} aria-label="Close" title="Close (Esc)">
+          <Button kind="icon" className="dialog-close" onClick={onCancel} disabled={busy} aria-label={t("Close")} title={t("Close (Esc)")}>
             <CloseIcon size={14} />
           </Button>
         )}

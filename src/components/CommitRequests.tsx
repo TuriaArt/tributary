@@ -6,6 +6,7 @@ import { SectionButton, SiteChip } from "./DetailsSite";
 import { PullRequestIcon } from "./Icons";
 import { tone, type Mentioned } from "./MentionedIssues";
 import { Button } from "./ui/Button";
+import { t } from "../lib/i18n";
 
 /** Pull requests' details already asked for, by repository and number: shown at once next time, then asked again. */
 const known = new Map<string, RequestDetails>();
@@ -20,7 +21,7 @@ const known = new Map<string, RequestDetails>();
 export function CommitRequests({ repoPath, requests }: { repoPath: string; requests: Mentioned[] }) {
   if (requests.length === 0) return null;
   const gitlab = requests.every((mention) => mention.request?.forge === "gitlab");
-  const noun = gitlab ? "Merge request" : "Pull request";
+  const noun = gitlab ? t("Merge request") : t("Pull request");
   return (
     <section className="details-section commit-requests">
       <div className="details-section-head">
@@ -58,8 +59,8 @@ function useStanding(repoPath: string, mention: Mentioned): Standing {
   }, [repoPath, number, key]);
   const standing = details && requestStanding(details);
   if (standing) return standing;
-  const status = mention.status ?? "Open";
-  return { text: details ? `Open, into ${details.base}` : status, tone: tone(status) === "merged" ? "merged" : "neutral" };
+  const status = mention.status ?? t("Open");
+  return { text: details ? t("Open, into {0}", details.base) : status, tone: tone(status) === "merged" ? "merged" : "neutral" };
 }
 
 function RequestItem({ repoPath, mention }: { repoPath: string; mention: Mentioned }) {
@@ -73,9 +74,9 @@ function RequestItem({ repoPath, mention }: { repoPath: string; mention: Mention
       <span className="site-item-text commit-request-standing" title={standing.text}>
         {standing.text}
       </span>
-      {mention.onShow && <SectionButton onClick={mention.onShow} icon={<PullRequestIcon size={12} />} label="Show" title={`Show ${mention.id} here, in Tributary`} />}
+      {mention.onShow && <SectionButton onClick={mention.onShow} icon={<PullRequestIcon size={12} />} label={t("Show")} title={t("Show {0} here, in Tributary", mention.id)} />}
       <span className="site-item-under commit-request-title">
-        <Button kind="link" className="commit-request-key mono" onClick={() => mention.url && openInBrowser(mention.url)} disabled={!mention.url} data-url={mention.url ?? undefined} title={mention.url ? `Open ${mention.id} on the site` : undefined}>
+        <Button kind="link" className="commit-request-key mono" onClick={() => mention.url && openInBrowser(mention.url)} disabled={!mention.url} data-url={mention.url ?? undefined} title={mention.url ? t("Open {0} on the site", mention.id) : undefined}>
           {mention.id}
         </Button>
         <span className="commit-request-name">

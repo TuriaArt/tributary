@@ -4,6 +4,7 @@ import { openInBrowser } from "../lib/weblinks";
 import { Dialog } from "./Dialog";
 import { CheckIcon, CloseIcon, WarningIcon } from "./Icons";
 import { Button } from "./ui/Button";
+import { t, tx } from "../lib/i18n";
 
 const STATUS_ICON = { good: <CheckIcon size={14} />, warning: <WarningIcon size={14} />, problem: <CloseIcon size={14} /> };
 
@@ -51,11 +52,11 @@ export function ProjectSetupDialog({
   };
   const fixable = (setup?.checks ?? []).filter((check) => check.fix && check.status !== "good");
   const count = (status: SetupCheck["status"]) => (setup?.checks ?? []).filter((check) => check.status === status).length;
-  const where = setup?.project ? ` in ${setup.project}/` : "";
+  const where = setup?.project ? t(" in {0}/", setup.project) : "";
 
   return (
     <Dialog
-      title="Project setup"
+      title={t("Project setup")}
       wide
       error={error}
       onCancel={onClose}
@@ -63,25 +64,25 @@ export function ProjectSetupDialog({
       buttons={
         <>
           <Button kind="secondary" onClick={onClose} disabled={fixing !== null}>
-            Close
+            {t("Close")}
           </Button>
           <span className="spacer" />
           {fixable.length > 1 && (
             <Button kind="primary" onClick={() => fix(fixable)} disabled={!canChange || fixing !== null}>
-              Fix all {fixable.length}
+              {tx("Fix all {0}", fixable.length)}
             </Button>
           )}
         </>
       }
     >
       {!setup ? (
-        !error && <p className="muted">Checking…</p>
+        !error && <p className="muted">{t("Checking…")}</p>
       ) : (
         <div className="setup-check">
           <p className="setup-summary">
-            {setup.engine === "unreal" ? `An Unreal project${where}.` : setup.engine === "unity" ? `A Unity project${where}.` : "No Unreal or Unity project found: the checks any game project needs."}{" "}
+            {setup.engine === "unreal" ? t("An Unreal project{0}.", where) : setup.engine === "unity" ? t("A Unity project{0}.", where) : t("No Unreal or Unity project found: the checks any game project needs.")}{" "}
             <span className="muted">
-              {[count("problem") && `${count("problem")} to fix`, count("warning") && `${count("warning")} to look at`, count("good") && `${count("good")} fine`]
+              {[count("problem") && t("{0} to fix", count("problem")), count("warning") && t("{0} to look at", count("warning")), count("good") && t("{0} fine", count("good"))]
                 .filter(Boolean)
                 .join(" · ")}
             </span>
@@ -108,24 +109,24 @@ export function ProjectSetupDialog({
                 <div className="setup-action">
                   {check.fix && check.status !== "good" && (
                     <Button kind="outline" onClick={() => fix([check])} disabled={!canChange || fixing !== null}>
-                      <span className="button-label">{fixing === check.id ? "Fixing…" : check.fixLabel}</span>
+                      <span className="button-label">{fixing === check.id ? t("Fixing…") : check.fixLabel}</span>
                     </Button>
                   )}
                   {check.id === "big" && (
                     <Button kind="outline" onClick={onOpenSize}>
-                      <span className="button-label">Repository size…</span>
+                      <span className="button-label">{t("Repository size…")}</span>
                     </Button>
                   )}
                   {check.id === "lfs-installed" && !check.fix && (
                     <Button kind="outline" onClick={() => openInBrowser("https://git-lfs.com")} data-url="https://git-lfs.com">
-                      <span className="button-label">Get Git LFS</span>
+                      <span className="button-label">{t("Get Git LFS")}</span>
                     </Button>
                   )}
                 </div>
               </li>
             ))}
           </ul>
-          <p className="dialog-note-line">Changes to .gitignore and .gitattributes are yours to commit, so everyone gets them.</p>
+          <p className="dialog-note-line">{t("Changes to .gitignore and .gitattributes are yours to commit, so everyone gets them.")}</p>
         </div>
       )}
     </Dialog>

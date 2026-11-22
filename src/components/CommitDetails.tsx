@@ -25,6 +25,7 @@ import { highlightedFirst } from "../lib/diffTargets";
 import { reflowBody } from "../lib/message";
 import { Loader } from "./Loader";
 import { Button } from "./ui/Button";
+import { t, tx } from "../lib/i18n";
 
 
 interface Props {
@@ -159,11 +160,11 @@ export function CommitDetailsPanel(props: Props) {
   // commit's own details, and what changed.
   return (
     <ActorNames.Provider value={actors}>
-      <aside className="details" aria-label="Commit details">
+      <aside className="details" aria-label={t("Commit details")}>
         <header className="details-header">
-          <span className="details-label">{commit.kind === "stash" ? "Stash" : "Commit"}</span>
+          <span className="details-label">{commit.kind === "stash" ? t("Stash") : t("Commit")}</span>
           <span className="spacer" />
-          <Button kind="icon" onClick={onClose} title="Close (Esc)" aria-label="Close details">
+          <Button kind="icon" onClick={onClose} title={t("Close (Esc)")} aria-label={t("Close details")}>
             <CloseIcon />
           </Button>
         </header>
@@ -202,38 +203,38 @@ export function CommitDetailsPanel(props: Props) {
 
           <section className="details-section">
             <div className="details-section-head">
-              <h3>{people.length > 1 ? "People" : "Author"}</h3>
+              <h3>{people.length > 1 ? t("People") : t("Author")}</h3>
             </div>
             <div className="people">{people}</div>
           </section>
 
           <section className="details-section">
             <div className="details-section-head">
-              <h3>Details</h3>
+              <h3>{t("Details")}</h3>
             </div>
             <dl className="meta">
-              <dt>SHA</dt>
+              <dt>{t("SHA")}</dt>
               <dd>
                 <ShaButton sha={commit.id} />
               </dd>
               {details?.signature && (
                 <>
-                  <dt>Signed</dt>
+                  <dt>{t("Signed")}</dt>
                   <dd>
                     <SignatureMark signature={details.signature} />
                   </dd>
                 </>
               )}
-              <dt>{commit.parents.length === 1 ? "Parent" : "Parents"}</dt>
+              <dt>{commit.parents.length === 1 ? t("Parent") : t("Parents")}</dt>
               <dd className="parents">
-                {commit.parents.length === 0 && <span className="muted">None (first commit)</span>}
+                {commit.parents.length === 0 && <span className="muted">{t("None (first commit)")}</span>}
                 {commit.parents.map((parent) => (
                   <button
                     key={parent}
                     className="sha-link"
                     onClick={() => onSelect(parent)}
                     disabled={!hasCommit(parent)}
-                    title={hasCommit(parent) ? "Go to parent" : "Not loaded"}
+                    title={hasCommit(parent) ? t("Go to parent") : t("Not loaded")}
                   >
                     <span className="button-label">{shortId(parent)}</span>
                   </button>
@@ -259,9 +260,9 @@ export function CommitDetailsPanel(props: Props) {
 
           <section className="details-section files">
             <div className="details-section-head">
-              <h3>Changed files</h3>
+              <h3>{t("Changed files")}</h3>
               {details && <span className="details-section-note">{details.files.length.toLocaleString()}</span>}
-              {commit.parents.length > 1 && <span className="details-section-note">· compared to the first parent</span>}
+              {commit.parents.length > 1 && <span className="details-section-note">{t("· compared to the first parent")}</span>}
               {details && details.files.length > 1 && (
                 <FilesLayoutSwitch />
               )}
@@ -269,9 +270,9 @@ export function CommitDetailsPanel(props: Props) {
             {current.error ? (
               <div className="details-error">{current.error}</div>
             ) : !details ? (
-              <Loader size={48} title="Reading the commit" />
+              <Loader size={48} title={t("Reading the commit")} />
             ) : details.files.length === 0 ? (
-              <div className="muted">No file changes.</div>
+              <div className="muted">{t("No file changes.")}</div>
             ) : (
               <>
                 {details.files.length > FILTER_FROM && <FileFilter value={query} onChange={setQuery} shown={files.length} total={details.files.length} />}
@@ -284,7 +285,7 @@ export function CommitDetailsPanel(props: Props) {
                 ) : (
                   <FileList items={files} keyOf={(file) => `${file.status}:${file.oldPath ?? ""}:${file.path}`} render={(file) => fileLine(file)} />
                 )}
-                {files.length === 0 && <div className="muted">No files match “{query.trim()}”.</div>}
+                {files.length === 0 && <div className="muted">{tx("No files match “{0}”.", query.trim())}</div>}
               </>
             )}
           </section>
@@ -303,7 +304,7 @@ function PersonLine({ role, person, exact }: { role: string; person: Person; exa
       <div className="person-text">
         <div className="person-name">
           <span className="person-full-name" title={person.name}>
-            {person.name || "Unknown"}
+            {person.name || t("Unknown")}
           </span>
           <span className="person-email" title={person.email}>
             {person.email}
@@ -335,7 +336,7 @@ function useCopy(text: string): [boolean, () => void] {
 function ShaButton({ sha }: { sha: string }) {
   const [copied, copy] = useCopy(sha);
   return (
-    <button className={`full-sha mono${copied ? " copied" : ""}`} onClick={copy} title={copied ? "Copied" : "Copy the full SHA"}>
+    <button className={`full-sha mono${copied ? " copied" : ""}`} onClick={copy} title={copied ? t("Copied") : t("Copy the full SHA")}>
       <span>{sha}</span>
       {copied ? <CheckIcon size={12} /> : <CopyIcon size={12} />}
     </button>

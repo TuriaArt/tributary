@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import type { FileDiff, Media } from "../../api";
 import { formatDuration, missingSide } from "../../lib/media";
 import { Button } from "../ui/Button";
+import { t } from "../../lib/i18n";
 
 /** Both versions of a video side by side, with a button to play them together. */
 export function DiffVideo({ diff, media }: { diff: FileDiff; media: Media }) {
@@ -26,7 +27,7 @@ export function DiffVideo({ diff, media }: { diff: FileDiff; media: Media }) {
       {(["before", "after"] as const).map((side) => (
         <figure key={side} className="diff-media-side">
           <figcaption>
-            {side === "before" ? "Before" : "After"}
+            {side === "before" ? t("Before") : t("After")}
             {facts[side] && <span className="diff-media-facts">{facts[side]}</span>}
           </figcaption>
           {media[side] ? (
@@ -49,7 +50,7 @@ export function DiffVideo({ diff, media }: { diff: FileDiff; media: Media }) {
       {both && (
         <div className="diff-media-actions">
           <Button kind="outline" onClick={playBoth}>
-            <span className="button-label">Play both</span>
+            <span className="button-label">{t("Play both")}</span>
           </Button>
         </div>
       )}

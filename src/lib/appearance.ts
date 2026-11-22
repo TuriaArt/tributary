@@ -1,3 +1,4 @@
+import { t } from "./i18n";
 // How Tributary looks: light or dark, the accent colour, the graph's colours and the diff
 // colours. The stylesheet's colours are roles (styles.css :root); this sets the ones that
 // depend on the accent, and the attributes that switch the others.
@@ -111,9 +112,9 @@ export const LANE_PALETTES: Record<LanePaletteName, Record<Theme, string[]>> = {
 };
 
 export const LANE_PALETTE_LABELS: Record<LanePaletteName, string> = {
-  vivid: "Vivid",
-  soft: "Soft",
-  safe: "Colour-blind safe",
+  vivid: t("Vivid"),
+  soft: t("Soft"),
+  safe: t("Colour-blind safe"),
 };
 
 type Rgb = [number, number, number];

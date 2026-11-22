@@ -8,6 +8,7 @@ import { openInBrowser } from "../lib/weblinks";
 import { thisSystem } from "./ErrorScreen";
 import { Dialog } from "./Dialog";
 import { Button } from "./ui/Button";
+import { t } from "../lib/i18n";
 
 interface Props {
   /** The open repository, if any. */
@@ -50,38 +51,38 @@ export function DiagnosticsDialog({ repoPath, extra, onCopied, onClose }: Props)
 
   return (
     <Dialog
-      title="Diagnostics"
+      title={t("Diagnostics")}
       error={error}
       wide
       onCancel={onClose}
       buttons={
         <>
-          <span className="dialog-note">Passwords and tokens in addresses are left out.</span>
+          <span className="dialog-note">{t("Passwords and tokens in addresses are left out.")}</span>
           {reports && (
             <Button kind="secondary" onClick={() => void revealItemInDir(reports).catch((e) => setError(String(e)))}>
-              Show Problem Reports
+              {t("Show Problem Reports")}
             </Button>
           )}
           <Button
             kind="secondary"
             onClick={() => text !== null && openInBrowser(bugReportUrl({ diagnostics: text, system: thisSystem() }))}
             disabled={text === null}
-            title="A new bug report on GitHub, with this filled in, to read and send there"
+            title={t("A new bug report on GitHub, with this filled in, to read and send there")}
           >
-            Report on GitHub
+            {t("Report on GitHub")}
           </Button>
           <Button kind="secondary" onClick={onClose}>
-            Close
+            {t("Close")}
           </Button>
           <Button kind="primary" onClick={copy} disabled={text === null} autoFocus>
-            Copy
+            {t("Copy")}
           </Button>
         </>
       }
     >
-      <p>To report a problem, copy this into the report. It's everything below, nothing more.</p>
+      <p>{t("To report a problem, copy this into the report. It's everything below, nothing more.")}</p>
       <pre className="diagnostics-text" tabIndex={0}>
-        {text ?? "Gathering…"}
+        {text ?? t("Gathering…")}
       </pre>
     </Dialog>
   );

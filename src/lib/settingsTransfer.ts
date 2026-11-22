@@ -1,3 +1,4 @@
+import { t } from "./i18n";
 // Moving Tributary's settings to another computer: everything kept in local storage,
 // except what only makes sense here (open tabs, places in lists, what you last saw of each
 // repository, folders, commit messages being written, notices dismissed). Repository settings (pins, protected and hidden branches, the issue tracker)
@@ -48,7 +49,7 @@ const folderName = (path: string) => path.replace(/[\\/]+$/, "").split(/[\\/]/).
 export function applySettings(file: unknown, storage: Storage, repositories: string[]): { settings: number; repositories: number } {
   const parsed = file as Partial<SettingsFile> | null;
   if (!parsed || parsed.app !== "Tributary" || parsed.version !== 1 || typeof parsed.settings !== "object" || !parsed.settings) {
-    throw new Error("That isn't a file of Tributary's settings.");
+    throw new Error(t("That isn't a file of Tributary's settings."));
   }
   const known = new Set(repositories);
   const byName = new Map(repositories.map((path) => [folderName(path), path]));

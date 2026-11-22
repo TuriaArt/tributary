@@ -8,6 +8,7 @@ import { CheckIcon, DownloadIcon, ExternalLinkIcon, InfoIcon, Logo, NotesIcon, R
 import { Button } from "./ui/Button";
 import { Switch } from "./ui/Switch";
 import { Chip } from "./ui/Chip";
+import { t, tx } from "../lib/i18n";
 
 const SOURCE = TRIBUTARY_ON_GITHUB;
 /** Opening About checks again when the last check is older than this. */
@@ -40,7 +41,7 @@ function UpdateStatus({ updates, onInstall }: Pick<Props, "updates" | "onInstall
   );
   const whatsNew = available && (
     <Button kind="link" onClick={onInstall}>
-      What's new
+      {t("What's new")}
     </Button>
   );
   let tone: string;
@@ -51,61 +52,61 @@ function UpdateStatus({ updates, onInstall }: Pick<Props, "updates" | "onInstall
   if (waiting) {
     tone = "available";
     icon = <RefreshIcon size={16} className="spin" />;
-    title = "Restarting when git is done…";
-    detail = "Waiting for a git command to finish";
+    title = t("Restarting when git is done…");
+    detail = t("Waiting for a git command to finish");
     action = (
       <Button kind="secondary" onClick={updates.stopWaiting}>
-        Don't restart
+        {t("Don't restart")}
       </Button>
     );
   } else if (error && error.step !== "check") {
     tone = "failed";
     icon = <WarningIcon size={16} />;
-    title = error.step === "download" ? "Couldn't download the update" : "Couldn't install the update";
+    title = error.step === "download" ? t("Couldn't download the update") : t("Couldn't install the update");
     detail = error.message;
-    action = again("Try again", error.step === "download" ? updates.download : updates.restart);
+    action = again(t("Try again"), error.step === "download" ? updates.download : updates.restart);
   } else if (ready && available) {
     tone = "available";
     icon = <DownloadIcon size={16} />;
-    title = `Tributary ${available.version} is ready`;
-    detail = <>Installs when you restart, or when you quit · {whatsNew}</>;
+    title = t("Tributary {0} is ready", available.version);
+    detail = <>{tx("Installs when you restart, or when you quit · {0}", whatsNew)}</>;
     action = (
       <Button kind="primary" onClick={() => void updates.restart()}>
-        Restart now
+        {t("Restart now")}
       </Button>
     );
   } else if (downloading && available) {
     tone = "available";
     icon = <DownloadIcon size={16} />;
-    title = `Downloading Tributary ${available.version}…`;
+    title = t("Downloading Tributary {0}…", available.version);
     detail = (
       <>
-        {downloading.percent === null ? "Starting" : `${downloading.percent}%`} · {whatsNew}
+        {downloading.percent === null ? t("Starting") : `${downloading.percent}%`} · {whatsNew}
       </>
     );
   } else if (checking) {
     tone = "checking";
     icon = <RefreshIcon size={16} className="spin" />;
-    title = "Checking for updates…";
-    detail = "Asking Tributary's GitHub releases";
+    title = t("Checking for updates…");
+    detail = t("Asking Tributary's GitHub releases");
   } else if (error) {
     tone = "failed";
     icon = <WarningIcon size={16} />;
-    title = "Couldn't check for updates";
+    title = t("Couldn't check for updates");
     detail = error.message;
-    action = again("Try again");
+    action = again(t("Try again"));
   } else if (checkedAt) {
     tone = "current";
     icon = <CheckIcon size={16} />;
-    title = "You're up to date";
-    detail = `Checked ${relativeTime(checkedAt / 1000, now / 1000)}`;
-    action = again("Check again");
+    title = t("You're up to date");
+    detail = t("Checked {0}", relativeTime(checkedAt / 1000, now / 1000));
+    action = again(t("Check again"));
   } else {
     tone = "unknown";
     icon = <InfoIcon size={16} />;
-    title = "Updates come from Tributary's GitHub releases";
+    title = t("Updates come from Tributary's GitHub releases");
     detail = null;
-    action = again("Check for updates");
+    action = again(t("Check for updates"));
   }
   return (
     <div className={`about-status ${tone}`} role="status">
@@ -147,47 +148,47 @@ export function AboutDialog({ version, updates, auto, setAuto, beta, setBeta, on
   }, [check, checkedAt, checking]);
   return (
     <Dialog
-      title="About Tributary"
+      title={t("About Tributary")}
       className="about-window"
       closable
       onCancel={onClose}
-      buttons={<span className="about-copyright">Copyright © 2026 Bogdan Roatis · Free and open source, under the MIT licence</span>}
+      buttons={<span className="about-copyright">{t("Copyright © 2026 Bogdan Roatis · Free and open source, under the MIT licence")}</span>}
     >
       <div className="about-hero">
         <Logo size={76} tile />
-        <span className="about-name">Tributary</span>
+        <span className="about-name">{t("Tributary")}</span>
         <span className="about-version">
-          {version ? `Version ${version}` : "Version unknown"}
-          {isBeta(version) && <Chip className="about-beta">Beta</Chip>}
+          {version ? t("Version {0}", version) : t("Version unknown")}
+          {isBeta(version) && <Chip className="about-beta">{t("Beta")}</Chip>}
         </span>
-        <span className="about-tagline">A fast, friendly git client.</span>
+        <span className="about-tagline">{t("A fast, friendly git client.")}</span>
       </div>
-      <section className="about-updates" aria-label="Updates">
+      <section className="about-updates" aria-label={t("Updates")}>
         <UpdateStatus updates={updates} onInstall={onInstall} />
-        <Toggle label="Check for updates automatically" hint="Shortly after Tributary starts, and every six hours." on={auto} set={setAuto} />
+        <Toggle label={t("Check for updates automatically")} hint={t("Shortly after Tributary starts, and every six hours.")} on={auto} set={setAuto} />
         <Toggle
-          label="Get beta versions"
+          label={t("Get beta versions")}
           hint={
             beta
-              ? "A new version with each change, before it's released. Turning this off keeps the version you have until a release is newer."
-              : "Try what's coming: a new version with each change, before it's released. It may have rough edges."
+              ? t("A new version with each change, before it's released. Turning this off keeps the version you have until a release is newer.")
+              : t("Try what's coming: a new version with each change, before it's released. It may have rough edges.")
           }
           on={beta}
           set={setBeta}
         />
       </section>
-      <nav className="about-links" aria-label="More about Tributary">
+      <nav className="about-links" aria-label={t("More about Tributary")}>
         <button className="about-link" onClick={onWhatsNew}>
           <SparkleIcon size={14} />
-          <span className="button-label">What's New</span>
+          <span className="button-label">{t("What's New")}</span>
         </button>
         <button className="about-link" onClick={onLicences}>
           <NotesIcon size={14} />
-          <span className="button-label">Licences</span>
+          <span className="button-label">{t("Licences")}</span>
         </button>
         <button className="about-link" onClick={() => openInBrowser(SOURCE)} data-url={SOURCE}>
           <ExternalLinkIcon size={14} />
-          <span className="button-label">Source code</span>
+          <span className="button-label">{t("Source code")}</span>
         </button>
       </nav>
     </Dialog>

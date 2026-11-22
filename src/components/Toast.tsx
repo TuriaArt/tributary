@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { CheckIcon } from "./Icons";
+import { t } from "../lib/i18n";
 
 export interface ToastMessage {
   text: string;
@@ -23,7 +24,7 @@ export function Toast({ toast, onDone }: { toast: ToastMessage; onDone: () => vo
     <div
       className="toast"
       role="status"
-      title="Click to dismiss"
+      title={t("Click to dismiss")}
       onClick={onDone}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}

@@ -7,6 +7,7 @@ import { useTip, type TeamData } from "./team/parts";
 import { TeamCards } from "./team/TeamCards";
 import { Loader } from "./Loader";
 import { Button } from "./ui/Button";
+import { t, tx } from "../lib/i18n";
 
 const PERIODS = [7, 14, 30];
 
@@ -128,33 +129,33 @@ export function TeamView({ repoPath, version, user, locks, overlaps, onClose, on
     } satisfies TeamData);
 
   return (
-    <section className="diff-view team-view" aria-label="Team activity">
+    <section className="diff-view team-view" aria-label={t("Team activity")}>
       <header className="diff-header">
         <div className="diff-title">
           <UserIcon size={14} />
-          <span className="team-title">Team activity</span>
+          <span className="team-title">{t("Team activity")}</span>
         </div>
-        <div className="diff-switch" role="group" aria-label="Period">
+        <div className="diff-switch" role="group" aria-label={t("Period")}>
           {PERIODS.map((period) => (
             <button key={period} className={days === period ? "selected" : undefined} aria-pressed={days === period} onClick={() => setDays(period)}>
-              <span className="button-label">{period} days</span>
+              <span className="button-label">{tx("{0} days", period)}</span>
             </button>
           ))}
         </div>
-        <Button kind="icon" onClick={onClose} title="Close (Esc)" aria-label="Close team activity">
+        <Button kind="icon" onClick={onClose} title={t("Close (Esc)")} aria-label={t("Close team activity")}>
           <CloseIcon />
         </Button>
       </header>
       <div className="diff-body team-body" ref={layer} onScroll={tip.hide}>
         {error ? (
           <div className="diff-message">
-            <strong>Couldn't read the activity</strong>
+            <strong>{t("Couldn't read the activity")}</strong>
             <span>{error}</span>
           </div>
         ) : !data ? (
-          <Loader size={88} title="Reading the team's activity" />
+          <Loader size={88} title={t("Reading the team's activity")} />
         ) : data.team.people.length === 0 ? (
-          <div className="diff-message muted">Nobody committed in the last {days} days. Fetch to see your teammates' latest work.</div>
+          <div className="diff-message muted">{tx("Nobody committed in the last {0} days. Fetch to see your teammates' latest work.", days)}</div>
         ) : (
           <TeamCards {...data} />
         )}

@@ -2,6 +2,7 @@ import { Fragment, useLayoutEffect, useRef, useState, type ReactNode } from "rea
 import { plural } from "../lib/format";
 import { CloseIcon, SearchIcon } from "./Icons";
 import { Button } from "./ui/Button";
+import { t, tx } from "../lib/i18n";
 
 /** Every file row is this tall (see .file). */
 const ROW = 26;
@@ -85,16 +86,16 @@ export function FileFilter({ value, onChange, shown, total }: FilterProps) {
             onChange("");
           }
         }}
-        placeholder={`Filter ${plural(total, "file")}`}
+        placeholder={t("Filter {0}", plural(total, "file"))}
         spellCheck={false}
-        aria-label="Filter files by name or folder"
+        aria-label={t("Filter files by name or folder")}
       />
       {value && (
         <>
           <span className="file-filter-count">
-            {shown.toLocaleString()} of {total.toLocaleString()}
+            {tx("{0} of {1}", shown.toLocaleString(), total.toLocaleString())}
           </span>
-          <Button kind="icon" size="small" onClick={() => onChange("")} aria-label="Clear the filter" title="Clear (Esc)">
+          <Button kind="icon" size="small" onClick={() => onChange("")} aria-label={t("Clear the filter")} title={t("Clear (Esc)")}>
             <CloseIcon size={12} />
           </Button>
         </>

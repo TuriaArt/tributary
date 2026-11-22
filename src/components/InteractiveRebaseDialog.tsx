@@ -6,6 +6,7 @@ import { Avatar } from "./Avatar";
 import { Dialog } from "./Dialog";
 import { GripIcon } from "./Icons";
 import { Button } from "./ui/Button";
+import { t, tx } from "../lib/i18n";
 
 interface Props {
   branch: string;
@@ -27,11 +28,11 @@ interface Row {
 }
 
 const ACTIONS: { value: StepAction; label: string; title: string }[] = [
-  { value: "pick", label: "Pick", title: "Keep the commit as it is" },
-  { value: "reword", label: "Reword", title: "Keep the commit, with a new message" },
-  { value: "squash", label: "Squash", title: "Combine with the commit below, keeping both messages" },
-  { value: "fixup", label: "Fixup", title: "Combine with the commit below, keeping only its message" },
-  { value: "drop", label: "Drop", title: "Leave the commit out" },
+  { value: "pick", label: t("Pick"), title: t("Keep the commit as it is") },
+  { value: "reword", label: t("Reword"), title: t("Keep the commit, with a new message") },
+  { value: "squash", label: t("Squash"), title: t("Combine with the commit below, keeping both messages") },
+  { value: "fixup", label: t("Fixup"), title: t("Combine with the commit below, keeping only its message") },
+  { value: "drop", label: t("Drop"), title: t("Leave the commit out") },
 ];
 
 
@@ -97,27 +98,27 @@ export function InteractiveRebaseDialog({ branch, onto, commits, loadDetails, on
   const lastKept = rows.map((row) => row.action !== "drop").lastIndexOf(true);
   const problem =
     lastKept < 0
-      ? "Every commit is dropped. To do that, hard reset to the commit instead."
+      ? t("Every commit is dropped. To do that, hard reset to the commit instead.")
       : rows[lastKept].action === "squash" || rows[lastKept].action === "fixup"
-        ? `${shortId(rows[lastKept].commit.id)} has no commit below it to combine with. Pick it instead.`
+        ? t("{0} has no commit below it to combine with. Pick it instead.", shortId(rows[lastKept].commit.id))
         : rows.some((row) => row.action === "reword" && !row.message.trim())
-          ? "Write a message for each commit you reword."
+          ? t("Write a message for each commit you reword.")
           : null;
   const changed = rows.some((row, i) => row.action !== "pick" || row.commit.id !== commits[i].id);
   const result = rows.filter((row) => row.action === "pick" || row.action === "reword").length;
 
   return (
     <Dialog
-      title={`Interactive rebase of ${branch}`}
+      title={t("Interactive rebase of {0}", branch)}
       wide
       onCancel={onCancel}
       buttons={
         <>
           <span className="dialog-note">
-            {commits.length} {commits.length === 1 ? "commit" : "commits"} → {result} after the rebase
+            {tx("{0} {1} → {2} after the rebase", commits.length, commits.length === 1 ? "commit" : "commits", result)}
           </span>
           <Button kind="secondary" onClick={onCancel}>
-            Cancel
+            {t("Cancel")}
           </Button>
           <Button
             kind="primary"
@@ -130,14 +131,13 @@ export function InteractiveRebaseDialog({ branch, onto, commits, loadDetails, on
               )
             }
           >
-            Start rebase
+            {t("Start rebase")}
           </Button>
         </>
       }
     >
       <p className="hint">
-        Rewrites the commits after <span className="mono">{shortId(onto.id)}</span> {onto.summary}. Drag to reorder (or
-        Alt+↑/↓), and choose what happens to each one. Newest is at the top.
+        {tx("Rewrites the commits after {0} {1}. Drag to reorder (or Alt+↑/↓), and choose what happens to each one. Newest is at the top.", <span className="mono">{shortId(onto.id)}</span>, onto.summary)}
       </p>
       <ol className={`rebase-list${dragging !== null ? " dragging" : ""}`} ref={list}>
         {rows.map((row, index) => (
@@ -156,7 +156,7 @@ export function InteractiveRebaseDialog({ branch, onto, commits, loadDetails, on
             }}
           >
             <div className="rebase-main">
-              <span className="rebase-grip" onPointerDown={(event) => startDrag(index, event)} title="Drag to reorder">
+              <span className="rebase-grip" onPointerDown={(event) => startDrag(index, event)} title={t("Drag to reorder")}>
                 <GripIcon size={14} />
               </span>
               <select
@@ -164,7 +164,7 @@ export function InteractiveRebaseDialog({ branch, onto, commits, loadDetails, on
                 value={row.action}
                 onChange={(event) => setAction(index, event.target.value as StepAction)}
                 title={ACTIONS.find((action) => action.value === row.action)?.title}
-                aria-label={`What to do with ${shortId(row.commit.id)}`}
+                aria-label={t("What to do with {0}", shortId(row.commit.id))}
               >
                 {ACTIONS.map((action) => (
                   <option key={action.value} value={action.value} title={action.title}>
@@ -185,7 +185,7 @@ export function InteractiveRebaseDialog({ branch, onto, commits, loadDetails, on
                 rows={3}
                 value={row.message}
                 onChange={(event) => update(index, { message: event.target.value })}
-                aria-label={`New message for ${shortId(row.commit.id)}`}
+                aria-label={t("New message for {0}", shortId(row.commit.id))}
                 autoFocus
               />
             )}

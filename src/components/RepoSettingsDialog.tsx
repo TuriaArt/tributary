@@ -10,6 +10,7 @@ import { useTemplateRows } from "./TemplateSettingsRows";
 import { useUnityRows } from "./UnitySettingsRows";
 import { NameList, SettingsDialog, type SettingRow, type SettingsSection } from "./SettingsDialog";
 import { Button } from "./ui/Button";
+import { t } from "../lib/i18n";
 
 interface Props {
   /** The repository's folder name, and its folder. */
@@ -31,8 +32,8 @@ interface Props {
 /** "Maya Chen <maya@example.com>", or what's missing. */
 function describe(name: string | null, email: string | null): string {
   if (name && email) return `${name} <${email}>`;
-  if (name || email) return `${name ?? "no name"} <${email ?? "no email"}>`;
-  return "not set";
+  if (name || email) return `${name ?? t("no name")} <${email ?? t("no email")}>`;
+  return t("not set");
 }
 
 /**
@@ -74,40 +75,40 @@ export function RepoSettingsDialog({ name, path, automaticTracker, protectedBran
 
   const sections: SettingsSection[] = [
     {
-      title: "Commits",
+      title: t("Commits"),
       icon: <UserIcon size={15} />,
       rows: [
         {
           kind: "custom",
-          label: own ? `Here you commit as ${describe(identity!.localName, identity!.localEmail)}` : `Here you commit as yourself: ${usual}`,
+          label: own ? t("Here you commit as {0}", describe(identity!.localName, identity!.localEmail)) : t("Here you commit as yourself: {0}", usual),
           hint: own
-            ? `Only in this repository. Everywhere else: ${usual}.`
-            : "Your usual name and email, from git. To commit as someone else here (your work address, say), enter them below.",
+            ? t("Only in this repository. Everywhere else: {0}.", usual)
+            : t("Your usual name and email, from git. To commit as someone else here (your work address, say), enter them below."),
           content: own ? (
             <Button kind="outline" onClick={() => save("", "")} disabled={saving}>
-              <span className="button-label">Use my usual one</span>
+              <span className="button-label">{t("Use my usual one")}</span>
             </Button>
           ) : null,
         },
         {
           kind: "custom",
-          label: "Name",
+          label: t("Name"),
           content: (
             <input
               className="text-input settings-input"
               value={draft.name}
-              placeholder={identity?.globalName ?? "Your name"}
+              placeholder={identity?.globalName ?? t("Your name")}
               onChange={(event) => setDraft({ ...draft, name: event.target.value })}
               // Until what's set here is read, as reading it fills these in over what was typed.
               disabled={identity === null}
               spellCheck={false}
-              aria-label="Name for commits in this repository"
+              aria-label={t("Name for commits in this repository")}
             />
           ),
         },
         {
           kind: "custom",
-          label: "Email",
+          label: t("Email"),
           content: (
             <input
               className="text-input settings-input"
@@ -117,7 +118,7 @@ export function RepoSettingsDialog({ name, path, automaticTracker, protectedBran
               disabled={identity === null}
               spellCheck={false}
               autoCapitalize="off"
-              aria-label="Email for commits in this repository"
+              aria-label={t("Email for commits in this repository")}
             />
           ),
         },
@@ -130,7 +131,7 @@ export function RepoSettingsDialog({ name, path, automaticTracker, protectedBran
               onClick={() => save(draft.name, draft.email)}
               disabled={saving || !changed || !draft.name.trim() || !draft.email.trim()}
             >
-              {own ? "Save" : "Use for this repository"}
+              {own ? t("Save") : t("Use for this repository")}
             </Button>
           ),
         },
@@ -138,58 +139,58 @@ export function RepoSettingsDialog({ name, path, automaticTracker, protectedBran
       ],
     },
     {
-      title: "Signing",
+      title: t("Signing"),
       icon: <KeyIcon size={15} />,
       rows: signingRows,
     },
     {
-      title: "Remotes",
+      title: t("Remotes"),
       icon: <GlobeIcon size={15} />,
       rows: remoteRows,
     },
     {
-      title: "Issues",
+      title: t("Issues"),
       icon: <CheckIcon size={15} />,
       rows: issueRows,
     },
     {
-      title: "Branches",
+      title: t("Branches"),
       icon: <LockIcon size={15} />,
       rows: [
         {
           kind: "custom",
-          label: "Protected branches",
-          hint: "Can't be deleted; rebasing, hard resetting or force pushing them needs their name typed.",
-          content: <NameList names={protectedBranches} onChange={setProtectedBranches} placeholder="Add a branch" />,
+          label: t("Protected branches"),
+          hint: t("Can't be deleted; rebasing, hard resetting or force pushing them needs their name typed."),
+          content: <NameList names={protectedBranches} onChange={setProtectedBranches} placeholder={t("Add a branch")} />,
         },
       ],
     },
     {
-      title: "Folders",
+      title: t("Folders"),
       icon: <FolderIcon size={15} />,
       rows: sparseRows,
     },
     {
-      title: "Speed",
+      title: t("Speed"),
       icon: <ActivityIcon size={15} />,
       rows: speedRows,
     },
     {
-      title: "Git LFS",
+      title: t("Git LFS"),
       icon: <CloudIcon size={15} />,
       rows: lfsRows,
     },
-    ...(unityRows ? [{ title: "Unity", icon: <MergeIcon size={15} />, rows: unityRows }] : []),
+    ...(unityRows ? [{ title: t("Unity"), icon: <MergeIcon size={15} />, rows: unityRows }] : []),
   ];
-  return <SettingsDialog title={`Settings for ${name}`} sections={sections} initial={section} onClose={onClose} />;
+  return <SettingsDialog title={t("Settings for {0}", name)} sections={sections} initial={section} onClose={onClose} />;
 }
 
 const FORMATS: Record<string, string> = { openpgp: "GPG", ssh: "SSH", x509: "X.509" };
 
 /** How commits are signed with git's usual settings, in words. */
 function describeUsual(settings: SigningSettings): string {
-  if (!settings.signs) return "not signed";
-  return `signed with ${FORMATS[settings.format] ?? settings.format}${settings.key ? ` (${baseKeyName(settings.key)})` : ""}`;
+  if (!settings.signs) return t("not signed");
+  return t("signed with {0}{1}", FORMATS[settings.format] ?? settings.format, settings.key ? ` (${baseKeyName(settings.key)})` : "");
 }
 
 function baseKeyName(key: string): string {
@@ -210,7 +211,7 @@ function useSigningRows(path: string, run: (action: Action) => Promise<boolean>)
       .catch(() => setSettings(null));
   }, [path]);
   useEffect(load, [load]);
-  if (!settings) return [{ kind: "loading", label: "Reading the settings" }];
+  if (!settings) return [{ kind: "loading", label: t("Reading the settings") }];
 
   const keys = settings.keys.filter((key) => key.format === draft.mode);
   const changed = draft.mode !== settings.mode || ((draft.mode === "gpg" || draft.mode === "ssh") && draft.key.trim() !== (settings.key ?? ""));
@@ -223,20 +224,20 @@ function useSigningRows(path: string, run: (action: Action) => Promise<boolean>)
   const usual = describeUsual(settings);
   const now =
     settings.mode === "usual"
-      ? `Commits here are ${usual}, as git is set up everywhere`
+      ? t("Commits here are {0}, as git is set up everywhere", usual)
       : settings.mode === "off"
-        ? "Commits here aren't signed"
-        : `Commits here are signed with ${settings.mode === "gpg" ? "GPG" : "SSH"}${settings.key ? ` (${baseKeyName(settings.key)})` : ""}`;
+        ? t("Commits here aren't signed")
+        : t("Commits here are signed with {0}{1}", settings.mode === "gpg" ? "GPG" : "SSH", settings.key ? ` (${baseKeyName(settings.key)})` : "");
   const rows: SettingRow[] = [
     {
       kind: "custom",
       label: now,
-      hint: "Signed commits show as verified on GitHub and GitLab once the key is added to your account there.",
+      hint: t("Signed commits show as verified on GitHub and GitLab once the key is added to your account there."),
       content: null,
     },
     {
       kind: "custom",
-      label: "Sign commits",
+      label: t("Sign commits"),
       content: (
         <select
           className="settings-select"
@@ -246,12 +247,12 @@ function useSigningRows(path: string, run: (action: Action) => Promise<boolean>)
             const first = settings.keys.find((key) => key.format === mode);
             setDraft({ mode, key: mode === "ssh" ? (first?.id ?? "") : "" });
           }}
-          aria-label="How to sign commits in this repository"
+          aria-label={t("How to sign commits in this repository")}
         >
-          <option value="usual">As usual ({usual})</option>
-          <option value="off">Don't sign them here</option>
-          <option value="gpg">With a GPG key</option>
-          <option value="ssh">With an SSH key</option>
+          <option value="usual">{t("As usual (")}{usual})</option>
+          <option value="off">{t("Don't sign them here")}</option>
+          <option value="gpg">{t("With a GPG key")}</option>
+          <option value="ssh">{t("With an SSH key")}</option>
         </select>
       ),
     },
@@ -260,15 +261,15 @@ function useSigningRows(path: string, run: (action: Action) => Promise<boolean>)
     const listed = keys.some((key) => key.id === draft.key);
     rows.push({
       kind: "custom",
-      label: "Key",
+      label: t("Key"),
       hint:
         draft.mode === "gpg"
           ? keys.length === 0
-            ? "No GPG keys found: make one with gpg --gen-key, or enter its id."
-            : "Without one chosen, GPG uses the key for the email you commit with."
+            ? t("No GPG keys found: make one with gpg --gen-key, or enter its id.")
+            : t("Without one chosen, GPG uses the key for the email you commit with.")
           : keys.length === 0
-            ? "No SSH keys found in ~/.ssh: enter the path of the public key (.pub) to sign with."
-            : "The public key (.pub) of the SSH key to sign with.",
+            ? t("No SSH keys found in ~/.ssh: enter the path of the public key (.pub) to sign with.")
+            : t("The public key (.pub) of the SSH key to sign with."),
       content: (
         <div className="signing-key">
           {keys.length > 0 && (
@@ -276,26 +277,26 @@ function useSigningRows(path: string, run: (action: Action) => Promise<boolean>)
               className="settings-select"
               value={listed ? draft.key : draft.key ? "other" : ""}
               onChange={(event) => setDraft({ ...draft, key: event.target.value === "other" ? " " : event.target.value })}
-              aria-label="Key to sign with"
+              aria-label={t("Key to sign with")}
             >
-              {draft.mode === "gpg" && <option value="">The key for my email</option>}
+              {draft.mode === "gpg" && <option value="">{t("The key for my email")}</option>}
               {keys.map((key) => (
                 <option key={key.id} value={key.id}>
                   {key.label}
                 </option>
               ))}
-              <option value="other">Another…</option>
+              <option value="other">{t("Another…")}</option>
             </select>
           )}
           {(keys.length === 0 || (!listed && draft.key !== "")) && (
             <input
               className="text-input settings-input"
               value={draft.key.trimStart()}
-              placeholder={draft.mode === "gpg" ? "Key id, like 3AA5C34371567BD2" : "~/.ssh/id_ed25519.pub"}
+              placeholder={draft.mode === "gpg" ? t("Key id, like 3AA5C34371567BD2") : "~/.ssh/id_ed25519.pub"}
               onChange={(event) => setDraft({ ...draft, key: event.target.value })}
               spellCheck={false}
               autoCapitalize="off"
-              aria-label="Key to sign with"
+              aria-label={t("Key to sign with")}
               autoFocus={keys.length > 0}
             />
           )}
@@ -308,7 +309,7 @@ function useSigningRows(path: string, run: (action: Action) => Promise<boolean>)
     label: "",
     content: (
       <Button kind="primary" onClick={() => void save()} disabled={saving || !changed || (draft.mode === "ssh" && !draft.key.trim())}>
-        Use for this repository
+        {t("Use for this repository")}
       </Button>
     ),
   });

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { CloseGlyph, MaximizeGlyph, MinimizeGlyph, RestoreGlyph } from "./Icons";
+import { t } from "../lib/i18n";
 
 /**
  * Minimize, maximize and close, for Windows, where the tab bar is the title bar
@@ -31,18 +32,18 @@ export function WindowControls() {
   const window = () => getCurrentWindow();
   return (
     <div className="window-controls">
-      <button className="window-control" onClick={() => window().minimize().catch(() => {})} title="Minimize" aria-label="Minimize">
+      <button className="window-control" onClick={() => window().minimize().catch(() => {})} title={t("Minimize")} aria-label={t("Minimize")}>
         <MinimizeGlyph />
       </button>
       <button
         className="window-control"
         onClick={() => window().toggleMaximize().catch(() => {})}
-        title={maximized ? "Restore Down" : "Maximize"}
-        aria-label={maximized ? "Restore" : "Maximize"}
+        title={maximized ? t("Restore Down") : t("Maximize")}
+        aria-label={maximized ? t("Restore") : t("Maximize")}
       >
         {maximized ? <RestoreGlyph /> : <MaximizeGlyph />}
       </button>
-      <button className="window-control close" onClick={() => window().close().catch(() => {})} title="Close" aria-label="Close">
+      <button className="window-control close" onClick={() => window().close().catch(() => {})} title={t("Close")} aria-label={t("Close")}>
         <CloseGlyph />
       </button>
     </div>

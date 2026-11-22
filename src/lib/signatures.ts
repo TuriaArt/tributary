@@ -1,32 +1,33 @@
 // Commit signatures, in words.
 import type { CommitSignature } from "../api";
+import { t } from "./i18n";
 
 const KINDS: Record<CommitSignature["kind"], string> = { gpg: "GPG", ssh: "SSH", x509: "X.509" };
 
 /** A signature's mark ("Verified"), how it looks, and what it means. */
 export function describeSignature(signature: CommitSignature): { label: string; tone: "good" | "neutral" | "warning" | "bad"; detail: string } {
   const kind = KINDS[signature.kind];
-  const by = signature.signer ? ` by ${signature.signer}` : "";
-  const key = signature.key ? ` (${kind} key ${signature.key})` : ` (${kind})`;
+  const by = signature.signer ? t(" by {0}", signature.signer) : "";
+  const key = signature.key ? t(" ({0} key {1})", kind, signature.key) : ` (${kind})`;
   switch (signature.status) {
     case "good":
-      return { label: "Verified", tone: "good", detail: `Signed${by}${key}, and the signature checks out.` };
+      return { label: t("Verified"), tone: "good", detail: t("Signed{0}{1}, and the signature checks out.", by, key) };
     case "untrusted":
-      return { label: "Signed", tone: "neutral", detail: `A good signature${by}${key}, but the key isn't trusted on this computer.` };
+      return { label: t("Signed"), tone: "neutral", detail: t("A good signature{0}{1}, but the key isn't trusted on this computer.", by, key) };
     case "expired":
-      return { label: "Signed, expired", tone: "warning", detail: `A good signature${by}${key}, but the key or the signature has expired.` };
+      return { label: t("Signed, expired"), tone: "warning", detail: t("A good signature{0}{1}, but the key or the signature has expired.", by, key) };
     case "revoked":
-      return { label: "Signed, key revoked", tone: "bad", detail: `Signed${by}${key} with a key that has been revoked.` };
+      return { label: t("Signed, key revoked"), tone: "bad", detail: t("Signed{0}{1} with a key that has been revoked.", by, key) };
     case "bad":
-      return { label: "Bad signature", tone: "bad", detail: `The signature${key} doesn't match the commit: it was changed after it was signed.` };
+      return { label: t("Bad signature"), tone: "bad", detail: t("The signature{0} doesn't match the commit: it was changed after it was signed.", key) };
     case "unchecked":
       return {
-        label: "Signed",
+        label: t("Signed"),
         tone: "neutral",
         detail:
           signature.kind === "ssh"
-            ? "Signed with an SSH key. Git checks SSH signatures against a list of allowed signers (gpg.ssh.allowedSignersFile), which isn't set up here."
-            : `Signed${key}, but the key isn't on this computer, so it couldn't be checked.`,
+            ? t("Signed with an SSH key. Git checks SSH signatures against a list of allowed signers (gpg.ssh.allowedSignersFile), which isn't set up here.")
+            : t("Signed{0}, but the key isn't on this computer, so it couldn't be checked.", key),
       };
   }
 }

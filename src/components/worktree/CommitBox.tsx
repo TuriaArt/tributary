@@ -9,6 +9,7 @@ import { modKey } from "../../lib/platform";
 import { ContextMenu } from "../ContextMenu";
 import { BranchIcon, ChevronDownIcon, WarningIcon } from "../Icons";
 import { Button } from "../ui/Button";
+import { t, tx } from "../../lib/i18n";
 
 export interface CommitDraft {
   summary: string;
@@ -197,7 +198,7 @@ export function CommitBox({ snapshot, draft, onDraft, stagedCount, largeStaged, 
             className={`summary-key${withKey ? " on" : ""}`}
             onClick={() => setWithKey(!withKey)}
             aria-pressed={withKey}
-            title={withKey ? `The summary starts with ${issueKey}: (this branch's issue). Click to leave it out` : `Start the summary with ${issueKey}:`}
+            title={withKey ? t("The summary starts with {0}: (this branch's issue). Click to leave it out", issueKey) : t("Start the summary with {0}:", issueKey)}
           >
             {issueKey}
           </button>
@@ -207,14 +208,14 @@ export function CommitBox({ snapshot, draft, onDraft, stagedCount, largeStaged, 
           value={draft.summary}
           onChange={(event) => onDraft({ ...draft, summary: event.target.value })}
           onKeyDown={onKeyDown}
-          placeholder="Commit summary"
-          aria-label="Commit summary"
+          placeholder={t("Commit summary")}
+          aria-label={t("Commit summary")}
           spellCheck
         />
         {draft.summary.length > 0 && (
           <span
             className={`summary-count${draft.summary.length > 72 ? " over" : draft.summary.length > 50 ? " long" : ""}`}
-            title="Summaries up to 50 characters (72 at most) show in full in most places"
+            title={t("Summaries up to 50 characters (72 at most) show in full in most places")}
           >
             {draft.summary.length}
           </span>
@@ -225,8 +226,8 @@ export function CommitBox({ snapshot, draft, onDraft, stagedCount, largeStaged, 
         value={draft.description}
         onChange={(event) => onDraft({ ...draft, description: event.target.value })}
         onKeyDown={onKeyDown}
-        placeholder="Description (optional)"
-        aria-label="Commit description"
+        placeholder={t("Description (optional)")}
+        aria-label={t("Commit description")}
         rows={3}
         spellCheck
       />
@@ -235,27 +236,25 @@ export function CommitBox({ snapshot, draft, onDraft, stagedCount, largeStaged, 
           <span>
             {largeStaged.length > 0 && (
               <>
-                {largeStaged.length === 1 ? `${baseName(largeStaged[0].path)} is` : `${largeStaged.length} staged files are`} big
-                and not in Git LFS.{" "}
+                {tx("{0} big and not in Git LFS.", largeStaged.length === 1 ? `${baseName(largeStaged[0].path)} is` : t("{0} staged files are", largeStaged.length))}{" "}
               </>
             )}
             {namesStaged.length > 0 && (
               <>
-                {namesStaged.length === 1 ? `${baseName(namesStaged[0].path)}'s name` : `${namesStaged.length} staged files' names`}{" "}
-                won't work on everyone's computer.{" "}
+                {tx("{0} won't work on everyone's computer.", namesStaged.length === 1 ? t("{0}'s name", baseName(namesStaged[0].path)) : t("{0} staged files' names", namesStaged.length))}{" "}
               </>
             )}
             {metasStaged.length > 0 && (
               <>
-                {metasStaged.length === 1 ? `${baseName(metasStaged[0].path)} ${describeMeta(metasStaged[0])}.` : `${metasStaged.length} staged Unity files have .meta problems.`}
+                {metasStaged.length === 1 ? `${baseName(metasStaged[0].path)} ${describeMeta(metasStaged[0])}.` : t("{0} staged Unity files have .meta problems.", metasStaged.length)}
               </>
             )}
           </span>
           <Button kind="link" onClick={() => setConfirmLarge(false)}>
-            Cancel
+            {t("Cancel")}
           </Button>
           <button className="danger-outline-button small" onClick={() => commit(true)}>
-            Commit anyway
+            {t("Commit anyway")}
           </button>
         </div>
       )}
@@ -263,7 +262,7 @@ export function CommitBox({ snapshot, draft, onDraft, stagedCount, largeStaged, 
         <div className="commit-new-branch">
           <span className="commit-new-branch-title">
             <BranchIcon size={13} />
-            {branch ? `Commit to a new branch from ${branch}` : "Commit to a new branch from here"}
+            {branch ? t("Commit to a new branch from {0}", branch) : t("Commit to a new branch from here")}
           </span>
           <div className="commit-new-branch-row">
             <input
@@ -281,38 +280,36 @@ export function CommitBox({ snapshot, draft, onDraft, stagedCount, largeStaged, 
                   setNewBranch(null);
                 } else onKeyDown(event);
               }}
-              placeholder="Branch name"
-              aria-label="New branch's name"
+              placeholder={t("Branch name")}
+              aria-label={t("New branch's name")}
               spellCheck={false}
             />
             <Button kind="link" onClick={() => setNewBranch(null)}>
-              Cancel
+              {t("Cancel")}
             </Button>
           </div>
           <span className="commit-new-branch-hint">
-            {draft.summary.trim() ? "Named from your summary. " : ""}
-            Your changes move to it{branch ? `, and ${branch} stays as it is` : ""}.
+            {tx("{0}Your changes move to it{1}.", draft.summary.trim() ? t("Named from your summary. ") : "", branch ? t(", and {0} stays as it is", branch) : "")}
           </span>
         </div>
       )}
       {protectedHead && protectedHead === branch && newBranch === null && canBranch && (
         <div className="commit-protected">
           <WarningIcon size={12} />
-          <span>{branch} is protected.</span>
+          <span>{tx("{0} is protected.", branch)}</span>
           <Button kind="link" onClick={toNewBranch}>
-            Commit to a new branch
+            {t("Commit to a new branch")}
           </Button>
         </div>
       )}
       <div className="commit-row-controls">
-        <label className="checkbox" title="Replace the last commit with these changes and this message">
-          <input
+        <label className="checkbox" title={t("Replace the last commit with these changes and this message")}>
+          {tx("{0}Amend last commit", <input
             type="checkbox"
             checked={draft.amend}
             disabled={!snapshot.headCommit}
             onChange={(event) => toggleAmend(event.target.checked)}
-          />
-          Amend last commit
+          />)}
         </label>
         <div className="commit-split">
           <Button
@@ -322,24 +319,22 @@ export function CommitBox({ snapshot, draft, onDraft, stagedCount, largeStaged, 
             disabled={!canCommit}
             title={
               stagedCount === 0 && !draft.amend
-                ? "Stage the files you want to commit first"
+                ? t("Stage the files you want to commit first")
                 : untouched
-                  ? "Fill in the template first"
+                  ? t("Fill in the template first")
                   : target === ""
-                    ? "Name the new branch first"
-                    : `Commit${summary !== draft.summary.trim() ? ` as "${summary}"` : ""}${
-                        target !== null ? ` to a new branch, ${target}` : branch && !draft.amend ? ` to ${branch}` : ""
-                      } (${modKey}Enter)`
+                    ? t("Name the new branch first")
+                    : t("Commit{0}{1} ({2}Enter)", summary !== draft.summary.trim() ? t(" as \"{0}\"", summary) : "", target !== null ? t(" to a new branch, {0}", target) : branch && !draft.amend ? ` to ${branch}` : "", modKey)
             }
           >
             <CommitLabel
               key={`${target ?? branch}-${draft.amend}-${committing}`}
               start={
                 committing
-                  ? "Committing…"
+                  ? t("Committing…")
                   : draft.amend
-                    ? "Amend commit"
-                    : `Commit ${stagedCount > 0 ? plural(stagedCount, "file") : ""}`.trim()
+                    ? t("Amend commit")
+                    : t("Commit {0}", stagedCount > 0 ? plural(stagedCount, "file") : "").trim()
               }
               branch={committing || draft.amend ? null : target !== null ? target || "a new branch" : branch}
             />
@@ -353,8 +348,8 @@ export function CommitBox({ snapshot, draft, onDraft, stagedCount, largeStaged, 
               if (box) setMenu({ x: box.right - 260, y: box.bottom + 2, above: box.top - 2 });
             }}
             disabled={busy || committing || snapshot.bare}
-            title="Where to commit"
-            aria-label="Where to commit"
+            title={t("Where to commit")}
+            aria-label={t("Where to commit")}
             aria-haspopup="menu"
           >
             <ChevronDownIcon size={14} />
@@ -369,14 +364,14 @@ export function CommitBox({ snapshot, draft, onDraft, stagedCount, largeStaged, 
           onClose={() => setMenu(null)}
           items={[
             {
-              label: branch ? `Commit to ${branch}` : "Commit here, without a branch",
-              detail: branch ? "The branch you're on" : undefined,
+              label: branch ? t("Commit to {0}", branch) : t("Commit here, without a branch"),
+              detail: branch ? t("The branch you're on") : undefined,
               checked: newBranch === null,
               onSelect: () => setNewBranch(null),
             },
             {
-              label: "Commit to a new branch…",
-              detail: branch ? `Your changes move to it; ${branch} stays as it is` : "Your changes move to it",
+              label: t("Commit to a new branch…"),
+              detail: branch ? t("Your changes move to it; {0} stays as it is", branch) : t("Your changes move to it"),
               checked: newBranch !== null,
               disabled: !canBranch,
               onSelect: toNewBranch,
@@ -422,8 +417,7 @@ function CommitLabel({ start, branch }: { start: string; branch: string | null }
       {start}
       {branch && (
         <>
-          {" to "}
-          <span className="commit-branch">
+          {" "}{tx("to {0}", <span className="commit-branch">
             {short && slash > 0 && slash < branch.length - 1 ? (
               <>
                 <span className="commit-branch-folder">…/</span>
@@ -432,7 +426,7 @@ function CommitLabel({ start, branch }: { start: string; branch: string | null }
             ) : (
               branch
             )}
-          </span>
+          </span>)}
         </>
       )}
     </span>

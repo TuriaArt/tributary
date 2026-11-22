@@ -8,13 +8,14 @@ import { dayLabel, median, perDay, punchCard, roughDuration } from "../../lib/te
 import { Avatar } from "../Avatar";
 import { AreaTrend } from "./AreaTrend";
 import type { Tip } from "./parts";
+import { locale, t, tx } from "../../lib/i18n";
 
 export const KIND_NAMES: Record<FileKind, string> = {
   code: "Code",
-  art: "Art & assets",
-  levels: "Levels",
-  audio: "Audio",
-  other: "Other",
+  art: t("Art & assets"),
+  levels: t("Levels"),
+  audio: t("Audio"),
+  other: t("Other"),
 };
 
 const kindColor = (kind: FileKind) => `var(--kind-${kind})`;
@@ -38,7 +39,7 @@ export function KindBar({ kinds, tall = false, tip }: { kinds: KindCount[]; tall
             key={entry.kind}
             className={`team-kind kind-${entry.kind}`}
             style={{ flexGrow: entry.work, background: kindColor(entry.kind) }}
-            onMouseEnter={(event) => tip.show(event, <strong>{`${KIND_NAMES[entry.kind]} · ${percent}% of the work (${plural(entry.files, "file change")})`}</strong>)}
+            onMouseEnter={(event) => tip.show(event, <strong>{t("{0} · {1}% of the work ({2})", KIND_NAMES[entry.kind], percent, plural(entry.files, "file change"))}</strong>)}
             onMouseLeave={tip.hide}
           >
             {tall && percent >= 9 && <span className="team-kind-share">{percent}%</span>}
@@ -54,9 +55,9 @@ export function KindsCard({ work, tip }: { work: TeamWork; tip: Tip }) {
   return (
     <section className="team-panel">
       <header className="team-panel-head">
-        <h3>What kind of work</h3>
-        <span className="muted" title="Each commit counts as one, split between the kinds of file it changed">
-          by commit, not by file
+        <h3>{t("What kind of work")}</h3>
+        <span className="muted" title={t("Each commit counts as one, split between the kinds of file it changed")}>
+          {t("by commit, not by file")}
         </span>
       </header>
       <KindBar kinds={work.kinds} tall tip={tip} />
@@ -86,28 +87,26 @@ export function LinesCard({ work, days, today, tip }: { work: TeamWork; days: nu
     <>
       <strong>{dayLabel(days[index], today)}</strong>
       <span className="team-tip-row">
-        <span className="team-swatch" style={{ background: "var(--added)" }} />
-        added<span className="team-tip-value">{added[index].toLocaleString()}</span>
+        {tx("{0}added{1}", <span className="team-swatch" style={{ background: "var(--added)" }} />, <span className="team-tip-value">{added[index].toLocaleString()}</span>)}
       </span>
       <span className="team-tip-row">
-        <span className="team-swatch" style={{ background: "var(--removed)" }} />
-        removed<span className="team-tip-value">{removed[index].toLocaleString()}</span>
+        {tx("{0}removed{1}", <span className="team-swatch" style={{ background: "var(--removed)" }} />, <span className="team-tip-value">{removed[index].toLocaleString()}</span>)}
       </span>
     </>
   );
   return (
     <section className="team-panel">
       <header className="team-panel-head">
-        <h3>Lines of code</h3>
+        <h3>{t("Lines of code")}</h3>
         <span className="team-lines-totals">
           <span className="added">+{totalAdded.toLocaleString()}</span>
           <span className="removed">−{totalRemoved.toLocaleString()}</span>
         </span>
       </header>
       <div className="team-mirror">
-        <AreaTrend values={added} top={top} color="var(--added)" height={56} label="Lines of code added per day" tip={tip} describe={describe} />
+        <AreaTrend values={added} top={top} color="var(--added)" height={56} label={t("Lines of code added per day")} tip={tip} describe={describe} />
         <span className="team-mirror-axis" />
-        <AreaTrend values={removed} top={top} color="var(--removed)" height={56} label="Lines of code removed per day" tip={tip} describe={describe} flipped />
+        <AreaTrend values={removed} top={top} color="var(--removed)" height={56} label={t("Lines of code removed per day")} tip={tip} describe={describe} flipped />
       </div>
     </section>
   );
@@ -128,8 +127,8 @@ export function HotspotsCard({ work, nameOf, colorOf, tip }: { work: TeamWork; n
   return (
     <section className="team-panel">
       <header className="team-panel-head">
-        <h3>Hotspots</h3>
-        <span className="muted">changed most</span>
+        <h3>{t("Hotspots")}</h3>
+        <span className="muted">{t("changed most")}</span>
       </header>
       <ul className="team-hotspots">
         {work.hotspots.slice(0, 8).map((spot) => {
@@ -142,12 +141,12 @@ export function HotspotsCard({ work, nameOf, colorOf, tip }: { work: TeamWork; n
                 <span className="team-hotspot-file">
                   <span className="mono">{baseName(spot.path)}</span>
                   {risky && (
-                    <span className="team-hotspot-risk" title="Several people changed it and it can't be merged: one version will win">
-                      <span className="chip-text">can't merge</span>
+                    <span className="team-hotspot-risk" title={t("Several people changed it and it can't be merged: one version will win")}>
+                      <span className="chip-text">{t("can't merge")}</span>
                     </span>
                   )}
                 </span>
-                <span className="muted">{folder || "top folder"}</span>
+                <span className="muted">{folder || t("top folder")}</span>
               </span>
               <span className="team-avatars">
                 {spot.people.slice(0, 3).map((email) => (
@@ -168,20 +167,20 @@ export function HotspotsCard({ work, nameOf, colorOf, tip }: { work: TeamWork; n
   );
 }
 
-const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const WEEKDAYS = [t("Mon"), t("Tue"), t("Wed"), t("Thu"), t("Fri"), t("Sat"), t("Sun")];
 
 /** When the team commits: weekdays by hours of the day, a dot sized by how many. */
 export function PunchCard({ times, tip }: { times: number[]; tip: Tip }) {
   const grid = punchCard(times);
   const most = Math.max(1, ...grid.flat());
-  const hour = (h: number) => new Date(2026, 0, 1, h).toLocaleTimeString(undefined, { hour: "numeric" });
+  const hour = (h: number) => new Date(2026, 0, 1, h).toLocaleTimeString(locale(), { hour: "numeric" });
   return (
     <section className="team-panel">
       <header className="team-panel-head">
-        <h3>When the team works</h3>
-        <span className="muted">your local time</span>
+        <h3>{t("When the team works")}</h3>
+        <span className="muted">{t("your local time")}</span>
       </header>
-      <div className="team-punch" role="img" aria-label="Commits by weekday and hour of the day">
+      <div className="team-punch" role="img" aria-label={t("Commits by weekday and hour of the day")}>
         {grid.map((row, weekday) => (
           <div key={weekday} className="team-punch-row">
             <span className="team-punch-day">{WEEKDAYS[weekday]}</span>
@@ -225,21 +224,21 @@ export function RequestsCard({ requests, since }: { requests: RecentRequest[]; s
   return (
     <section className="team-panel team-requests">
       <header className="team-panel-head">
-        <h3>Pull requests</h3>
+        <h3>{t("Pull requests")}</h3>
         <span className="muted">{plural(stillOpen, "open now", "open now")}</span>
       </header>
       <div className="team-figures">
         <div>
           <span className="team-figure">{opened.length}</span>
-          <span className="muted">opened</span>
+          <span className="muted">{t("opened")}</span>
         </div>
         <div>
           <span className="team-figure">{merged.length}</span>
-          <span className="muted">merged</span>
+          <span className="muted">{t("merged")}</span>
         </div>
         <div>
           <span className="team-figure">{typical === null ? "–" : roughDuration(typical)}</span>
-          <span className="muted">typically, from opened to merged</span>
+          <span className="muted">{t("typically, from opened to merged")}</span>
         </div>
       </div>
       {authors.length > 0 && (
@@ -251,7 +250,7 @@ export function RequestsCard({ requests, since }: { requests: RecentRequest[]; s
               <span className="team-hotspot-bar">
                 <span style={{ width: `${(count / mostMerged) * 100}%` }} />
               </span>
-              <span className="team-hotspot-count">{count} merged</span>
+              <span className="team-hotspot-count">{tx("{0} merged", count)}</span>
             </li>
           ))}
         </ul>

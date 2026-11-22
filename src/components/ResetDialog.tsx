@@ -1,10 +1,11 @@
 import { useMemo, useState } from "react";
 import { runAction, type CommitRow, type RepoSnapshot } from "../api";
 import { ancestors, countMissing } from "../lib/graph";
-import { plural, shortId } from "../lib/format";
+import { joinAnd, plural, shortId } from "../lib/format";
 import { Dialog } from "./Dialog";
 import { TypeToConfirm } from "./Safety";
 import { Button } from "./ui/Button";
+import { t, tx } from "../lib/i18n";
 
 interface Props {
   snapshot: RepoSnapshot;
@@ -59,64 +60,59 @@ export function ResetDialog({ snapshot, target, protectedName, onCancel, onDone,
 
   return (
     <Dialog
-      title={discardOnly ? "Discard all uncommitted changes?" : `Hard reset ${branch}?`}
+      title={discardOnly ? t("Discard all uncommitted changes?") : t("Hard reset {0}?", branch)}
       error={error}
       busy={running}
       onCancel={onCancel}
       buttons={
         <>
           <Button kind="secondary" onClick={onCancel} disabled={running} autoFocus={!protectedName}>
-            Cancel
+            {t("Cancel")}
           </Button>
           <Button kind="danger" onClick={discardAll ? onDiscardAll : reset} disabled={running || !confirmed}>
-            {running ? (discardOnly ? "Discarding…" : "Resetting…") : discardOnly ? "Discard changes" : `Reset ${branch}`}
+            {running ? (discardOnly ? t("Discarding…") : t("Resetting…")) : discardOnly ? t("Discard changes") : t("Reset {0}", branch)}
           </Button>
         </>
       }
     >
       {discardAll ? (
-        <p>Your files will be changed back to how they are in the last commit, and new files will be deleted.</p>
+        <p>{t("Your files will be changed back to how they are in the last commit, and new files will be deleted.")}</p>
       ) : discardOnly ? (
-        <p>Your files will be changed back to how they are in the last commit.</p>
+        <p>{t("Your files will be changed back to how they are in the last commit.")}</p>
       ) : (
       <p>
-        <strong>{branch}</strong> will point to <CommitRef commit={target} />
-        {head && head.id !== target.id && (
+        {tx("{0} will point to {1}{2}, and your files will be changed to match it.", <strong>{branch}</strong>, <CommitRef commit={target} />, head && head.id !== target.id && (
           <>
-            {" "}
-            instead of <CommitRef commit={head} />
+            {" "}{tx("instead of {0}", <CommitRef commit={head} />)}
           </>
-        )}
-        , and your files will be changed to match it.
+        ))}
       </p>
       )}
       <ul className="dialog-consequences">
         {leaving > 0 && (
           <li>
-            {plural(leaving, "commit")} will no longer be on {branch}. You can still get them back with{" "}
-            <code>git reflog</code> for a while.
+            {tx("{0} will no longer be on {1}. You can still get them back with {2} for a while.", plural(leaving, "commit"), branch, <code>git reflog</code>)}
           </li>
         )}
         {discardAll ? (
           <>
-            {lostFiles > 0 && <li className="danger">Changes to {plural(lostFiles, "file")} will be discarded.</li>}
+            {lostFiles > 0 && <li className="danger">{tx("Changes to {0} will be discarded.", plural(lostFiles, "file"))}</li>}
             {untrackedFiles + newFolders > 0 && (
               <li className="danger">
-                {[untrackedFiles > 0 && plural(untrackedFiles, "new file"), newFolders > 0 && plural(newFolders, "new folder")].filter(Boolean).join(" and ")} will be
-                deleted{newFolders > 0 ? `, with everything in ${newFolders === 1 ? "it" : "them"}` : ""}.
+                {tx("{0} will be deleted{1}.", joinAnd([untrackedFiles > 0 ? plural(untrackedFiles, "new file") : "", newFolders > 0 ? plural(newFolders, "new folder") : ""].filter(Boolean)), newFolders === 0 ? "" : newFolders === 1 ? t(", with everything in it") : t(", with everything in them"))}
               </li>
             )}
-            <li>You can put them back with Undo, for 30 days.</li>
+            <li>{t("You can put them back with Undo, for 30 days.")}</li>
           </>
         ) : (
           <>
             {lostFiles > 0 && (
               <li className="danger">
-                Uncommitted changes to {plural(lostFiles, "file")} will be discarded. This can't be undone.
+                {tx("Uncommitted changes to {0} will be discarded. This can't be undone.", plural(lostFiles, "file"))}
               </li>
             )}
-            {untrackedFiles + newFolders > 0 && <li>New files are kept.</li>}
-            {leaving === 0 && lostFiles === 0 && <li>No commits or uncommitted changes will be lost.</li>}
+            {untrackedFiles + newFolders > 0 && <li>{t("New files are kept.")}</li>}
+            {leaving === 0 && lostFiles === 0 && <li>{t("No commits or uncommitted changes will be lost.")}</li>}
           </>
         )}
       </ul>

@@ -1,6 +1,7 @@
 // Errors that stop the interface, kept in the problems log (see src-tauri/src/problems.rs)
 // so they can be sent with a report later.
 import { reportProblem } from "../api";
+import { t } from "./i18n";
 
 /** How many problems one window keeps, so an error that repeats can't fill the log. */
 const MAX_REPORTS = 20;
@@ -26,7 +27,7 @@ export function describeProblem(error: unknown, where?: string | null): string {
     .map((line) => line.trim())
     .filter(Boolean)
     .slice(0, STACK_LINES);
-  if (components?.length) parts.push("In:", ...components.map((line) => `  ${line}`));
+  if (components?.length) parts.push(t("In:"), ...components.map((line) => `  ${line}`));
   return parts.join("\n");
 }
 

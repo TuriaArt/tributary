@@ -5,6 +5,7 @@ import { PullRequestsContext, requestNumber } from "../lib/pullRequests";
 import { openInBrowser } from "../lib/weblinks";
 import { Button } from "./ui/Button";
 import { Chip } from "./ui/Chip";
+import { t } from "../lib/i18n";
 
 /** Issues already looked up, by tracker and key. */
 const known = new Map<string, Issue | null>();
@@ -132,7 +133,7 @@ export function MentionedIssues({ mentions }: { mentions: Mentioned[] }) {
   const issues = mentions.filter((mention) => !mention.request);
   if (issues.length === 0) return null;
   return (
-    <ul className="mentioned-issues" aria-label="Issues">
+    <ul className="mentioned-issues" aria-label={t("Issues")}>
       {issues.map((mention) => (
         <Mention key={mention.key} id={mention.id} url={mention.url} title={mention.title} status={mention.status} done={mention.done} />
       ))}

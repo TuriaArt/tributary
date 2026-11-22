@@ -7,6 +7,7 @@ import { describeNews, findNews, remoteTips, watchedFor, type News } from "../li
 import { notifySystem } from "../lib/notify";
 import { FIRST_AUTO_FETCH_DELAY } from "./constants";
 import type { NewCommitNotices } from "./usePreferences";
+import { t } from "../lib/i18n";
 
 interface Options {
   /** The open repository. */
@@ -99,9 +100,9 @@ export function useBackgroundFetch(options: Options): Record<string, string> {
     const top = news[0];
     const pullable = top.branch === snapshot.upstream?.name && !snapshot.operation;
     notify({
-      text: describeNews(top) + (news.length > 1 ? `, and more on ${news.length - 1} other ${news.length === 2 ? "branch" : "branches"}` : ""),
+      text: describeNews(top) + (news.length > 1 ? t(", and more on {0} other {1}", news.length - 1, news.length === 2 ? "branch" : "branches") : ""),
       icon: <BellIcon size={14} />,
-      action: pullable ? { label: "Pull", onClick: pull } : { label: "Show", onClick: () => show(top.tip) },
+      action: pullable ? { label: t("Pull"), onClick: pull } : { label: t("Show"), onClick: () => show(top.tip) },
     });
     if (notices === "system" && !document.hasFocus()) {
       for (const item of news) notifySystem(snapshot.name, describeNews(item));
@@ -121,7 +122,7 @@ export function useBackgroundFetch(options: Options): Record<string, string> {
       notify({
         text: `${tab.name}: ${describeNews(news[0])}`,
         icon: <BellIcon size={14} />,
-        action: { label: "Open", onClick: () => switchTab(tab.path) },
+        action: { label: t("Open"), onClick: () => switchTab(tab.path) },
       });
       if (notices === "system" && !document.hasFocus()) {
         for (const item of news) notifySystem(tab.name, describeNews(item));

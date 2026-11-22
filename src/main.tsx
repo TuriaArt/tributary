@@ -11,6 +11,7 @@ import { isMac, isWindows, watchDevicePixel } from "./lib/platform";
 import { applyStoredAppearance } from "./app/useAppearance";
 import { ErrorBoundary } from "./components/ErrorScreen";
 import { watchForProblems } from "./lib/problems";
+import { language } from "./lib/i18n";
 
 // On macOS the window has no title bar: the tab bar makes room for the window buttons.
 if (isMac) document.documentElement.classList.add("mac");
@@ -18,6 +19,8 @@ if (isMac) document.documentElement.classList.add("mac");
 if (isWindows) document.documentElement.classList.add("windows");
 // One screen pixel, in CSS pixels, for nudges smaller than that (see .chip-text).
 watchDevicePixel();
+// The language chosen in Settings, for the spelling checker and screen readers.
+document.documentElement.lang = language();
 // The remembered theme and accent, before anything is drawn.
 applyStoredAppearance();
 
@@ -28,7 +31,7 @@ watchForProblems();
 // Keep it when text is selected, so copying still works, and in text fields, where it
 // has the spelling suggestions and cut, copy and paste.
 const TEXT_FIELD =
-  'textarea, input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"], [type="button"], [type="submit"], [type="file"]), [contenteditable="true"]';
+  "textarea, input:not([type=\"checkbox\"], [type=\"radio\"], [type=\"range\"], [type=\"color\"], [type=\"button\"], [type=\"submit\"], [type=\"file\"]), [contenteditable=\"true\"]";
 if (!import.meta.env.DEV) {
   document.addEventListener("contextmenu", (event) => {
     const inField = event.target instanceof Element && event.target.closest(TEXT_FIELD);

@@ -3,6 +3,7 @@ import type { RefEntry } from "../../lib/refs";
 import { ChevronDownIcon, FolderIcon } from "../Icons";
 import { rowIndent } from "./RefItem";
 import { group, type Node } from "./refTree";
+import { t } from "../../lib/i18n";
 
 /** Which sections and folders are open. */
 export interface Folding {
@@ -39,7 +40,7 @@ export function SidebarSection({ id, title, count, filtering, folding, action, e
         </button>
         {action && <span className="sidebar-heading-actions">{action}</span>}
       </div>
-      {open && (empty ? <div className="sidebar-empty">None</div> : children)}
+      {open && (empty ? <div className="sidebar-empty">{t("None")}</div> : children)}
     </section>
   );
 }

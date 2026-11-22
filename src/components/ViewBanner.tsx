@@ -3,6 +3,7 @@ import { baseName } from "../lib/paths";
 import { plural } from "../lib/format";
 import { ChevronDownIcon, ChevronUpIcon, EyeIcon, FileHistoryIcon } from "./Icons";
 import { Button } from "./ui/Button";
+import { t, tx } from "../lib/i18n";
 
 interface Props {
   focus: Focus | null;
@@ -31,42 +32,37 @@ export function ViewBanner({ focus, firstParent, solo, branchLabel, mine, focuse
       {focus?.kind === "path" ? <FileHistoryIcon size={14} /> : <EyeIcon size={14} />}
       {focus?.kind === "path" ? (
         <span>
-          Highlighting the {plural(focus.ids.length, "commit")}
-          {focus.truncated ? "+" : ""} that changed{" "}
-          <strong title={focus.path}>
+          {tx("Highlighting the {0}{1} that changed {2}{3}.", plural(focus.ids.length, "commit"), focus.truncated ? "+" : "", <strong title={focus.path}>
             {baseName(focus.path)}
             {focus.folder ? "/" : ""}
-          </strong>
-          {focus.ids.length > pathMatches.length && ` (${(focus.ids.length - pathMatches.length).toLocaleString()} not loaded)`}.
+          </strong>, focus.ids.length > pathMatches.length && t(" ({0} not loaded)", (focus.ids.length - pathMatches.length).toLocaleString()))}
         </span>
       ) : focus?.kind === "history" ? (
         <span>
-          Highlighting <strong>{focus.name}</strong>'s history.
+          {tx("Highlighting {0}'s history.", <strong>{focus.name}</strong>)}
         </span>
       ) : focus?.kind === "author" ? (
         <span>
-          Highlighting <strong>{mine ? "your" : `${focus.name || focus.email}'s`}</strong> commits ({focusedCount} loaded).
+          {tx("Highlighting {0} commits ({1} loaded).", <strong>{mine ? "your" : `${focus.name || focus.email}'s`}</strong>, focusedCount)}
         </span>
       ) : firstParent ? (
         <span>
-          Showing only <strong>{branchLabel}</strong>'s own history.
+          {tx("Showing only {0}'s own history.", <strong>{branchLabel}</strong>)}
         </span>
       ) : (
         <span>
-          Showing only{" "}
-          <strong>
+          {tx("Showing only {0} (and {1}).", <strong>
             {solo
               .map((name) => name.replace(/^refs\/(heads|remotes|tags)\//, ""))
               .slice(0, 4)
               .join(", ")}
-            {solo.length > 4 ? ` and ${solo.length - 4} more` : ""}
-          </strong>{" "}
-          (and {branchLabel}).
+            {solo.length > 4 ? t(" and {0} more", solo.length - 4) : ""}
+          </strong>, branchLabel)}
         </span>
       )}
       {focus?.kind === "path" && pathMatches.length > 0 && (
         <span className="banner-steps">
-          <Button kind="icon" onClick={() => onStep(-1)} title="Newer change" aria-label="Newer change">
+          <Button kind="icon" onClick={() => onStep(-1)} title={t("Newer change")} aria-label={t("Newer change")}>
             <ChevronUpIcon size={13} />
           </Button>
           <span className="banner-step-count">
@@ -74,13 +70,13 @@ export function ViewBanner({ focus, firstParent, solo, branchLabel, mine, focuse
               ? `${pathMatches.indexOf(selectedIndex) + 1} of ${pathMatches.length}`
               : plural(pathMatches.length, "change")}
           </span>
-          <Button kind="icon" onClick={() => onStep(1)} title="Older change" aria-label="Older change">
+          <Button kind="icon" onClick={() => onStep(1)} title={t("Older change")} aria-label={t("Older change")}>
             <ChevronDownIcon size={13} />
           </Button>
         </span>
       )}
       <Button kind="link" onClick={onShowEverything}>
-        {focus ? "Show everything (Esc)" : "Show all branches"}
+        {focus ? t("Show everything (Esc)") : t("Show all branches")}
       </Button>
     </div>
   );

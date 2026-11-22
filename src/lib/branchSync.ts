@@ -1,5 +1,6 @@
 import { createContext } from "react";
 import { plural } from "./format";
+import { t } from "./i18n";
 
 /**
  * How far a local branch is ahead of and behind the remote branch it tracks: along each
@@ -28,9 +29,9 @@ export function describeSync({ ahead, behind, aheadCommits, behindCommits, upstr
   if (ahead > 0 && behind > 0) {
     // "2 commits ahead of and 5 behind": the second count's word only when it isn't "commits".
     const second = behindCommits !== undefined && behindCommits > behind ? describeCount(behind, behindCommits) : String(behind);
-    return `${describeCount(ahead, aheadCommits)} ahead of and ${second} behind ${upstream}`;
+    return t("{0} ahead of and {1} behind {2}", describeCount(ahead, aheadCommits), second, upstream);
   }
-  if (ahead > 0) return `${describeCount(ahead, aheadCommits)} ahead of ${upstream} (not pushed yet)`;
-  if (behind > 0) return `${describeCount(behind, behindCommits)} behind ${upstream} (pull to bring them in)`;
+  if (ahead > 0) return t("{0} ahead of {1} (not pushed yet)", describeCount(ahead, aheadCommits), upstream);
+  if (behind > 0) return t("{0} behind {1} (pull to bring them in)", describeCount(behind, behindCommits), upstream);
   return null;
 }

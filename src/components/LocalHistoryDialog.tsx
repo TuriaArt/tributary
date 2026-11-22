@@ -6,6 +6,7 @@ import { baseName, folderOf } from "../lib/paths";
 import { Dialog } from "./Dialog";
 import { HistoryIcon } from "./Icons";
 import { Button } from "./ui/Button";
+import { locale, t, tx } from "../lib/i18n";
 
 interface Props {
   repoPath: string;
@@ -23,12 +24,12 @@ function dayOf(time: number): string {
   const date = new Date(time);
   const today = new Date();
   const yesterday = new Date(today.getTime() - 86_400_000);
-  if (date.toDateString() === today.toDateString()) return "Today";
-  if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
-  return date.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" });
+  if (date.toDateString() === today.toDateString()) return t("Today");
+  if (date.toDateString() === yesterday.toDateString()) return t("Yesterday");
+  return date.toLocaleDateString(locale(), { weekday: "long", month: "short", day: "numeric" });
 }
 
-const timeOf = (time: number) => new Date(time).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+const timeOf = (time: number) => new Date(time).toLocaleTimeString(locale(), { hour: "2-digit", minute: "2-digit" });
 
 /**
  * Local history: snapshots of uncommitted work, taken every few minutes, to put files back
@@ -80,7 +81,7 @@ export function LocalHistoryDialog({ repoPath, file, canChange, run, onOpenSetti
     setError(null);
     try {
       const taken = await takeSnapshot(repoPath, maxMB * 1_000_000, days);
-      if (!taken) setError("Nothing new to keep: your changes are as the last snapshot has them.");
+      if (!taken) setError(t("Nothing new to keep: your changes are as the last snapshot has them."));
       load();
     } catch (e) {
       setError(String(e));
@@ -91,7 +92,7 @@ export function LocalHistoryDialog({ repoPath, file, canChange, run, onOpenSetti
 
   return (
     <Dialog
-      title={file ? `Local history of ${baseName(file)}` : "Local history"}
+      title={file ? t("Local history of {0}", baseName(file)) : t("Local history")}
       wide
       className="local-history-dialog"
       error={error}
@@ -99,15 +100,15 @@ export function LocalHistoryDialog({ repoPath, file, canChange, run, onOpenSetti
       buttons={
         <>
           <Button kind="secondary" onClick={() => void takeOne()} disabled={taking || !canChange}>
-            {taking ? "Keeping…" : "Keep a snapshot now"}
+            {taking ? t("Keeping…") : t("Keep a snapshot now")}
           </Button>
           <span className="spacer" />
           <Button kind="secondary" onClick={onClose}>
-            Close
+            {t("Close")}
           </Button>
           {files.length > 1 && (
             <Button kind="primary" disabled={!canChange} onClick={() => restore(files.map((each) => each.path))}>
-              Restore all {files.length}
+              {tx("Restore all {0}", files.length)}
             </Button>
           )}
         </>
@@ -116,23 +117,22 @@ export function LocalHistoryDialog({ repoPath, file, canChange, run, onOpenSetti
       <p className="dialog-note-line">
         {minutes > 0 ? (
           <>
-            Your uncommitted work, kept every {minutes} minutes for {days === 1 ? "a day" : `${days} days`} (files up to {maxMB >= 1000 ? `${maxMB / 1000} GB` : `${maxMB} MB`}).
-            Restoring a file puts it back as it was then; what it is now is kept too, so Undo brings it back.{" "}
+            {tx("Your uncommitted work, kept every {0} minutes for {1} (files up to {2}). Restoring a file puts it back as it was then; what it is now is kept too, so Undo brings it back.", minutes, days === 1 ? t("a day") : plural(days, "day"), maxMB >= 1000 ? `${maxMB / 1000} ${t("GB")}` : `${maxMB} ${t("MB")}`)}{" "}
           </>
         ) : (
-          <>Snapshots aren't kept now. </>
+          <>{t("Snapshots aren't kept now.")}{" "}</>
         )}
         <Button kind="link" onClick={onOpenSettings}>
-          Settings
+          {t("Settings")}
         </Button>
       </p>
       {snapshots === null ? (
-        <p className="shelves-empty">Looking…</p>
+        <p className="shelves-empty">{t("Looking…")}</p>
       ) : snapshots.length === 0 ? (
-        <p className="shelves-empty">{file ? "No snapshots of this file yet." : "No snapshots yet. They're kept while you have uncommitted changes."}</p>
+        <p className="shelves-empty">{file ? t("No snapshots of this file yet.") : t("No snapshots yet. They're kept while you have uncommitted changes.")}</p>
       ) : (
         <div className="history-columns">
-          <div className="history-times" role="listbox" aria-label="Snapshots">
+          <div className="history-times" role="listbox" aria-label={t("Snapshots")}>
             {byDay.map((group) => (
               <div key={group.day}>
                 <div className="history-day">{group.day}</div>
@@ -161,10 +161,10 @@ export function LocalHistoryDialog({ repoPath, file, canChange, run, onOpenSetti
                 <Button
                   kind="outline"
                   disabled={!canChange}
-                  title={each.change === "deleted" ? "It had been deleted then: delete it again" : `Put ${baseName(each.path)} back as it was at ${selected ? timeOf(selected.time) : ""}`}
+                  title={each.change === "deleted" ? t("It had been deleted then: delete it again") : t("Put {0} back as it was at {1}", baseName(each.path), selected ? timeOf(selected.time) : "")}
                   onClick={() => restore([each.path])}
                 >
-                  <span className="button-label">Restore</span>
+                  <span className="button-label">{t("Restore")}</span>
                 </Button>
               </li>
             ))}

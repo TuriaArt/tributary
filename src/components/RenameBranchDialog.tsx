@@ -3,6 +3,7 @@ import { runAction } from "../api";
 import { Dialog } from "./Dialog";
 import { Button } from "./ui/Button";
 import { Field } from "./ui/Field";
+import { t } from "../lib/i18n";
 
 interface Props {
   repoPath: string;
@@ -31,17 +32,17 @@ export function RenameBranchDialog({ repoPath, branch, onCancel, onDone }: Props
 
   return (
     <Dialog
-      title={`Rename ${branch}`}
+      title={t("Rename {0}", branch)}
       error={error}
       busy={running}
       onCancel={onCancel}
       buttons={
         <>
           <Button kind="secondary" onClick={onCancel} disabled={running}>
-            Cancel
+            {t("Cancel")}
           </Button>
           <Button kind="primary" onClick={rename} disabled={running || unchanged}>
-            {running ? "Renaming…" : "Rename"}
+            {running ? t("Renaming…") : t("Rename")}
           </Button>
         </>
       }
@@ -53,7 +54,7 @@ export function RenameBranchDialog({ repoPath, branch, onCancel, onDone }: Props
           rename();
         }}
       >
-        <Field label="New name">
+        <Field label={t("New name")}>
           <input
             className="text-input"
             value={name}

@@ -4,6 +4,7 @@ import type { ToastMessage } from "../components/Toast";
 import { describeForkRun, forkKey, syncDue, tellForkSyncNews, type ForkRun, type ForkRunResult, type ForkSyncEvery } from "../lib/forks";
 import { notifySystem } from "../lib/notify";
 import { FIRST_AUTO_FETCH_DELAY } from "./constants";
+import { t } from "../lib/i18n";
 
 /** How often it looks whether the forks are due to be synced. */
 const LOOK_EVERY = 5 * 60_000;
@@ -71,8 +72,8 @@ export function useForkSync(options: Options) {
     const said = describeForkRun(run);
     if (!said) return;
     const show = latest.current.onShow;
-    latest.current.notify({ text: said, action: show ? { label: "Your forks", onClick: show } : undefined });
-    if (!document.hasFocus()) void notifySystem("Tributary", said);
+    latest.current.notify({ text: said, action: show ? { label: t("Your forks"), onClick: show } : undefined });
+    if (!document.hasFocus()) void notifySystem(t("Tributary"), said);
   }, []);
 
   const { shown, every } = options;

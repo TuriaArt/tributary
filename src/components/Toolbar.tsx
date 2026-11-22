@@ -23,6 +23,7 @@ import {
 } from "./Icons";
 import { relativeTime } from "../lib/format";
 import { Button } from "./ui/Button";
+import { t, tx } from "../lib/i18n";
 
 export type RemoteAction = "fetch" | "pull" | "push" | "sync";
 
@@ -45,16 +46,16 @@ export interface SearchState {
 const MODES: { mode: SearchMode; label: string; placeholder: string; title: string }[] = [
   {
     mode: "everything",
-    label: "Everything",
-    placeholder: "Search, or type author:, tag:, file:…",
-    title: "Messages, authors, branches, tags, commit ids, files and code, in every branch: what's found is listed beside the history",
+    label: t("Everything"),
+    placeholder: t("Search, or type author:, tag:, file:…"),
+    title: t("Messages, authors, branches, tags, commit ids, files and code, in every branch: what's found is listed beside the history"),
   },
-  { mode: "messages", label: "Messages", placeholder: "Commits whose message says…", title: "Commits in any branch whose message (any line of it) contains this (message:)" },
-  { mode: "authors", label: "Authors", placeholder: "A name or an email", title: "Commits in any branch by someone whose name or email contains this (author:)" },
-  { mode: "refs", label: "Branches & tags", placeholder: "A branch's or tag's name", title: "Commits with a branch or tag whose name contains this, among the loaded commits (branch:, tag:)" },
-  { mode: "hashes", label: "Commit ids", placeholder: "The start of a commit's id", title: "Commits whose id starts with this (hash:)" },
-  { mode: "files", label: "Files", placeholder: "Commits that changed a file, like store.ts or *.psd", title: "Commits in any branch that changed a file whose path contains this (or matches a pattern like *.psd) (file:)" },
-  { mode: "code", label: "Code", placeholder: "Commits that added or removed some code", title: "Commits in any branch that added or removed this exact text (code:)" },
+  { mode: "messages", label: t("Messages"), placeholder: t("Commits whose message says…"), title: t("Commits in any branch whose message (any line of it) contains this (message:)") },
+  { mode: "authors", label: t("Authors"), placeholder: t("A name or an email"), title: t("Commits in any branch by someone whose name or email contains this (author:)") },
+  { mode: "refs", label: t("Branches & tags"), placeholder: t("A branch's or tag's name"), title: t("Commits with a branch or tag whose name contains this, among the loaded commits (branch:, tag:)") },
+  { mode: "hashes", label: t("Commit ids"), placeholder: t("The start of a commit's id"), title: t("Commits whose id starts with this (hash:)") },
+  { mode: "files", label: t("Files"), placeholder: t("Commits that changed a file, like store.ts or *.psd"), title: t("Commits in any branch that changed a file whose path contains this (or matches a pattern like *.psd) (file:)") },
+  { mode: "code", label: t("Code"), placeholder: t("Commits that added or removed some code"), title: t("Commits in any branch that added or removed this exact text (code:)") },
 ];
 
 interface Props {
@@ -104,21 +105,21 @@ export function Toolbar(props: Props) {
   const pullDisabled = running !== null || !onBranch || !snapshot.upstream;
   const pushDisabled = running !== null || !onBranch || !hasRemotes;
   const pullTitle = !onBranch
-    ? "Check out a branch to pull"
+    ? t("Check out a branch to pull")
     : !snapshot.upstream
-      ? `${snapshot.headBranch} has no upstream branch yet. Push it first.`
-      : `Pull ${snapshot.upstream.name} into ${snapshot.headBranch}${behind > 0 ? `: ${describeCount(behind, props.behindCommits)}` : ""}`;
+      ? t("{0} has no upstream branch yet. Push it first.", snapshot.headBranch)
+      : t("Pull {0} into {1}{2}", snapshot.upstream.name, snapshot.headBranch, behind > 0 ? `: ${describeCount(behind, props.behindCommits)}` : "");
   // Commits on both sides: a push would be refused, so the button syncs (pulls, then pushes).
   const diverged = onBranch && hasRemotes && snapshot.upstream !== null && ahead > 0 && behind > 0;
   const pushTitle = diverged
-    ? `Sync ${snapshot.headBranch} with ${snapshot.upstream?.name}: pull ${describeCount(behind, props.behindCommits)}, then push ${describeCount(ahead, props.aheadCommits)}`
+    ? t("Sync {0} with {1}: pull {2}, then push {3}", snapshot.headBranch, snapshot.upstream?.name, describeCount(behind, props.behindCommits), describeCount(ahead, props.aheadCommits))
     : !onBranch
-    ? "Check out a branch to push"
+    ? t("Check out a branch to push")
     : !hasRemotes
-      ? "This repository has no remotes"
+      ? t("This repository has no remotes")
       : snapshot.upstream
-        ? `Push ${snapshot.headBranch} to ${snapshot.upstream.name}${ahead > 0 ? `: ${describeCount(ahead, props.aheadCommits)}` : ""}`
-        : `Push ${snapshot.headBranch} and set its upstream`;
+        ? t("Push {0} to {1}{2}", snapshot.headBranch, snapshot.upstream.name, ahead > 0 ? `: ${describeCount(ahead, props.aheadCommits)}` : "")
+        : t("Push {0} and set its upstream", snapshot.headBranch);
 
   return (
     <header className="toolbar" data-tauri-drag-region style={props.historyLeft !== null ? ({ "--history-left": `${props.historyLeft}px` } as CSSProperties) : undefined}>
@@ -126,21 +127,21 @@ export function Toolbar(props: Props) {
         <Button
           kind="icon" className={props.sidebarOpen ? "active" : undefined}
           onClick={props.onToggleSidebar}
-          title={`${props.sidebarOpen ? "Hide" : "Show"} branches (${modKey}B)`}
-          aria-label="Toggle the branches sidebar"
+          title={t("{0} branches ({1}B)", props.sidebarOpen ? t("Hide") : t("Show"), modKey)}
+          aria-label={t("Toggle the branches sidebar")}
           aria-pressed={props.sidebarOpen}
         >
           <SidebarIcon />
         </Button>
         {snapshot.headBranch ? (
-          <span className="head-chip" title="Checked out branch" data-tour="head">
+          <span className="head-chip" title={t("Checked out branch")} data-tour="head">
             <BranchIcon size={14} />
             <span className="head-chip-name chip-text">{snapshot.headBranch}</span>
           </span>
         ) : snapshot.headCommit ? (
-          <span className="head-chip detached" title="HEAD is detached">
+          <span className="head-chip detached" title={t("HEAD is detached")}>
             <CommitIcon size={14} />
-            <span className="head-chip-name chip-text">detached at {shortId(snapshot.headCommit)}</span>
+            <span className="head-chip-name chip-text">{tx("detached at {0}", shortId(snapshot.headCommit))}</span>
           </span>
         ) : null}
       </div>
@@ -158,7 +159,7 @@ export function Toolbar(props: Props) {
             value={search.mode}
             onChange={(event) => props.onSearchMode(event.target.value as SearchMode)}
             title={MODES.find((entry) => entry.mode === search.mode)?.title}
-            aria-label="Search in"
+            aria-label={t("Search in")}
           >
             {MODES.map((entry) => (
               <option key={entry.mode} value={entry.mode}>
@@ -184,7 +185,7 @@ export function Toolbar(props: Props) {
           placeholder={MODES.find((entry) => entry.mode === search.mode)?.placeholder ?? ""}
           title={`${MODES.find((entry) => entry.mode === search.mode)?.title} (${modKey}F)`}
           spellCheck={false}
-          aria-label="Search commits"
+          aria-label={t("Search commits")}
         />
         {search.query && (
           <>
@@ -193,30 +194,32 @@ export function Toolbar(props: Props) {
               title={
                 search.error ??
                 (search.notLoaded > 0
-                  ? `${plural(search.notLoaded, "more commit")} further back match${search.notLoaded === 1 ? "es" : ""}: scroll down to load ${search.notLoaded === 1 ? "it" : "them"}`
+                  ? search.notLoaded === 1
+                    ? t("{0} further back matches: scroll down to load it", plural(search.notLoaded, "more commit"))
+                    : t("{0} further back match: scroll down to load them", plural(search.notLoaded, "more commit"))
                   : search.mode === "refs" && snapshot.truncated
-                    ? "Only the loaded commits are searched"
+                    ? t("Only the loaded commits are searched")
                     : undefined)
               }
             >
               {search.searching
-                ? "Searching…"
+                ? t("Searching…")
                 : search.error
-                  ? "Couldn't search"
+                  ? t("Couldn't search")
                   : search.total === 0
                     ? search.notLoaded > 0
-                      ? `${search.notLoaded}${search.truncated ? "+" : ""} further back`
-                      : "No matches"
+                      ? t("{0}{1} further back", search.notLoaded, search.truncated ? "+" : "")
+                      : t("No matches")
                     : search.current > 0
-                      ? `${search.current} of ${search.total}${search.notLoaded > 0 ? "+" : ""}`
+                      ? t("{0} of {1}{2}", search.current, search.total, search.notLoaded > 0 ? "+" : "")
                       : plural(search.total, "match", "matches") + (search.notLoaded > 0 ? "+" : "")}
             </span>
             <Button
               kind="icon" size="small"
               onClick={() => props.onSearchStep(-1)}
               disabled={search.total === 0}
-              title="Previous match (Shift+Enter)"
-              aria-label="Previous match"
+              title={t("Previous match (Shift+Enter)")}
+              aria-label={t("Previous match")}
             >
               <ChevronUpIcon size={14} />
             </Button>
@@ -224,16 +227,16 @@ export function Toolbar(props: Props) {
               kind="icon" size="small"
               onClick={() => props.onSearchStep(1)}
               disabled={search.total === 0}
-              title="Next match (Enter)"
-              aria-label="Next match"
+              title={t("Next match (Enter)")}
+              aria-label={t("Next match")}
             >
               <ChevronDownIcon size={14} />
             </Button>
             <Button
               kind="icon" size="small"
               onClick={() => props.onSearch("")}
-              title="Clear search (Esc)"
-              aria-label="Clear search"
+              title={t("Clear search (Esc)")}
+              aria-label={t("Clear search")}
             >
               <CloseIcon size={13} />
             </Button>
@@ -249,16 +252,16 @@ export function Toolbar(props: Props) {
           disabled={fetchDisabled}
           title={
             !hasRemotes
-              ? "This repository has no remotes"
-              : `Fetch from all remotes${props.lastFetch ? ` (last fetched ${relativeTime(props.lastFetch / 1000)})` : ""}`
+              ? t("This repository has no remotes")
+              : t("Fetch from all remotes{0}", props.lastFetch ? t(" (last fetched {0})", relativeTime(props.lastFetch / 1000)) : "")
           }
         >
           <FetchIcon className={running === "fetch" ? "pulse" : undefined} />
-          <span className="label">Fetch</span>
+          <span className="label">{t("Fetch")}</span>
         </Button>
         <Button kind="tool" data-tour="remote" onClick={() => props.onRemote("pull")} disabled={pullDisabled} title={pullTitle}>
           <PullIcon className={running === "pull" ? "pulse" : undefined} />
-          <span className="label">Pull</span>
+          <span className="label">{t("Pull")}</span>
           {behind > 0 && (
             <span className="count">
               <span>{behind}</span>
@@ -268,7 +271,7 @@ export function Toolbar(props: Props) {
         <div className="split-button" data-tour="remote">
           <Button kind="tool" onClick={() => props.onRemote(diverged ? "sync" : "push")} disabled={pushDisabled} title={pushTitle}>
             {diverged ? <SyncIcon className={running === "sync" ? "pulse" : undefined} /> : <PushIcon className={running === "push" ? "pulse" : undefined} />}
-            <span className="label">{diverged ? "Sync" : "Push"}</span>
+            <span className="label">{diverged ? t("Sync") : t("Push")}</span>
             {ahead > 0 && (
               <span className="count">
                 <span>{ahead}</span>
@@ -280,8 +283,8 @@ export function Toolbar(props: Props) {
             kind="tool" className="menu-toggle"
             onClick={() => pushMenuButton.current && props.onPushMenu(pushMenuButton.current)}
             disabled={pushDisabled}
-            title="More push options"
-            aria-label="More push options"
+            title={t("More push options")}
+            aria-label={t("More push options")}
           >
             <ChevronDownIcon size={14} />
           </Button>
@@ -292,8 +295,8 @@ export function Toolbar(props: Props) {
         <Button
           kind="icon" className={props.teamOpen ? "active" : undefined}
           onClick={props.onToggleTeam}
-          title={`Team activity: who's been working on what (${isMac ? "⇧⌘T" : "Ctrl+Shift+T"})`}
-          aria-label="Team activity"
+          title={t("Team activity: who's been working on what ({0})", isMac ? "⇧⌘T" : "Ctrl+Shift+T")}
+          aria-label={t("Team activity")}
           data-tour="team"
           aria-pressed={props.teamOpen}
         >
@@ -303,8 +306,8 @@ export function Toolbar(props: Props) {
           <Button
             kind="icon" className={props.forks.open ? "active" : undefined}
             onClick={props.forks.onToggle}
-            title="Your forks: how far behind each is, and syncing them"
-            aria-label="Your forks"
+            title={t("Your forks: how far behind each is, and syncing them")}
+            aria-label={t("Your forks")}
             aria-pressed={props.forks.open}
           >
             <ForkIcon />
@@ -313,8 +316,8 @@ export function Toolbar(props: Props) {
         <Button
           kind="icon"
           onClick={props.onSettings}
-          title={`Settings for ${snapshot.name}: who you commit as, protected branches, Git LFS`}
-          aria-label="Repository settings"
+          title={t("Settings for {0}: who you commit as, protected branches, Git LFS", snapshot.name)}
+          aria-label={t("Repository settings")}
         >
           <GearIcon />
         </Button>
@@ -322,12 +325,12 @@ export function Toolbar(props: Props) {
           ref={openButton}
           kind="icon"
           onClick={() => openButton.current && props.onOpenMenu(openButton.current)}
-          title={`Open ${snapshot.name}: on its website, in ${isMac ? "Finder" : "Explorer"}, in your editor or terminal`}
-          aria-label="Open the repository elsewhere"
+          title={t("Open {0}: on its website, in {1}, in your editor or terminal", snapshot.name, isMac ? t("Finder") : t("Explorer"))}
+          aria-label={t("Open the repository elsewhere")}
         >
           <ExternalLinkIcon />
         </Button>
-        <Button kind="icon" onClick={props.onClose} title="Close repository" aria-label="Close repository">
+        <Button kind="icon" onClick={props.onClose} title={t("Close repository")} aria-label={t("Close repository")}>
           <CloseIcon />
         </Button>
       </div>

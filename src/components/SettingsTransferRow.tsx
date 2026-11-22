@@ -7,6 +7,7 @@ import { applySettings, collectSettings } from "../lib/settingsTransfer";
 import type { SettingRow } from "./SettingsDialog";
 import { SettingsRepositoryDialog } from "./SettingsRepositoryDialog";
 import { Button } from "./ui/Button";
+import { t } from "../lib/i18n";
 
 /** Every setting, as the JSON text that's exported. */
 const exportedText = () => JSON.stringify(collectSettings(localStorage), null, 2);
@@ -14,7 +15,7 @@ const exportedText = () => JSON.stringify(collectSettings(localStorage), null, 2
 /** Apply imported settings (JSON text) and start again with them. */
 function applyImported(text: string, notify: (text: string) => void) {
   const result = applySettings(JSON.parse(text), localStorage, loadRecent().map((repo) => repo.path));
-  notify(`Imported ${plural(result.settings, "setting")}${result.repositories ? `, for ${plural(result.repositories, "repository", "repositories")} here too` : ""}: starting again with them`);
+  notify(t("Imported {0}{1}: starting again with them", plural(result.settings, "setting"), result.repositories ? t(", for {0} here too", plural(result.repositories, "repository", "repositories")) : ""));
   // Everything reads its settings when it starts.
   window.setTimeout(() => window.location.reload(), 1200);
 }
@@ -25,7 +26,7 @@ function RepositoryButton({ mode, notify }: { mode: "export" | "import"; notify:
   return (
     <>
       <Button kind="outline" onClick={() => setOpen(true)}>
-        <span className="button-label">{mode === "export" ? "Export to a repository…" : "Import from a repository…"}</span>
+        <span className="button-label">{mode === "export" ? t("Export to a repository…") : t("Import from a repository…")}</span>
       </Button>
       {open && (
         <SettingsRepositoryDialog
@@ -53,18 +54,18 @@ function RepositoryButton({ mode, notify }: { mode: "export" | "import"; notify:
 /** Settings: exporting every setting to a file or a git repository, and importing them back (on another computer, say). */
 export function settingsTransferRows(notify: (text: string) => void): SettingRow[] {
   const exportSettings = async () => {
-    const file = await save({ title: "Export Tributary's settings", defaultPath: "tributary-settings.json", filters: [{ name: "Settings", extensions: ["json"] }] });
+    const file = await save({ title: t("Export Tributary's settings"), defaultPath: "tributary-settings.json", filters: [{ name: "Settings", extensions: ["json"] }] });
     if (!file) return;
     const text = exportedText();
     try {
       await saveSettingsFile(file, text);
-      notify(`Exported ${plural(Object.keys(JSON.parse(text).settings).length, "setting")}`);
+      notify(t("Exported {0}", plural(Object.keys(JSON.parse(text).settings).length, "setting")));
     } catch (e) {
       notify(String(e));
     }
   };
   const importSettings = async () => {
-    const file = await open({ title: "Import Tributary's settings", multiple: false, directory: false, filters: [{ name: "Settings", extensions: ["json"] }] });
+    const file = await open({ title: t("Import Tributary's settings"), multiple: false, directory: false, filters: [{ name: "Settings", extensions: ["json"] }] });
     if (typeof file !== "string") return;
     try {
       applyImported(await readSettingsFile(file), notify);
@@ -75,12 +76,12 @@ export function settingsTransferRows(notify: (text: string) => void): SettingRow
   return [
     {
       kind: "custom",
-      label: "Export your settings",
-      hint: "Appearance, columns, notices, and each repository's pinned, hidden and protected branches. No passwords or tokens.",
+      label: t("Export your settings"),
+      hint: t("Appearance, columns, notices, and each repository's pinned, hidden and protected branches. No passwords or tokens."),
       content: (
         <div className="settings-buttons">
           <Button kind="outline" onClick={() => void exportSettings()}>
-            <span className="button-label">Export to a file…</span>
+            <span className="button-label">{t("Export to a file…")}</span>
           </Button>
           <RepositoryButton mode="export" notify={notify} />
         </div>
@@ -88,12 +89,12 @@ export function settingsTransferRows(notify: (text: string) => void): SettingRow
     },
     {
       kind: "custom",
-      label: "Import settings",
-      hint: "Exported here or on another computer. Tributary starts again with them.",
+      label: t("Import settings"),
+      hint: t("Exported here or on another computer. Tributary starts again with them."),
       content: (
         <div className="settings-buttons">
           <Button kind="outline" onClick={() => void importSettings()}>
-            <span className="button-label">Import from a file…</span>
+            <span className="button-label">{t("Import from a file…")}</span>
           </Button>
           <RepositoryButton mode="import" notify={notify} />
         </div>

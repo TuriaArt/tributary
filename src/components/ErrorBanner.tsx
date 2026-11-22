@@ -2,6 +2,7 @@ import { Fragment, useState, type ReactNode } from "react";
 import { copyText } from "../lib/clipboard";
 import { ChevronRightIcon, CloseIcon, WarningIcon } from "./Icons";
 import { Button } from "./ui/Button";
+import { t } from "../lib/i18n";
 
 /** Something that can be done about an error, and what it does. */
 export interface ErrorChoice {
@@ -41,7 +42,7 @@ export function ErrorBanner({ headline, detail, children, choices, raw, onDismis
         {children}
         {choices.length > 0 && (
           <div className="error-choices">
-            <div className="error-choices-title">What you can do</div>
+            <div className="error-choices-title">{t("What you can do")}</div>
             {choices.map((choice) => (
               <Fragment key={choice.label}>
                 <button className="error-action" onClick={choice.run} disabled={choice.disabled}>
@@ -57,7 +58,7 @@ export function ErrorBanner({ headline, detail, children, choices, raw, onDismis
             <div className="error-raw-controls">
               <Button kind="link" className="error-raw-toggle" onClick={() => setShowRaw(!showRaw)} aria-expanded={showRaw}>
                 <ChevronRightIcon size={12} className={showRaw ? "open" : undefined} />
-                {showRaw ? "Hide git's message" : "Show git's message"}
+                {showRaw ? t("Hide git's message") : t("Show git's message")}
               </Button>
               {showRaw && (
                 <Button
@@ -70,7 +71,7 @@ export function ErrorBanner({ headline, detail, children, choices, raw, onDismis
                     })
                   }
                 >
-                  {copied ? "Copied" : "Copy"}
+                  {copied ? t("Copied") : t("Copy")}
                 </Button>
               )}
             </div>
@@ -78,7 +79,7 @@ export function ErrorBanner({ headline, detail, children, choices, raw, onDismis
           </div>
         )}
       </div>
-      <Button kind="icon" onClick={onDismiss} aria-label="Dismiss">
+      <Button kind="icon" onClick={onDismiss} aria-label={t("Dismiss")}>
         <CloseIcon size={14} />
       </Button>
     </div>

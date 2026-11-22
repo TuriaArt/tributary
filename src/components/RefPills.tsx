@@ -9,6 +9,7 @@ import { pressLabel } from "../lib/drag";
 import { describePill, refPills, type RefPill } from "../lib/refs";
 import { CheckIcon, CloseIcon, CloudIcon, CommitIcon, LaptopIcon, SpinnerIcon, StashIcon, TagIcon } from "./Icons";
 import { useHint } from "./hints";
+import { t } from "../lib/i18n";
 
 interface Props {
   refs: RefLabel[];
@@ -61,7 +62,7 @@ export function RefPills({ refs, color, limit, onActivate, onContextMenu, onFocu
           // (A commit's row is a single control: a button in it couldn't be reached.)
           <span
             className="ref-pill more openable"
-            {...hint(`${hidden.map(describePill).join("\n")}\nClick for their menus`)}
+            {...hint(t("{0}\nClick for their menus", hidden.map(describePill).join("\n")))}
             onMouseDown={(event) => event.stopPropagation()}
             onClick={(event) => {
               event.stopPropagation();
@@ -129,7 +130,7 @@ function Pill({ pill, color, onActivate, onContextMenu, onFocusPill, onHoverPill
       {...hint(
         describePill(pill) +
           (syncText ? `\n${syncText}` : "") +
-          (onActivate && pill.kind === "branch" && !pill.current ? "\nDouble-click to check out" : ""),
+          (onActivate && pill.kind === "branch" && !pill.current ? t("\nDouble-click to check out") : ""),
       )}
       onMouseEnter={() => onHoverPill?.(pill)}
       onMouseLeave={() => onHoverPill?.(null)}
@@ -193,7 +194,7 @@ export function PullRequestBadge({ pr, onOpen }: { pr: PullRequest; onOpen: (pr:
   return (
     <span
       className={`pr-badge${pr.checks ? ` ${pr.checks}` : ""}${pr.draft ? " draft" : ""}${icon ? " with-icon" : ""}`}
-      {...hint(`${describeChecks(pr)}\nClick to see its reviews and checks`)}
+      {...hint(t("{0}\nClick to see its reviews and checks", describeChecks(pr)))}
       // Its name for screen readers, number and checks, whether the number shows or not.
       aria-label={describeChecks(pr)}
       role="link"

@@ -1,3 +1,4 @@
+import { t } from "./i18n";
 // Fetch latest on a schedule: every open repository fetched at a set time (07:00, say), and
 // brought up to date when that's a fast-forward, so a big update is waiting in the morning.
 
@@ -57,8 +58,8 @@ export function describeRun(run: ScheduledRun): string {
   const done = run.results.filter((result) => result.ok);
   const failed = run.results.filter((result) => !result.ok);
   const total = run.results.length;
-  if (total === 0) return "No repositories were open to fetch the latest of";
-  if (failed.length === 0) return total === 1 ? `Fetched the latest of ${run.results[0].name}` : `Fetched the latest of ${total} repositories`;
+  if (total === 0) return t("No repositories were open to fetch the latest of");
+  if (failed.length === 0) return total === 1 ? t("Fetched the latest of {0}", run.results[0].name) : t("Fetched the latest of {0} repositories", total);
   const names = failed.map((result) => result.name).join(", ");
-  return done.length === 0 ? `Couldn't fetch the latest of ${names}` : `Fetched the latest of ${done.length} of ${total} repositories; not ${names}`;
+  return done.length === 0 ? t("Couldn't fetch the latest of {0}", names) : t("Fetched the latest of {0} of {1} repositories; not {2}", done.length, total, names);
 }

@@ -5,6 +5,7 @@ import { openInBrowser } from "../lib/weblinks";
 import { CheckIcon, CopyIcon, ExternalLinkIcon, EyeIcon, EyeOffIcon, KeyIcon } from "./Icons";
 import { Loader } from "./Loader";
 import { Button } from "./ui/Button";
+import { t, tx } from "../lib/i18n";
 
 /** Where GitHub takes a new SSH key. */
 const GITHUB_NEW_KEY = "https://github.com/settings/ssh/new";
@@ -24,30 +25,30 @@ function KeyCard({ sshKey, check, checking }: { sshKey: SshKey; check: SshCheck 
         <KeyIcon size={15} />
         <span className="ssh-key-name">{sshKey.name}</span>
         {checking ? (
-          <span className="ssh-key-state">Checking GitHub…</span>
+          <span className="ssh-key-state">{t("Checking GitHub…")}</span>
         ) : check ? (
           check.accepted ? (
             <span className="ssh-key-state accepted" title={check.message}>
               <CheckIcon size={11} />
-              <span className="chip-text">GitHub knows it{check.user ? ` as ${check.user}` : ""}</span>
+              <span className="chip-text">{tx("GitHub knows it{0}", check.user ? ` as ${check.user}` : "")}</span>
             </span>
           ) : (
             <span className="ssh-key-state" title={check.message}>
-              <span className="chip-text">Not on GitHub</span>
+              <span className="chip-text">{t("Not on GitHub")}</span>
             </span>
           )
         ) : null}
         <div className="ssh-key-actions">
-          <Button kind="outline" onClick={() => void copy()} title="Copy the public key, to add it to GitHub or GitLab">
+          <Button kind="outline" onClick={() => void copy()} title={t("Copy the public key, to add it to GitHub or GitLab")}>
             {copied ? <CheckIcon size={13} /> : <CopyIcon size={13} />}
-            <span className="button-label">{copied ? "Copied" : "Copy public key"}</span>
+            <span className="button-label">{copied ? t("Copied") : t("Copy public key")}</span>
           </Button>
           <Button
             kind="icon"
             onClick={() => setShown(!shown)}
             aria-pressed={shown}
-            title={shown ? "Hide the public key" : "Show the public key (the half that's safe to share)"}
-            aria-label={shown ? "Hide the public key" : "Show the public key"}
+            title={shown ? t("Hide the public key") : t("Show the public key (the half that's safe to share)")}
+            aria-label={shown ? t("Hide the public key") : t("Show the public key")}
           >
             {shown ? <EyeOffIcon size={15} /> : <EyeIcon size={15} />}
           </Button>
@@ -120,22 +121,22 @@ export function SshKeys() {
     }
   };
 
-  if (keys === null && !error) return <Loader size={48} title="Reading your SSH keys" />;
+  if (keys === null && !error) return <Loader size={48} title={t("Reading your SSH keys")} />;
   const none = keys !== null && keys.length === 0;
   const newKey = made ?? (none ? null : undefined);
 
   const form = (
     <div className="ssh-make">
       <label className="ssh-field">
-        <span>Name</span>
-        <input className="text-input mono" value={name} onChange={(event) => setName(event.target.value)} spellCheck={false} aria-label="The new key's name" />
+        <span>{t("Name")}</span>
+        <input className="text-input mono" value={name} onChange={(event) => setName(event.target.value)} spellCheck={false} aria-label={t("The new key's name")} />
       </label>
       <label className="ssh-field">
-        <span>Passphrase (optional)</span>
-        <input className="text-input" type="password" value={passphrase} onChange={(event) => setPassphrase(event.target.value)} aria-label="A passphrase for the new key" />
+        <span>{t("Passphrase (optional)")}</span>
+        <input className="text-input" type="password" value={passphrase} onChange={(event) => setPassphrase(event.target.value)} aria-label={t("A passphrase for the new key")} />
       </label>
       <Button kind="primary" onClick={() => void make()} disabled={making === "busy" || !name.trim()}>
-        <span className="button-label">{making === "busy" ? "Making it…" : "Make the key"}</span>
+        <span className="button-label">{making === "busy" ? t("Making it…") : t("Make the key")}</span>
       </Button>
     </div>
   );
@@ -149,12 +150,12 @@ export function SshKeys() {
           <li className={made ? "done" : "now"}>
             <span className="ssh-step-number">{made ? <CheckIcon size={13} /> : "1"}</span>
             <div>
-              <div className="ssh-step-title">Make a key</div>
+              <div className="ssh-step-title">{t("Make a key")}</div>
               {made ? (
-                <div className="ssh-key-meta">Made {made.name}, in your .ssh folder.</div>
+                <div className="ssh-key-meta">{tx("Made {0}, in your .ssh folder.", made.name)}</div>
               ) : (
                 <>
-                  <div className="ssh-key-meta">You haven't got an SSH key yet. An Ed25519 key is the one to have.</div>
+                  <div className="ssh-key-meta">{t("You haven't got an SSH key yet. An Ed25519 key is the one to have.")}</div>
                   {form}
                 </>
               )}
@@ -163,17 +164,17 @@ export function SshKeys() {
           <li className={made ? "now" : ""}>
             <span className="ssh-step-number">2</span>
             <div>
-              <div className="ssh-step-title">Add it to GitHub</div>
-              <div className="ssh-key-meta">GitHub needs the key's public half, the part that's safe to share: copy it, then paste it on GitHub's page.</div>
+              <div className="ssh-step-title">{t("Add it to GitHub")}</div>
+              <div className="ssh-key-meta">{t("GitHub needs the key's public half, the part that's safe to share: copy it, then paste it on GitHub's page.")}</div>
               {newKey && (
                 <div className="ssh-step-actions">
                   <Button kind="outline" onClick={() => void copyText(newKey.publicKey)}>
                     <CopyIcon size={13} />
-                    <span className="button-label">Copy public key</span>
+                    <span className="button-label">{t("Copy public key")}</span>
                   </Button>
                   <Button kind="outline" onClick={() => openInBrowser(GITHUB_NEW_KEY)}>
                     <ExternalLinkIcon size={13} />
-                    <span className="button-label">Open GitHub's SSH keys page</span>
+                    <span className="button-label">{t("Open GitHub's SSH keys page")}</span>
                   </Button>
                 </div>
               )}
@@ -182,17 +183,17 @@ export function SshKeys() {
           <li>
             <span className="ssh-step-number">3</span>
             <div>
-              <div className="ssh-step-title">Check it works</div>
-              <div className="ssh-key-meta">Connects to github.com and says who it knows you as.</div>
+              <div className="ssh-step-title">{t("Check it works")}</div>
+              <div className="ssh-key-meta">{t("Connects to github.com and says who it knows you as.")}</div>
               {newKey && (
                 <div className="ssh-step-actions">
                   <Button kind="outline" onClick={() => void checkAll([newKey])} disabled={checking}>
-                    <span className="button-label">{checking ? "Checking…" : "Check with GitHub"}</span>
+                    <span className="button-label">{checking ? t("Checking…") : t("Check with GitHub")}</span>
                   </Button>
                   {checks.get(newKey.path) && (
                     <span className={`ssh-key-state${checks.get(newKey.path)!.accepted ? " accepted" : ""}`}>
                       <span className="chip-text">
-                        {checks.get(newKey.path)!.accepted ? `GitHub knows you${checks.get(newKey.path)!.user ? ` as ${checks.get(newKey.path)!.user}` : ""}` : "Not yet: add it on GitHub first"}
+                        {checks.get(newKey.path)!.accepted ? t("GitHub knows you{0}", checks.get(newKey.path)!.user ? ` as ${checks.get(newKey.path)!.user}` : "") : t("Not yet: add it on GitHub first")}
                       </span>
                     </span>
                   )}
@@ -209,11 +210,11 @@ export function SshKeys() {
           ))}
           <div className="ssh-step-actions">
             <Button kind="outline" onClick={() => void checkAll(keys)} disabled={checking}>
-              <span className="button-label">{checking ? "Checking…" : "Check with GitHub"}</span>
+              <span className="button-label">{checking ? t("Checking…") : t("Check with GitHub")}</span>
             </Button>
             {making === "closed" && (
               <Button kind="outline" onClick={() => setMaking("open")}>
-                <span className="button-label">Make a new key…</span>
+                <span className="button-label">{t("Make a new key…")}</span>
               </Button>
             )}
           </div>

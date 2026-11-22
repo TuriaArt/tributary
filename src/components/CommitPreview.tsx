@@ -6,6 +6,7 @@ import { fullDate, plural, shortId } from "../lib/format";
 import { Avatar } from "./Avatar";
 import { RefPills } from "./RefPills";
 import { Loader } from "./Loader";
+import { t } from "../lib/i18n";
 
 interface Props {
   commit: CommitRow;
@@ -75,13 +76,13 @@ export function CommitPreview({ commit, x, y, hint, loadDetails }: Props) {
         <code>{shortId(commit.id)}</code>
       </div>
       <div className="preview-dates">
-        {commit.commitTime !== commit.time ? `Authored ${fullDate(commit.time)} · committed ${fullDate(commit.commitTime)}` : fullDate(commit.time)}
+        {commit.commitTime !== commit.time ? t("Authored {0} · committed {1}", fullDate(commit.time), fullDate(commit.commitTime)) : fullDate(commit.time)}
       </div>
       <div className="preview-files">
         {!details ? (
-          <Loader inline size={22} title="Loading…" />
+          <Loader inline size={22} title={t("Loading…")} />
         ) : details.files.length === 0 ? (
-          <span className="muted">No file changes</span>
+          <span className="muted">{t("No file changes")}</span>
         ) : (
           <>
             <span>{plural(details.files.length, "file")}</span>

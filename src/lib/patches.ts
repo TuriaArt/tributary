@@ -1,6 +1,7 @@
 import { save } from "@tauri-apps/plugin-dialog";
 import { patchText, type Action } from "../api";
 import { copyText } from "./clipboard";
+import { t } from "./i18n";
 
 /** A file name for commits saved as a patch, from the newest one's summary. */
 export function patchFileName(summary: string, count: number): string {
@@ -16,7 +17,7 @@ export function patchFileName(summary: string, count: number): string {
 /** Ask where to save the commits `ids` as a patch, then save them there. */
 export async function savePatch(ids: string[], summary: string, run: (action: Action) => void): Promise<void> {
   const file = await save({
-    title: ids.length > 1 ? `Save ${ids.length} commits as a patch` : "Save the commit as a patch",
+    title: ids.length > 1 ? t("Save {0} commits as a patch", ids.length) : t("Save the commit as a patch"),
     defaultPath: patchFileName(summary, ids.length),
     filters: [{ name: "Patch", extensions: ["patch", "diff"] }],
   });
@@ -27,7 +28,7 @@ export async function savePatch(ids: string[], summary: string, run: (action: Ac
 export async function copyPatch(repoPath: string, ids: string[], notify: (text: string) => void): Promise<void> {
   try {
     await copyText(await patchText(repoPath, ids));
-    notify(ids.length > 1 ? `Copied ${ids.length} commits as a patch` : "Copied the commit as a patch");
+    notify(ids.length > 1 ? t("Copied {0} commits as a patch", ids.length) : t("Copied the commit as a patch"));
   } catch (error) {
     notify(String(error));
   }

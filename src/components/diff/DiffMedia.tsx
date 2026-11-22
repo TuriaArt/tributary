@@ -5,6 +5,7 @@ import { DiffAudio } from "./DiffAudio";
 import { DiffImages } from "./DiffImages";
 import { DiffVideo } from "./DiffVideo";
 import { Loader } from "../Loader";
+import { t } from "../../lib/i18n";
 
 /** The 3D viewer brings three.js with it: it's loaded only when a model is shown. */
 const ModelViewer = lazy(() => import("./ModelViewer"));
@@ -20,7 +21,7 @@ export function DiffMedia({ diff, media }: { diff: FileDiff; media: Media }) {
       ) : media.kind === "video" ? (
         <DiffVideo diff={diff} media={media} />
       ) : (
-        <Suspense fallback={<Loader size={88} title="Loading the 3D viewer" />}>
+        <Suspense fallback={<Loader size={88} title={t("Loading the 3D viewer")} />}>
           <ModelViewer diff={diff} media={media} />
         </Suspense>
       )}

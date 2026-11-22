@@ -1,5 +1,6 @@
 import { useCallback, useRef } from "react";
 import { commitDetails, type CommitDetails, type CommitRow } from "../api";
+import { t } from "../lib/i18n";
 
 /** Commits' full messages and changed files, asked for once and kept. */
 export function useCommitDetails(repoPath: string | null, commits: CommitRow[] | undefined) {
@@ -9,7 +10,7 @@ export function useCommitDetails(repoPath: string | null, commits: CommitRow[] |
     async (id: string) => {
       const cached = cache.current.get(id);
       if (cached) return cached;
-      if (!repoPath) throw new Error("No repository");
+      if (!repoPath) throw new Error(t("No repository"));
       const details = await commitDetails(repoPath, id);
       cache.current.set(id, details);
       return details;

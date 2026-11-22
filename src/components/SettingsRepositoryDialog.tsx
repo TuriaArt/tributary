@@ -4,6 +4,7 @@ import { useStoredState } from "../lib/settings";
 import { Dialog } from "./Dialog";
 import { Button } from "./ui/Button";
 import { Field } from "./ui/Field";
+import { t } from "../lib/i18n";
 
 /** The repository the settings were last exported to or imported from. */
 const REPOSITORY_KEY = "settings.repository";
@@ -51,7 +52,7 @@ export function SettingsRepositoryDialog({ mode, contents, onImported, onDone, o
 
   return (
     <Dialog
-      title={exporting ? "Export your settings to a repository" : "Import settings from a repository"}
+      title={exporting ? t("Export your settings to a repository") : t("Import settings from a repository")}
       className="settings-repository-window"
       busy={busy}
       error={error}
@@ -59,18 +60,18 @@ export function SettingsRepositoryDialog({ mode, contents, onImported, onDone, o
       buttons={
         <>
           <Button kind="secondary" onClick={onCancel} disabled={busy}>
-            Cancel
+            {t("Cancel")}
           </Button>
           <Button kind="primary" onClick={() => void go()} disabled={busy || !url.trim()}>
-            {busy ? (exporting ? "Exporting…" : "Importing…") : exporting ? "Export" : "Import"}
+            {busy ? (exporting ? t("Exporting…") : t("Importing…")) : exporting ? t("Export") : t("Import")}
           </Button>
         </>
       }
     >
       <p className="settings-repository-lead">
         {exporting
-          ? "Tributary commits your settings to the repository, as tributary-settings.json, and pushes them with your git and its sign-in. Import them on any computer with the same link."
-          : "Tributary reads tributary-settings.json from the repository, where Export put it, and starts again with those settings."}
+          ? t("Tributary commits your settings to the repository, as tributary-settings.json, and pushes them with your git and its sign-in. Import them on any computer with the same link.")
+          : t("Tributary reads tributary-settings.json from the repository, where Export put it, and starts again with those settings.")}
       </p>
       <form
         className="dialog-form"
@@ -79,7 +80,7 @@ export function SettingsRepositoryDialog({ mode, contents, onImported, onDone, o
           void go();
         }}
       >
-        <Field label="Repository">
+        <Field label={t("Repository")}>
           <input
             className="text-input"
             value={url}
@@ -98,8 +99,7 @@ export function SettingsRepositoryDialog({ mode, contents, onImported, onDone, o
       </form>
       {exporting && (
         <p className="hint">
-          Keep the repository private. Your settings include where your repositories are on this computer (their folders), and anyone who can
-          see the repository could read that.
+          {t("Keep the repository private. Your settings include where your repositories are on this computer (their folders), and anyone who can see the repository could read that.")}
         </p>
       )}
     </Dialog>

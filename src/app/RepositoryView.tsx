@@ -69,6 +69,7 @@ import { ThemeContext } from "./useAppearance";
 import { useGoToCommit } from "./useGoToCommit";
 import { useSinceLastHere } from "./useSinceLastHere";
 import { ViewPanel } from "../components/ViewPanel";
+import { t } from "../lib/i18n";
 
 const REMOTE_ACTIONS: Record<RemoteAction, Action> = {
   fetch: { kind: "fetch" },
@@ -298,9 +299,9 @@ export function RepositoryView(props: Props) {
       // A hidden branch: its commit may not even be loaded.
       if (!name) return;
       menu.show(x, y, [
-        { label: `Show ${entry.name}`, icon: <EyeIcon />, onSelect: () => settings.setHidden(pillRefNames(pillForEntry(entry)), false) },
+        { label: t("Show {0}", entry.name), icon: <EyeIcon />, onSelect: () => settings.setHidden(pillRefNames(pillForEntry(entry)), false) },
         {
-          label: settings.pins.includes(name) ? `Unpin ${entry.name}` : `Pin ${entry.name} in the sidebar`,
+          label: settings.pins.includes(name) ? t("Unpin {0}", entry.name) : t("Pin {0} in the sidebar", entry.name),
           icon: <PlusIcon />,
           onSelect: () => settings.togglePin(name),
         },
@@ -321,7 +322,7 @@ export function RepositoryView(props: Props) {
   const myLocks = lfs.locks?.locks.filter((lock) => lock.mine) ?? [];
   // What arrived since you were last here, said in a banner and marked beside the scrollbar.
   const sinceHere = useSinceLastHere(snapshot, myLocks.map((lock) => lock.path));
-  const notLoaded = () => props.notify({ text: "That commit isn't loaded: load more commits, or fetch" });
+  const notLoaded = () => props.notify({ text: t("That commit isn't loaded: load more commits, or fetch") });
   // Go to Commit, and links to commits that aren't loaded yet (a parent, a commit a message
   // mentions): older history loads until they are.
   const { goTo } = useGoToCommit({
@@ -332,8 +333,8 @@ export function RepositoryView(props: Props) {
       props.notify({
         text:
           reason === "far"
-            ? "That commit is too far back to load here"
-            : "That commit isn't in the graph as it's shown: its branch may be hidden, or it may only be in a stash or the reflog",
+            ? t("That commit is too far back to load here")
+            : t("That commit isn't in the graph as it's shown: its branch may be hidden, or it may only be in a stash or the reflog"),
       }),
   });
   /** The status bar's "changed elsewhere": the branches, and your files on each. */
@@ -409,7 +410,7 @@ export function RepositoryView(props: Props) {
         }}
         onShowAll={settings.showAllBranches}
         onPrune={canChange ? () => openDialog({ kind: "prune" }) : null}
-        onManageRemotes={snapshot.bare ? null : () => openDialog({ kind: "repoSettings", section: "Remotes" })}
+        onManageRemotes={snapshot.bare ? null : () => openDialog({ kind: "repoSettings", section: t("Remotes") })}
         protectedBranches={settings.protectedBranches}
         locks={lfs.locks?.locks ?? null}
         locksError={lfs.locks?.error ?? null}
@@ -423,7 +424,7 @@ export function RepositoryView(props: Props) {
         onOpenSubmodule={submoduleContext.open}
         onSubmoduleMenu={(submodule, x, y) => menu.show(x, y, submoduleMenuItems(submodule, submoduleContext))}
         reveal={strip.open}
-        onSidebarSettings={() => props.openSettings("Sidebar")}
+        onSidebarSettings={() => props.openSettings(t("Sidebar"))}
       />
     ) : null,
   );
@@ -431,13 +432,13 @@ export function RepositoryView(props: Props) {
   const stashCount = useMemo(() => sidebarLists(snapshot.commits, snapshot.hiddenRefs).stashes.length, [snapshot.commits, snapshot.hiddenRefs]);
   const locks = lfs.locks?.locks ?? null;
   const stripSections: StripSection[] = [
-    ...(settings.pins.length > 0 ? [{ id: "pinned", label: "Pinned", icon: <PinIcon size={16} /> }] : []),
-    { id: "branches", label: "Branches", icon: <BranchIcon size={16} /> },
-    { id: "tags", label: "Tags", icon: <TagIcon size={16} /> },
-    { id: "stashes", label: "Stashes", icon: <StashIcon size={16} />, count: stashCount },
-    ...(props.worktrees.length > 1 ? [{ id: "worktrees", label: "Worktrees", icon: <FolderIcon size={16} /> }] : []),
-    ...(props.submodules.list.length > 0 ? [{ id: "submodules", label: "Submodules", icon: <SubmoduleIcon size={16} /> }] : []),
-    ...(locks ? [{ id: "locks", label: "Locked files", icon: <LockIcon size={16} />, count: locks.length }] : []),
+    ...(settings.pins.length > 0 ? [{ id: "pinned", label: t("Pinned"), icon: <PinIcon size={16} /> }] : []),
+    { id: "branches", label: t("Branches"), icon: <BranchIcon size={16} /> },
+    { id: "tags", label: t("Tags"), icon: <TagIcon size={16} /> },
+    { id: "stashes", label: t("Stashes"), icon: <StashIcon size={16} />, count: stashCount },
+    ...(props.worktrees.length > 1 ? [{ id: "worktrees", label: t("Worktrees"), icon: <FolderIcon size={16} /> }] : []),
+    ...(props.submodules.list.length > 0 ? [{ id: "submodules", label: t("Submodules"), icon: <SubmoduleIcon size={16} /> }] : []),
+    ...(locks ? [{ id: "locks", label: t("Locked files"), icon: <LockIcon size={16} />, count: locks.length }] : []),
   ];
   const detailsOpen = !props.forks.open && Boolean(props.request || comparing.request || selection.selected || selection.multi);
   const detailsPanel = usePresence(
@@ -526,7 +527,7 @@ export function RepositoryView(props: Props) {
     requestCreated: props.onRequestCreated,
     signIn: () => {
       openDialog(null);
-      props.openSettings("Accounts");
+      props.openSettings(t("Accounts"));
     },
     openSettings: (section) => props.openSettings(section),
   };
@@ -753,7 +754,7 @@ export function RepositoryView(props: Props) {
         snapshot={snapshot}
         ahead={counts.ahead}
         behind={counts.behind}
-        running={running === null ? null : (runningLabel ?? "Working")}
+        running={running === null ? null : (runningLabel ?? t("Working"))}
         hiddenCount={settings.hiddenCount}
         soloing={settings.soloing}
         onShowAll={settings.showAllBranches}
@@ -798,7 +799,7 @@ export function RepositoryView(props: Props) {
           setDaySeparators={preferences.setDaySeparators}
           sidebarOpen={sidebarOpen}
           setSidebarOpen={setSidebarOpen}
-          onSettings={() => props.openSettings("Appearance")}
+          onSettings={() => props.openSettings(t("Appearance"))}
           onClose={props.onCloseView}
         />
       )}

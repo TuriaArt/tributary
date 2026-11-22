@@ -1,5 +1,6 @@
 import type { Submodule } from "../api";
 import { plural } from "./format";
+import { t } from "./i18n";
 
 /** A submodule's folder name, like "editor-kit". */
 export function submoduleName(submodule: Submodule): string {
@@ -10,12 +11,12 @@ export function submoduleName(submodule: Submodule): string {
 export function submoduleNote(submodule: Submodule): string | null {
   switch (submodule.state) {
     case "notSetUp":
-      return "not set up";
+      return t("not set up");
     case "behind":
     case "different":
-      return "out of date";
+      return t("out of date");
     case "ahead":
-      return "new commits";
+      return t("new commits");
     case "conflicted":
       return "conflicted";
     case "upToDate":
@@ -29,29 +30,29 @@ export function submoduleTitle(submodule: Submodule): string {
   if (submodule.url) lines.push(submodule.url);
   switch (submodule.state) {
     case "notSetUp":
-      lines.push("Not set up yet: its files aren't here. Update it to clone it.");
+      lines.push(t("Not set up yet: its files aren't here. Update it to clone it."));
       break;
     case "upToDate":
-      lines.push("At the commit this repository records.");
+      lines.push(t("At the commit this repository records."));
       break;
     case "behind":
       lines.push(
         submodule.behind > 0
-          ? `${plural(submodule.behind, "commit")} behind the commit this repository records. Update it to catch up.`
-          : "Not at the commit this repository records (it isn't downloaded yet). Update it to catch up.",
+          ? t("{0} behind the commit this repository records. Update it to catch up.", plural(submodule.behind, "commit"))
+          : t("Not at the commit this repository records (it isn't downloaded yet). Update it to catch up."),
       );
       break;
     case "ahead":
-      lines.push(`${plural(submodule.ahead, "new commit")} in it. Commit it here to record them.`);
+      lines.push(t("{0} in it. Commit it here to record them.", plural(submodule.ahead, "new commit")));
       break;
     case "different":
-      lines.push("At a different commit from the one this repository records. Update it to go back to that one.");
+      lines.push(t("At a different commit from the one this repository records. Update it to go back to that one."));
       break;
     case "conflicted":
-      lines.push("Both sides of the merge moved it. Stage the commit you want it at.");
+      lines.push(t("Both sides of the merge moved it. Stage the commit you want it at."));
       break;
   }
-  if (submodule.changed) lines.push("It has uncommitted changes of its own.");
+  if (submodule.changed) lines.push(t("It has uncommitted changes of its own."));
   return lines.join("\n");
 }
 
@@ -71,12 +72,17 @@ export function submoduleNotice(submodules: Submodule[], moved: ReadonlySet<stri
   if (late.length > 0) {
     const names = late.map(submoduleName);
     const [only] = late;
-    const how = only.state === "behind" ? "is older than" : only.state === "ahead" ? "is newer than" : "isn't";
+    const one =
+      only.state === "behind"
+        ? t("Your copy of the submodule {0} is older than the version this branch uses.", names[0])
+        : only.state === "ahead"
+          ? t("Your copy of the submodule {0} is newer than the version this branch uses.", names[0])
+          : t("Your copy of the submodule {0} isn't the version this branch uses.", names[0]);
     return {
       text:
         late.length === 1
-          ? `Your copy of the submodule ${names[0]} ${how} the version this branch uses.`
-          : `Your copies of ${late.length} submodules (${names.join(", ")}) aren't the versions this branch uses.`,
+          ? one
+          : t("Your copies of {0} submodules ({1}) aren't the versions this branch uses.", late.length, names.join(", ")),
       paths: late.map((submodule) => submodule.path),
       action: late.length === 1 ? "Update it" : "Update them",
     };
@@ -86,8 +92,8 @@ export function submoduleNotice(submodules: Submodule[], moved: ReadonlySet<stri
     return {
       text:
         missing.length === 1
-          ? `The submodule ${submoduleName(missing[0])} isn't set up yet: its files aren't here.`
-          : `This repository's ${missing.length} submodules aren't set up yet: their files aren't here.`,
+          ? t("The submodule {0} isn't set up yet: its files aren't here.", submoduleName(missing[0]))
+          : t("This repository's {0} submodules aren't set up yet: their files aren't here.", missing.length),
       paths: missing.map((submodule) => submodule.path),
       action: missing.length === 1 ? "Set it up" : "Set them up",
     };
@@ -97,6 +103,6 @@ export function submoduleNotice(submodules: Submodule[], moved: ReadonlySet<stri
 
 /** What a submodule is, and why one gets out of date, for the banner's tooltip. */
 export const SUBMODULE_EXPLAINED =
-  "A submodule is another repository kept inside this one (a library, say), pinned to one of its commits. " +
-  "Each branch says which commit it uses. When a pull or a checkout changes that, git leaves the submodule's folder " +
-  "as it was until you update it, so you'd be building with the wrong version.";
+  t("A submodule is another repository kept inside this one (a library, say), pinned to one of its commits. ") +
+  t("Each branch says which commit it uses. When a pull or a checkout changes that, git leaves the submodule's folder ") +
+  t("as it was until you update it, so you'd be building with the wrong version.");

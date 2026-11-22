@@ -3,6 +3,7 @@ import { ChevronLeftIcon, ChevronRightIcon, CloseIcon, CopyIcon, FolderIcon, Gea
 import { copyText } from "../lib/clipboard";
 import { shortcutLabel } from "./appCommand";
 import { isMac } from "../lib/platform";
+import { t } from "../lib/i18n";
 
 interface Options {
   path: string;
@@ -29,14 +30,14 @@ export const REOPEN_TAB_KEYS = "CmdOrCtrl+Shift+R";
 /** Right-click on a repository's tab. */
 export function tabMenuItems({ path, count, index, settings, reveal, close, closeOthers, moveLeft, moveRight, reopen }: Options): MenuItem[] {
   return [
-    { label: "Repository Settings…", icon: <GearIcon />, onSelect: settings },
-    { label: isMac ? "Show in Finder" : "Show in Explorer", icon: <FolderIcon />, separated: true, onSelect: reveal },
-    { label: "Copy path", icon: <CopyIcon />, onSelect: () => copyText(path) },
+    { label: t("Repository Settings…"), icon: <GearIcon />, onSelect: settings },
+    { label: isMac ? t("Show in Finder") : t("Show in Explorer"), icon: <FolderIcon />, separated: true, onSelect: reveal },
+    { label: t("Copy path"), icon: <CopyIcon />, onSelect: () => copyText(path) },
     // Or drag the tab there.
-    { label: "Move Tab Left", icon: <ChevronLeftIcon />, separated: true, disabled: index <= 0, shortcut: MOVE_TAB_KEYS[0], onSelect: moveLeft },
-    { label: "Move Tab Right", icon: <ChevronRightIcon />, disabled: index < 0 || index >= count - 1, shortcut: MOVE_TAB_KEYS[1], onSelect: moveRight },
-    { label: "Close tab", icon: <CloseIcon />, separated: true, onSelect: close },
-    { label: "Close other tabs", icon: <CloseIcon />, disabled: count < 2, onSelect: closeOthers },
-    { label: "Reopen closed tab", icon: <HistoryIcon />, disabled: !reopen, shortcut: shortcutLabel(REOPEN_TAB_KEYS), onSelect: () => reopen?.() },
+    { label: t("Move Tab Left"), icon: <ChevronLeftIcon />, separated: true, disabled: index <= 0, shortcut: MOVE_TAB_KEYS[0], onSelect: moveLeft },
+    { label: t("Move Tab Right"), icon: <ChevronRightIcon />, disabled: index < 0 || index >= count - 1, shortcut: MOVE_TAB_KEYS[1], onSelect: moveRight },
+    { label: t("Close tab"), icon: <CloseIcon />, separated: true, onSelect: close },
+    { label: t("Close other tabs"), icon: <CloseIcon />, disabled: count < 2, onSelect: closeOthers },
+    { label: t("Reopen closed tab"), icon: <HistoryIcon />, disabled: !reopen, shortcut: shortcutLabel(REOPEN_TAB_KEYS), onSelect: () => reopen?.() },
   ];
 }

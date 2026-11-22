@@ -5,6 +5,7 @@ import { parseNotices, searchNotices, type NoticePackage } from "../lib/notices"
 import { Dialog } from "./Dialog";
 import { ExternalLinkIcon, SearchIcon } from "./Icons";
 import { Button } from "./ui/Button";
+import { t, tx } from "../lib/i18n";
 
 /** Tributary's own entry, first in the list. */
 const OWN = "tributary";
@@ -40,33 +41,33 @@ export function LicencesDialog({ onClose }: { onClose: () => void }) {
 
   return (
     <Dialog
-      title="Third-party licences"
+      title={t("Third-party licences")}
       className="settings-window licences-window"
       closable
       error={error}
       onCancel={onClose}
       buttons={
         <Button kind="secondary" onClick={onClose} autoFocus>
-          Done
+          {t("Done")}
         </Button>
       }
     >
       <div className="settings">
-        <nav className="settings-nav licences-nav" aria-label="Packages">
+        <nav className="settings-nav licences-nav" aria-label={t("Packages")}>
           <label className="licences-search">
             <SearchIcon size={13} />
-            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search packages or licences" aria-label="Search packages or licences" spellCheck={false} />
+            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t("Search packages or licences")} aria-label={t("Search packages or licences")} spellCheck={false} />
           </label>
           {!query && (
             <button className={`settings-tab${chosen === OWN ? " selected" : ""}`} onClick={() => setChosen(OWN)}>
               <span className="settings-tab-text">
-                <span>Tributary</span>
-                <span className="settings-tab-subtitle">MIT License</span>
+                <span>{t("Tributary")}</span>
+                <span className="settings-tab-subtitle">{"MIT License"}</span>
               </span>
             </button>
           )}
-          {packages === null && !error && <p className="licences-empty">Reading the licences…</p>}
-          {packages !== null && shown.length === 0 && <p className="licences-empty">No package matches “{query}”.</p>}
+          {packages === null && !error && <p className="licences-empty">{t("Reading the licences…")}</p>}
+          {packages !== null && shown.length === 0 && <p className="licences-empty">{tx("No package matches “{0}”.", query)}</p>}
           {shown.map((entry) => (
             <button key={key(entry)} className={`settings-tab${chosen === key(entry) ? " selected" : ""}`} onClick={() => setChosen(key(entry))} title={`${entry.name} ${entry.version}`}>
               <span className="settings-tab-text">
@@ -84,7 +85,7 @@ export function LicencesDialog({ onClose }: { onClose: () => void }) {
               <h3>
                 {selected.name}
                 <span className="settings-panel-subtitle">
-                  Version {selected.version} · {selected.license}
+                  {tx("Version {0} · {1}", selected.version, selected.license)}
                 </span>
               </h3>
               <Button kind="link" className="licences-home" onClick={() => openInBrowser(selected.home)} data-url={selected.home}>
@@ -92,7 +93,7 @@ export function LicencesDialog({ onClose }: { onClose: () => void }) {
                 <span>{selected.home.replace(/^https?:\/\//, "")}</span>
               </Button>
               {selected.texts.length === 0 ? (
-                <p className="licences-note">This package doesn't come with a licence file: its licence is the standard text of {selected.license}.</p>
+                <p className="licences-note">{tx("This package doesn't come with a licence file: its licence is the standard text of {0}.", selected.license)}</p>
               ) : (
                 selected.texts.map((text, index) => (
                   <pre key={index} className="licences-text">
@@ -104,14 +105,12 @@ export function LicencesDialog({ onClose }: { onClose: () => void }) {
           ) : (
             <>
               <h3>
-                Tributary
-                <span className="settings-panel-subtitle">MIT License</span>
+                {tx("Tributary{0}", <span className="settings-panel-subtitle">{"MIT License"}</span>)}
               </h3>
               <p className="licences-note">
-                Tributary is free and open source, under the MIT License below.
-                {packages && ` It's made with ${packages.length} open-source packages, each under its own licence: they're listed on the left.`}
+                {tx("Tributary is free and open source, under the MIT License below.{0}", packages && t(" It's made with {0} open-source packages, each under its own licence: they're listed on the left.", packages.length))}
               </p>
-              {own ? <pre className="licences-text">{own}</pre> : <p className="licences-note">The licence text wasn't installed with this copy: it's the LICENSE file in Tributary's source code.</p>}
+              {own ? <pre className="licences-text">{own}</pre> : <p className="licences-note">{t("The licence text wasn't installed with this copy: it's the LICENSE file in Tributary's source code.")}</p>}
             </>
           )}
         </section>

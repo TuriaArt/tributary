@@ -5,6 +5,7 @@ import { relativeTime } from "../lib/format";
 import type { HistoryEntry } from "../lib/history";
 import { CheckIcon, CloseIcon, CopyIcon, RevertIcon } from "./Icons";
 import { Button } from "./ui/Button";
+import { locale, t, tx } from "../lib/i18n";
 
 interface Props {
   entries: LogEntry[];
@@ -22,7 +23,7 @@ interface Props {
 /** What you did, newest first, each with Undo while it's still safe. */
 function YourActions({ history, canUndo, onUndo }: Pick<Props, "history" | "canUndo" | "onUndo">) {
   if (history.length === 0) {
-    return <div className="activity-empty">Nothing yet: what you do here (commits, pulls, checkouts, merges…) is listed, with Undo where it can be undone.</div>;
+    return <div className="activity-empty">{t("Nothing yet: what you do here (commits, pulls, checkouts, merges…) is listed, with Undo where it can be undone.")}</div>;
   }
   return (
     <>
@@ -40,14 +41,13 @@ function YourActions({ history, canUndo, onUndo }: Pick<Props, "history" | "canU
               </span>
             )}
             {entry.undone ? (
-              <span className="history-undone">Undone</span>
+              <span className="history-undone">{t("Undone")}</span>
             ) : entry.undo ? (
-              <Button kind="secondary" size="small" className="history-undo" disabled={!state.ok} title={state.ok ? `Undo: ${entry.text}` : state.why} onClick={() => onUndo(entry)}>
-                <RevertIcon size={12} />
-                Undo
+              <Button kind="secondary" size="small" className="history-undo" disabled={!state.ok} title={state.ok ? t("Undo: {0}", entry.text) : state.why} onClick={() => onUndo(entry)}>
+                {tx("{0}Undo", <RevertIcon size={12} />)}
               </Button>
             ) : (
-              <span className="history-none" title="This can't be undone from here">
+              <span className="history-none" title={t("This can't be undone from here")}>
                 —
               </span>
             )}
@@ -58,7 +58,7 @@ function YourActions({ history, canUndo, onUndo }: Pick<Props, "history" | "canU
   );
 }
 
-const time = new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+const time = new Intl.DateTimeFormat(locale(), { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 
 /** An argument as it would be typed in a terminal. */
 function quote(arg: string): string {
@@ -88,23 +88,22 @@ export function ActivityPanel({ entries, folder, onClear, onClose, history, canU
   }, [shown.length, history.length, tab]);
 
   return (
-    <section className="activity-panel" aria-label="Activity">
+    <section className="activity-panel" aria-label={t("Activity")}>
       <header className="activity-header">
-        <strong>Activity</strong>
-        <div className="diff-switch" role="tablist" aria-label="Show">
+        <strong>{t("Activity")}</strong>
+        <div className="diff-switch" role="tablist" aria-label={t("Show")}>
           <button role="tab" className={tab === "actions" ? "selected" : undefined} aria-selected={tab === "actions"} onClick={() => setTab("actions")}>
-            <span className="button-label">Your actions</span>
+            <span className="button-label">{t("Your actions")}</span>
           </button>
           <button role="tab" className={tab === "commands" ? "selected" : undefined} aria-selected={tab === "commands"} onClick={() => setTab("commands")}>
-            <span className="button-label">Git commands</span>
+            <span className="button-label">{t("Git commands")}</span>
           </button>
         </div>
-        <span className="muted">{tab === "actions" ? "What you did here, with Undo while it's still safe." : "Every git command Tributary runs, and what git said."}</span>
+        <span className="muted">{tab === "actions" ? t("What you did here, with Undo while it's still safe.") : t("Every git command Tributary runs, and what git said.")}</span>
         <span className="spacer" />
         {tab === "commands" && (
           <label className="checkbox small">
-            <input type="checkbox" checked={onlyHere} onChange={(event) => setOnlyHere(event.target.checked)} />
-            This repository only
+            {tx("{0}This repository only", <input type="checkbox" checked={onlyHere} onChange={(event) => setOnlyHere(event.target.checked)} />)}
           </label>
         )}
         <Button
@@ -112,15 +111,15 @@ export function ActivityPanel({ entries, folder, onClear, onClose, history, canU
           onClick={tab === "actions" ? onClearHistory : onClear}
           disabled={tab === "actions" ? history.length === 0 : shown.length === 0}
         >
-          Clear
+          {t("Clear")}
         </Button>
-        <Button kind="icon" onClick={onClose} aria-label="Close activity" title="Close">
+        <Button kind="icon" onClick={onClose} aria-label={t("Close activity")} title={t("Close")}>
           <CloseIcon size={14} />
         </Button>
       </header>
       <div className="activity-list" ref={list}>
         {tab === "actions" && <YourActions history={history} canUndo={canUndo} onUndo={onUndo} />}
-        {tab === "commands" && shown.length === 0 && <div className="activity-empty">No git commands yet.</div>}
+        {tab === "commands" && shown.length === 0 && <div className="activity-empty">{t("No git commands yet.")}</div>}
         {tab === "commands" && shown.map((entry) => (
           <div key={entry.id} className={`activity-entry${entry.success ? "" : " failed"}`}>
             <button
@@ -134,7 +133,7 @@ export function ActivityPanel({ entries, folder, onClear, onClose, history, canU
                 {entry.success ? <CheckIcon size={12} /> : <CloseIcon size={12} />}
               </span>
               <code className="activity-command">{commandLine(entry)}</code>
-              {entry.background && <span className="activity-badge">background</span>}
+              {entry.background && <span className="activity-badge">{t("background")}</span>}
               {!onlyHere && <span className="activity-folder">{entry.folder.split(/[\\/]/).pop()}</span>}
               <span className="activity-duration">{duration(entry.durationMs)}</span>
             </button>
@@ -143,12 +142,12 @@ export function ActivityPanel({ entries, folder, onClear, onClose, history, canU
                 <Button
                   kind="icon" size="small"
                   onClick={() => copyText(commandLine(entry))}
-                  title="Copy the command"
-                  aria-label="Copy the command"
+                  title={t("Copy the command")}
+                  aria-label={t("Copy the command")}
                 >
                   <CopyIcon size={13} />
                 </Button>
-                <pre>{entry.output || "(no output)"}</pre>
+                <pre>{entry.output || t("(no output)")}</pre>
               </div>
             )}
           </div>

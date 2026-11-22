@@ -4,6 +4,7 @@ import { svgSize, svgText } from "../../lib/embeddedPictures";
 import { missingSide } from "../../lib/media";
 import { comparePixels, describePixelChanges, type PixelChanges } from "../../lib/pixels";
 import { useStoredState } from "../../lib/settings";
+import { t, tx } from "../../lib/i18n";
 
 type Mode = "side" | "swipe" | "onion" | "pixels";
 type Side = "before" | "after";
@@ -13,10 +14,10 @@ interface Size {
 }
 
 const MODES: { mode: Mode; label: string; title: string }[] = [
-  { mode: "side", label: "Side by side", title: "Before and after next to each other" },
-  { mode: "swipe", label: "Swipe", title: "One over the other: drag across the picture to wipe from before to after" },
-  { mode: "onion", label: "Onion skin", title: "After laid over before, see-through: slide to fade from one to the other" },
-  { mode: "pixels", label: "Changed pixels", title: "The pixels that changed, highlighted over a greyed-out picture" },
+  { mode: "side", label: t("Side by side"), title: t("Before and after next to each other") },
+  { mode: "swipe", label: t("Swipe"), title: t("One over the other: drag across the picture to wipe from before to after") },
+  { mode: "onion", label: t("Onion skin"), title: t("After laid over before, see-through: slide to fade from one to the other") },
+  { mode: "pixels", label: t("Changed pixels"), title: t("The pixels that changed, highlighted over a greyed-out picture") },
 ];
 
 /** Changed pixels are painted in this (a vivid pink that stands out on grey). */
@@ -75,7 +76,7 @@ export function DiffImages({ diff, media }: { diff: Pick<FileDiff, "path" | "siz
     const [width, height] = file ?? (picture ? [picture.width, picture.height] : []);
     if (!width || !height) return null;
     const times = vector ? 1 : enlargement(picture);
-    const shownAs = file && picture && picture.width < file[0] ? ", shown smaller" : times > 1 ? `, shown ${times}× bigger` : "";
+    const shownAs = file && picture && picture.width < file[0] ? t(", shown smaller") : times > 1 ? t(", shown {0}× bigger", times) : "";
     return `${Math.round(width)} × ${Math.round(height)}${shownAs}`;
   };
   const missing = (side: Side) => (side === "before" ? media.beforeNote : media.afterNote) ?? missingSide(diff, side);
@@ -83,7 +84,7 @@ export function DiffImages({ diff, media }: { diff: Pick<FileDiff, "path" | "siz
   return (
     <div className="diff-images-frame">
       {both && (
-        <div className="diff-switch diff-image-modes" role="group" aria-label="Compare the pictures">
+        <div className="diff-switch diff-image-modes" role="group" aria-label={t("Compare the pictures")}>
           {MODES.map(({ mode: each, label, title }) => (
             <button key={each} className={mode === each ? "selected" : undefined} aria-pressed={mode === each} onClick={() => setMode(each)} title={title}>
               <span className="button-label">{label}</span>
@@ -96,7 +97,7 @@ export function DiffImages({ diff, media }: { diff: Pick<FileDiff, "path" | "siz
           {(["before", "after"] as const).map((side) => (
             <figure key={side} className="diff-media-side diff-image">
               <figcaption>
-                {side === "before" ? "Before" : "After"}
+                {side === "before" ? t("Before") : t("After")}
                 {facts(side) && <span className="diff-media-facts">{facts(side)}</span>}
               </figcaption>
               <div className="diff-image-frame">
@@ -126,8 +127,8 @@ export function DiffImages({ diff, media }: { diff: Pick<FileDiff, "path" | "siz
       ) : (
         <>
           <div className="diff-image-sizes">
-            <span>Before {facts("before") && <span className="diff-media-facts">{facts("before")}</span>}</span>
-            <span>After {facts("after") && <span className="diff-media-facts">{facts("after")}</span>}</span>
+            <span>{tx("Before {0}", facts("before") && <span className="diff-media-facts">{facts("before")}</span>)}</span>
+            <span>{tx("After {0}", facts("after") && <span className="diff-media-facts">{facts("after")}</span>)}</span>
           </div>
           {mode === "pixels" ? (
             <ChangedPixels before={media.before!} after={media.after!} path={diff.path} size={drawn ? atLeast(drawn.after ?? drawn.before, VECTOR_PIXELS) : undefined} />
@@ -194,10 +195,10 @@ function Overlay({
           onPointerUp={() => (dragging.current = false)}
           onPointerCancel={() => (dragging.current = false)}
         >
-          <img src={before} alt={`${path}, before`} onLoad={onLoad("before")} draggable={false} />
+          <img src={before} alt={t("{0}, before", path)} onLoad={onLoad("before")} draggable={false} />
           <img
             src={after}
-            alt={`${path}, after`}
+            alt={t("{0}, after", path)}
             onLoad={onLoad("after")}
             draggable={false}
             style={mode === "swipe" ? { clipPath: `inset(0 0 0 ${swipe}%)` } : { opacity: fade / 100 }}
@@ -210,16 +211,16 @@ function Overlay({
         </div>
       </div>
       <label className="diff-overlay-slider">
-        <span>Before</span>
+        <span>{t("Before")}</span>
         <input
           type="range"
           min={0}
           max={100}
           value={mode === "swipe" ? 100 - swipe : fade}
           onChange={(event) => (mode === "swipe" ? setSwipe(100 - Number(event.target.value)) : setFade(Number(event.target.value)))}
-          aria-label={mode === "swipe" ? "How much of the after picture shows" : "How strongly the after picture shows"}
+          aria-label={mode === "swipe" ? t("How much of the after picture shows") : t("How strongly the after picture shows")}
         />
-        <span>After</span>
+        <span>{t("After")}</span>
       </label>
     </div>
   );
@@ -237,7 +238,7 @@ function loadPicture(url: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const picture = new Image();
     picture.onload = () => resolve(picture);
-    picture.onerror = () => reject(new Error("Couldn't load the picture"));
+    picture.onerror = () => reject(new Error(t("Couldn't load the picture")));
     picture.src = url;
   });
 }
@@ -263,14 +264,14 @@ function ChangedPixels({ before, after, path, size }: { before: string; after: s
           scratch.width = width;
           scratch.height = height;
           const context = scratch.getContext("2d", { willReadFrequently: true });
-          if (!context) throw new Error("Couldn't compare the pictures");
+          if (!context) throw new Error(t("Couldn't compare the pictures"));
           context.drawImage(picture, 0, 0, width, height);
           return context.getImageData(0, 0, width, height).data;
         };
         target.width = width;
         target.height = height;
         const context = target.getContext("2d");
-        if (!context) throw new Error("Couldn't compare the pictures");
+        if (!context) throw new Error(t("Couldn't compare the pictures"));
         const out = context.createImageData(width, height);
         const changes = comparePixels(read(first), read(second), width, height, out.data, HIGHLIGHT);
         context.putImageData(out, 0, 0);
@@ -289,15 +290,15 @@ function ChangedPixels({ before, after, path, size }: { before: string; after: s
           className="diff-pixels"
           // As big as the other views: small textures are scaled up, pixel by pixel.
           style={result && "size" in result ? { width: `min(100%, calc(60vh * ${result.size.width / result.size.height}))` } : undefined}
-          aria-label={`${path}: the pixels that changed`}
+          aria-label={t("{0}: the pixels that changed", path)}
         />
       </div>
       <p className="diff-pixels-summary">
         {!result
-          ? "Comparing…"
+          ? t("Comparing…")
           : "error" in result
             ? result.error
-            : `${describePixelChanges(result.changes)}${result.scaled ? ` The sizes differ: compared at ${result.size.width} × ${result.size.height}.` : ""}`}
+            : `${describePixelChanges(result.changes)}${result.scaled ? t(" The sizes differ: compared at {0} × {1}.", result.size.width, result.size.height) : ""}`}
       </p>
     </div>
   );

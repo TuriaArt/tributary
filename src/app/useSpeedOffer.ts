@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { speedSettings, type RepoSnapshot } from "../api";
 import type { ToastMessage } from "../components/Toast";
+import { locale, t } from "../lib/i18n";
 
 const KEY = "tributary.speed.offered";
 
@@ -37,8 +38,8 @@ export function useSpeedOffer(snapshot: RepoSnapshot | null, notify: (toast: Toa
           // Without storage, it may be offered again next time.
         }
         latest.current.notify({
-          text: `${name} has ${settings.files.toLocaleString("en-US")} files: git's speed-ups would make it quicker`,
-          action: { label: "Speed up…", onClick: () => latest.current.openSpeedSettings() },
+          text: t("{0} has {1} files: git's speed-ups would make it quicker", name, settings.files.toLocaleString(locale() ?? "en-US")),
+          action: { label: t("Speed up…"), onClick: () => latest.current.openSpeedSettings() },
         });
       })
       .catch(() => {});

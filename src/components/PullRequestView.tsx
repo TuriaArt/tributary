@@ -37,6 +37,7 @@ import { ConversationList, MergeRequestDialog, ReviewBox } from "./RequestReview
 import { SectionButton, SiteChip } from "./DetailsSite";
 import { Button } from "./ui/Button";
 import { Chip } from "./ui/Chip";
+import { t, tx } from "../lib/i18n";
 
 /** While checks are running, they're asked about again this often. */
 const POLL = 20_000;
@@ -63,13 +64,13 @@ interface Props {
   onShowChecks?: (id: string, summary: string) => void;
 }
 
-const STATES: Record<RequestDetails["state"], string> = { open: "Open", draft: "Draft", merged: "Merged", closed: "Closed" };
+const STATES: Record<RequestDetails["state"], string> = { open: t("Open"), draft: t("Draft"), merged: t("Merged"), closed: t("Closed") };
 
 const REVIEWS: Record<RequestReview["state"], string> = {
   approved: "approved",
-  changesRequested: "asked for changes",
+  changesRequested: t("asked for changes"),
   commented: "commented",
-  requested: "asked to review",
+  requested: t("asked to review"),
 };
 
 /** How the status card looks: good to merge, something wrong, waiting, or done. */
@@ -259,27 +260,27 @@ export function PullRequestView({ repoPath, request, onClose, openUrl, onShowBra
             loadConversation();
           }}
           disabled={loading}
-          title="Refresh"
-          aria-label={`Refresh the ${noun}`}
+          title={t("Refresh")}
+          aria-label={t("Refresh the {0}", noun)}
         >
           <RefreshIcon size={14} />
         </Button>
-        <Button kind="outline" onClick={() => openUrl(details?.url ?? request.url)} title={`Open it on ${site}`} data-url={details?.url ?? request.url}>
+        <Button kind="outline" onClick={() => openUrl(details?.url ?? request.url)} title={t("Open it on {0}", site)} data-url={details?.url ?? request.url}>
           <ExternalLinkIcon size={13} />
-          <span className="button-label">Open on {site}</span>
+          <span className="button-label">{tx("Open on {0}", site)}</span>
         </Button>
-        <Button kind="icon" onClick={onClose} title="Close (Esc)" aria-label={`Close the ${noun}`}>
+        <Button kind="icon" onClick={onClose} title={t("Close (Esc)")} aria-label={t("Close the {0}", noun)}>
           <CloseIcon />
         </Button>
       </header>
       <div className="diff-body request-body-scroll">
         {error && !details ? (
           <div className="diff-message">
-            <strong>Couldn't read {noun} {requestNumber(request)}</strong>
+            <strong>{tx("Couldn't read {0} {1}", noun, requestNumber(request))}</strong>
             <span>{error}</span>
           </div>
         ) : !details ? (
-          <Loader title={`Loading ${noun} ${requestNumber(request)}`} detail={request.title} size={96} />
+          <Loader title={t("Loading {0} {1}", noun, requestNumber(request))} detail={request.title} size={96} />
         ) : (
           <div className="request-content">
             <div className="request-meta">
@@ -290,7 +291,7 @@ export function PullRequestView({ repoPath, request, onClose, openUrl, onShowBra
                 {STATES[details.state]}
               </Chip>
               <span className="request-who chip-text">
-                <strong>{details.author}</strong> wants to merge
+                {tx("{0} wants to merge", <strong>{details.author}</strong>)}
               </span>
               <BranchChip
                 name={details.branch}
@@ -299,8 +300,8 @@ export function PullRequestView({ repoPath, request, onClose, openUrl, onShowBra
                     x,
                     y,
                     items: [
-                      { label: "Copy name", icon: <CopyIcon />, onSelect: () => void copyText(details.branch) },
-                      { label: `Highlight ${details.branch}'s history`, icon: <HistoryIcon />, onSelect: () => onShowBranch(details.branch) },
+                      { label: t("Copy name"), icon: <CopyIcon />, onSelect: () => void copyText(details.branch) },
+                      { label: t("Highlight {0}'s history", details.branch), icon: <HistoryIcon />, onSelect: () => onShowBranch(details.branch) },
                     ],
                   })
                 }
@@ -310,9 +311,9 @@ export function PullRequestView({ repoPath, request, onClose, openUrl, onShowBra
               </span>
               <BranchChip
                 name={details.base}
-                onMenu={(x, y) => setMenu({ x, y, items: [{ label: "Copy name", icon: <CopyIcon />, onSelect: () => void copyText(details.base) }] })}
+                onMenu={(x, y) => setMenu({ x, y, items: [{ label: t("Copy name"), icon: <CopyIcon />, onSelect: () => void copyText(details.base) }] })}
               />
-              {Number.isFinite(created) && <span className="request-when chip-text">opened {relativeTime(created)}</span>}
+              {Number.isFinite(created) && <span className="request-when chip-text">{tx("opened {0}", relativeTime(created))}</span>}
             </div>
             <div className="request-facts">
               {details.additions !== null && details.deletions !== null && (
@@ -324,7 +325,7 @@ export function PullRequestView({ repoPath, request, onClose, openUrl, onShowBra
               {details.files !== null && <span className="chip-text">{plural(details.files, "file")}</span>}
               <span className="chip-text">{plural(details.comments, "comment")}</span>
               {details.reviews.length > 0 && (
-                <span className="request-avatars" aria-label={describeReviews(details.reviews) ?? "Reviewers"}>
+                <span className="request-avatars" aria-label={describeReviews(details.reviews) ?? t("Reviewers")}>
                   {details.reviews.map((review) => (
                     <span key={review.author} className={`request-avatar ${review.state}`} title={`${review.author} ${REVIEWS[review.state]}`}>
                       <Avatar name={review.author} email="" size={22} />
@@ -337,32 +338,32 @@ export function PullRequestView({ repoPath, request, onClose, openUrl, onShowBra
             <StatusCard
               details={details}
               onShowChecks={onShowChecks && details.headSha ? () => onShowChecks(details.headSha!, details.title) : undefined}
-              title={standing?.text ?? (localSaid ? `Into ${details.base}: ${localSaid.text[0].toLowerCase() + localSaid.text.slice(1)} (checked here)` : "Open")}
+              title={standing?.text ?? (localSaid ? t("Into {0}: {1} (checked here)", details.base, localSaid.text[0].toLowerCase() + localSaid.text.slice(1)) : t("Open"))}
               tone={standing?.tone ?? (localSaid ? (localSaid.tone === "bad" ? "bad" : localSaid.tone === "good" ? "good" : "waiting") : "neutral")}
               openUrl={openUrl}
               action={
                 canAct && conversation ? (
                   details.state === "draft" ? (
                     <Button kind="primary" className="request-primary" disabled={busy} onClick={() => void change({ kind: "draft", draft: false })}>
-                      <span className="button-label">Ready for review</span>
+                      <span className="button-label">{t("Ready for review")}</span>
                     </Button>
                   ) : conversation.mergeMethods.length > 0 ? (
                     <span className="request-split">
                       <Button kind="primary" className="request-primary" onClick={() => setMerging(true)}>
                         <MergeIcon size={14} />
-                        <span className="button-label">Merge…</span>
+                        <span className="button-label">{t("Merge…")}</span>
                       </Button>
                       <Button
                         kind="primary" className="request-primary request-caret"
                         disabled={busy}
-                        title="More ways to merge"
-                        aria-label="More ways to merge"
+                        title={t("More ways to merge")}
+                        aria-label={t("More ways to merge")}
                         onClick={(event) =>
                           showMenu(event.currentTarget, [
                             {
-                              label: details.forge === "gitlab" ? "Merge when the pipeline succeeds" : "Merge when checks pass",
+                              label: details.forge === "gitlab" ? t("Merge when the pipeline succeeds") : t("Merge when checks pass"),
                               checked: details.autoMerge,
-                              detail: details.autoMerge ? "It merges by itself: choose again to stop" : "It merges by itself once they pass",
+                              detail: details.autoMerge ? t("It merges by itself: choose again to stop") : t("It merges by itself once they pass"),
                               onSelect: () => void change({ kind: "autoMerge", on: !details.autoMerge, method: conversation.mergeMethods[0] }),
                             },
                           ])
@@ -377,19 +378,19 @@ export function PullRequestView({ repoPath, request, onClose, openUrl, onShowBra
               note={
                 conversation && !conversation.you && open
                   ? details.forge === "gitlab"
-                    ? "To comment, review or merge here, git needs a token for GitLab: push or fetch once to sign in."
-                    : "To comment, review or merge here, sign in to GitHub in Settings."
+                    ? t("To comment, review or merge here, git needs a token for GitLab: push or fetch once to sign in.")
+                    : t("To comment, review or merge here, sign in to GitHub in Settings.")
                   : null
               }
             >
               {local?.outcome === "conflicts" && local.conflicts.length > 0 && (
                 <div className="request-conflicts">
-                  <span className="muted">{local.conflictCount === 1 ? "The file that conflicts" : `The ${local.conflictCount} files that conflict`}, as merged here:</span>
+                  <span className="muted">{tx("{0}, as merged here:", local.conflictCount === 1 ? t("The file that conflicts") : t("The {0} files that conflict", local.conflictCount))}</span>
                   <ul className="mono">
                     {local.conflicts.slice(0, 12).map((file) => (
                       <li key={file}>{file}</li>
                     ))}
-                    {local.conflictCount > 12 && <li className="muted">and {plural(local.conflictCount - 12, "more file")}</li>}
+                    {local.conflictCount > 12 && <li className="muted">{tx("and {0}", plural(local.conflictCount - 12, "more file"))}</li>}
                   </ul>
                 </div>
               )}
@@ -397,43 +398,43 @@ export function PullRequestView({ repoPath, request, onClose, openUrl, onShowBra
 
             <div className="request-toolbar">
               {forcePushed && (
-                <Button kind="outline" onClick={() => onShowRewrite(details.branch, details.base)} title={`${details.branch} was force-pushed: see what changed, commit by commit`}>
+                <Button kind="outline" onClick={() => onShowRewrite(details.branch, details.base)} title={t("{0} was force-pushed: see what changed, commit by commit", details.branch)}>
                   <RebaseIcon size={14} />
-                  <span className="button-label">Since the force-push</span>
+                  <span className="button-label">{t("Since the force-push")}</span>
                 </Button>
               )}
               {canAct && (
                 <Button kind="outline" className={reviewing ? "active" : undefined} onClick={() => setReviewing(!reviewing)} aria-expanded={reviewing}>
                   <EyeIcon size={14} />
-                  <span className="button-label">Review</span>
+                  <span className="button-label">{t("Review")}</span>
                 </Button>
               )}
               {canAct && (
                 <Button kind="outline" className={asking ? "active" : undefined} disabled={busy} onClick={() => setAsking(!asking)} aria-expanded={asking}>
                   <UserIcon size={14} />
-                  <span className="button-label">Ask for review…</span>
+                  <span className="button-label">{t("Ask for review…")}</span>
                 </Button>
               )}
               <Button
                 kind="outline" className="quiet"
-                title="More"
+                title={t("More")}
                 onClick={(event) =>
                   showMenu(event.currentTarget, [
                     ...(canAct && details.state === "open"
-                      ? [{ label: "Back to draft", icon: <PencilIcon size={14} />, onSelect: () => void change({ kind: "draft", draft: true }) }]
+                      ? [{ label: t("Back to draft"), icon: <PencilIcon size={14} />, onSelect: () => void change({ kind: "draft", draft: true }) }]
                       : []),
                     {
-                      label: "Copy link",
+                      label: t("Copy link"),
                       icon: <CopyIcon size={14} />,
                       onSelect: () =>
                         void copyText(details.url)
-                          .then(() => notify(`Copied the link to ${requestNumber(request)}`))
+                          .then(() => notify(t("Copied the link to {0}", requestNumber(request))))
                           .catch((e) => notify(String(e))),
                     },
                   ])
                 }
               >
-                <span className="button-label">More</span>
+                <span className="button-label">{t("More")}</span>
                 <ChevronDownIcon size={13} />
               </Button>
             </div>
@@ -441,21 +442,21 @@ export function PullRequestView({ repoPath, request, onClose, openUrl, onShowBra
             {changeError && <p className="review-error">{changeError}</p>}
             {reviewing && conversation && <ReviewBox repoPath={repoPath} details={details} conversation={conversation} onDone={done} onCancel={() => setReviewing(false)} />}
 
-            <section className="request-card request-description-card" aria-label="Description">
-              {details.body.trim() ? <Markdown text={details.body.trim()} openUrl={openUrl} /> : <p className="muted request-empty">No description.</p>}
+            <section className="request-card request-description-card" aria-label={t("Description")}>
+              {details.body.trim() ? <Markdown text={details.body.trim()} openUrl={openUrl} /> : <p className="muted request-empty">{t("No description.")}</p>}
             </section>
 
-            <section className="request-section" aria-label="Conversation">
-              <h3 className="team-heading">Conversation</h3>
+            <section className="request-section" aria-label={t("Conversation")}>
+              <h3 className="team-heading">{t("Conversation")}</h3>
               {conversation ? (
                 <ConversationList repoPath={repoPath} details={details} conversation={conversation} openUrl={openUrl} onDone={refresh} />
               ) : conversationError ? (
-                <p className="muted request-empty">Couldn't read the comments: {conversationError}</p>
+                <p className="muted request-empty">{tx("Couldn't read the comments: {0}", conversationError)}</p>
               ) : (
-                <Loader size={48} title="Reading the conversation" />
+                <Loader size={48} title={t("Reading the conversation")} />
               )}
             </section>
-            {error && <p className="request-stale">Couldn't refresh it: {error}</p>}
+            {error && <p className="request-stale">{tx("Couldn't refresh it: {0}", error)}</p>}
           </div>
         )}
       </div>
@@ -502,7 +503,7 @@ function StatusCard({
   // Running checks count up to the second; otherwise the clock's ends ("5 minutes ago") still move.
   const now = useNow(anyRunning(checks) ? 1000 : 30_000);
   return (
-    <section className={`request-status ${tone}`} aria-label="Where it stands">
+    <section className={`request-status ${tone}`} aria-label={t("Where it stands")}>
       <div className="request-status-top">
         <span className="request-status-icon" aria-hidden>
           {TONE_ICONS[tone]}
@@ -518,9 +519,9 @@ function StatusCard({
       {checks.length > 0 && (
         <>
           <div className="request-checks-head">
-            <span className="request-checks-title">{gitlab ? "Pipeline" : "Checks"}</span>
+            <span className="request-checks-title">{gitlab ? t("Pipeline") : t("Checks")}</span>
             <SiteChip site={gitlab ? "GitLab" : "GitHub"} />
-            {onShowChecks && <SectionButton onClick={onShowChecks} icon={<WorkflowIcon size={12} />} label="Open" title="Open the checks, each run as a graph of its jobs" />}
+            {onShowChecks && <SectionButton onClick={onShowChecks} icon={<WorkflowIcon size={12} />} label={t("Open")} title={t("Open the checks, each run as a graph of its jobs")} />}
           </div>
           {/* How they went, said beside the river; with none that ran, there's no river to be beside. */}
           {ran.length > 0 ? (
@@ -539,7 +540,7 @@ function StatusCard({
 function CheckTime({ check, time }: { check: RequestCheck; time: string }) {
   const running = check.state === "pending";
   return (
-    <span className="request-check-time" title={running ? `Running for ${time}` : `Took ${time}`}>
+    <span className="request-check-time" title={running ? t("Running for {0}", time) : t("Took {0}", time)}>
       {time}
     </span>
   );
@@ -548,7 +549,7 @@ function CheckTime({ check, time }: { check: RequestCheck; time: string }) {
 /** A check in a commit's details: its state, its name, how long it took, and its page. */
 export function CheckRow({ check, time, openUrl }: { check: RequestCheck; time: string | null; openUrl: (url: string) => void }) {
   const state = checkState(check);
-  const words = { success: "Passed", failure: "Failed", pending: "Running", cancelled: "Cancelled", skipped: "Skipped" }[state];
+  const words = { success: t("Passed"), failure: t("Failed"), pending: t("Running"), cancelled: t("Cancelled"), skipped: t("Skipped") }[state];
   return (
     <li className={`request-check ${state}`}>
       <span className="request-check-dot" aria-label={words} title={words} />
@@ -557,7 +558,7 @@ export function CheckRow({ check, time, openUrl }: { check: RequestCheck; time: 
       {time && <CheckTime check={check} time={time} />}
       {check.url && (
         <Button kind="link" className="request-check-link" onClick={() => openUrl(check.url!)} data-url={check.url}>
-          Details
+          {t("Details")}
         </Button>
       )}
     </li>
@@ -580,7 +581,7 @@ function BranchChip({ name, onMenu }: { name: string; onMenu: (x: number, y: num
         event.preventDefault();
         onMenu(event.clientX, event.clientY);
       }}
-      title={copied ? "Copied" : `Copy ${name} (right-click for more)`}
+      title={copied ? t("Copied") : t("Copy {0} (right-click for more)", name)}
     >
       <span className="chip-text">{name}</span>
       {copied ? <CheckIcon size={12} /> : <CopyIcon size={12} />}

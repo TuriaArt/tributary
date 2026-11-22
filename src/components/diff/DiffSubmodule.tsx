@@ -1,16 +1,17 @@
 import type { SubmoduleChange } from "../../api";
 import { plural, shortId } from "../../lib/format";
 import { SubmoduleIcon } from "../Icons";
+import { t } from "../../lib/i18n";
 
 /** What a submodule's change was: the commit it moved from and to, and the commits in between. */
 function headline(change: SubmoduleChange): string {
   const { before, after, commits, rewound } = change;
-  if (!before && after) return "Submodule added";
-  if (before && !after) return "Submodule removed";
-  if (before === after) return change.dirty ? "Only its own files changed" : "No change";
-  if (commits.length === 0) return "Moved to another commit";
-  const count = `${plural(commits.length, "commit")}${change.more ? " or more" : ""}`;
-  return rewound ? `Moved back by ${count}` : `Moved forward by ${count}`;
+  if (!before && after) return t("Submodule added");
+  if (before && !after) return t("Submodule removed");
+  if (before === after) return change.dirty ? t("Only its own files changed") : t("No change");
+  if (commits.length === 0) return t("Moved to another commit");
+  const count = `${plural(commits.length, "commit")}${change.more ? t(" or more") : ""}`;
+  return rewound ? t("Moved back by {0}", count) : t("Moved forward by {0}", count);
 }
 
 export function DiffSubmodule({ change }: { change: SubmoduleChange }) {
@@ -36,14 +37,14 @@ export function DiffSubmodule({ change }: { change: SubmoduleChange }) {
               <span>{commit.summary}</span>
             </li>
           ))}
-          {change.more && <li className="muted">and more</li>}
+          {change.more && <li className="muted">{t("and more")}</li>}
         </ul>
       )}
       {before && after && before !== after && change.commits.length === 0 && (
-        <p className="muted">Its commits aren't downloaded here: update the submodule to see them.</p>
+        <p className="muted">{t("Its commits aren't downloaded here: update the submodule to see them.")}</p>
       )}
-      {change.rewound && <p className="muted">These commits were in its history before, and aren't after.</p>}
-      {change.dirty && <p className="diff-submodule-dirty">It also has uncommitted changes of its own: open it in a tab to see them.</p>}
+      {change.rewound && <p className="muted">{t("These commits were in its history before, and aren't after.")}</p>}
+      {change.dirty && <p className="diff-submodule-dirty">{t("It also has uncommitted changes of its own: open it in a tab to see them.")}</p>}
     </div>
   );
 }

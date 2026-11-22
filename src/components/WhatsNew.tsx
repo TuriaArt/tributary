@@ -7,6 +7,7 @@ import { Dialog } from "./Dialog";
 import { CheckIcon } from "./Icons";
 import { MarkdownLine } from "./Markdown";
 import { Button } from "./ui/Button";
+import { pluralWord, t, tx } from "../lib/i18n";
 
 /** Each item in its own graph colour, as chosen in Settings (with the next one's, for the lanes beside it). */
 function useItemColors() {
@@ -47,7 +48,7 @@ function slidesOf(releases: Release[]): Slide[] {
 export function counts(release: Release): string {
   const { items, rest } = featured(release);
   const others = rest.reduce((sum, section) => sum + section.items.length, 0);
-  const parts = [items.length > 0 && `${items.length} new`, others > 0 && `${others} ${others === 1 ? "fix" : "fixes"}`].filter(Boolean);
+  const parts = [items.length > 0 && t("{0} new", items.length), others > 0 && `${others} ${pluralWord(others, "fix", "fixes")}`].filter(Boolean);
   return parts.join(" · ");
 }
 
@@ -86,7 +87,7 @@ export function WhatsNewDialog({ releases, onClose }: { releases: Release[]; onC
     return () => window.removeEventListener("keydown", onKey);
   }, [count]);
   if (!slide) return null;
-  const title = shown.length === 1 ? `What's new in Tributary ${shown[0].version}` : "What's new in Tributary";
+  const title = shown.length === 1 ? t("What's new in Tributary {0}", shown[0].version) : t("What's new in Tributary");
   // The rest by their sections' names: "Fixes", "Better and Fixes".
   const name = (entry: Slide) => (entry.kind === "item" ? entry.item.title : entry.sections.map((section) => section.name).join(" and "));
   const isShown = (release: Release) => shown.some((other) => other.version === release.version);
@@ -100,22 +101,22 @@ export function WhatsNewDialog({ releases, onClose }: { releases: Release[]; onC
       buttons={
         <>
           <span className="wn-step">
-            {at + 1} of {slides.length}
+            {tx("{0} of {1}", at + 1, slides.length)}
           </span>
           <span className="spacer" />
           {at > 0 && (
             <Button kind="secondary" onClick={() => setAt(at - 1)}>
-              Back
+              {t("Back")}
             </Button>
           )}
           <Button kind="primary" onClick={() => (last ? onClose() : setAt(at + 1))} autoFocus>
-            {last ? "Got it" : "Next"}
+            {last ? t("Got it") : t("Next")}
           </Button>
         </>
       }
     >
       <div className="wn-spotlight">
-        <nav ref={nav} className="wn-nav" aria-label="Versions">
+        <nav ref={nav} className="wn-nav" aria-label={t("Versions")}>
           {versions.map((release) =>
             isShown(release) ? (
               <div key={release.version} className="wn-version open">
@@ -159,7 +160,7 @@ export function WhatsNewDialog({ releases, onClose }: { releases: Release[]; onC
           {slide.kind === "item" ? (
             <>
               {slide.item.picture?.src ? <img className="wn-picture" src={slide.item.picture.src} alt={slide.item.picture.alt} /> : <LaneArt index={at} />}
-              <span className="wn-stage-version">New in {slide.version}</span>
+              <span className="wn-stage-version">{tx("New in {0}", slide.version)}</span>
               <h3>{slide.item.title}</h3>
               <p>
                 <Line text={body(slide.item)} />
@@ -167,7 +168,7 @@ export function WhatsNewDialog({ releases, onClose }: { releases: Release[]; onC
             </>
           ) : (
             <>
-              <span className="wn-stage-version">Also in {slide.version}</span>
+              <span className="wn-stage-version">{tx("Also in {0}", slide.version)}</span>
               <div className="wn-stage-rest">
                 {slide.sections.map((section) => (
                   <div key={section.name}>

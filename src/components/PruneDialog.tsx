@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { pruneCandidates, runAction, type BranchTip, type PruneCandidate, type PruneInfo } from "../api";
-import { compactTime, idleFor } from "../lib/format";
+import { compactTime, idleFor, plural } from "../lib/format";
 import { useStoredState } from "../lib/settings";
 import { Dialog } from "./Dialog";
 import { Button } from "./ui/Button";
+import { t, tx } from "../lib/i18n";
 
 interface Props {
   repoPath: string;
@@ -19,7 +20,7 @@ interface Props {
 
 /** The remote a branch tracked, from its upstream, like "origin". */
 function remoteOf(candidate: PruneCandidate): string {
-  return candidate.remote ?? candidate.upstream?.split("/")[0] ?? "its remote";
+  return candidate.remote ?? candidate.upstream?.split("/")[0] ?? t("its remote");
 }
 
 /** How long without a commit makes a branch old, to choose from: off, or months. */
@@ -92,19 +93,18 @@ export function PruneDialog({ repoPath, fetchFirst, pinned, protectedNames, onCa
   };
   const idleChoice = (
     <label className="prune-idle">
-      Also old branches, with no commits in
-      <select className="settings-select" value={idleMonths} onChange={(event) => chooseIdle(Number(event.target.value))}>
+      {tx("Also old branches, with no commits in{0}", <select className="settings-select" value={idleMonths} onChange={(event) => chooseIdle(Number(event.target.value))}>
         {IDLE_MONTHS.map((months) => (
           <option key={months} value={months}>
-            {months === 0 ? "(not offered)" : months === 12 ? "a year" : `${months} months`}
+            {months === 0 ? t("(not offered)") : months === 12 ? t("a year") : plural(months, "month")}
           </option>
         ))}
-      </select>
+      </select>)}
     </label>
   );
 
   const candidates = info?.candidates ?? [];
-  const base = info?.base ?? "the main branch";
+  const base = info?.base ?? t("the main branch");
   const toggle = (name: string) =>
     setChosen((current) => {
       const next = new Set(current);
@@ -125,7 +125,7 @@ export function PruneDialog({ repoPath, fetchFirst, pinned, protectedNames, onCa
 
   return (
     <Dialog
-      title="Prune branches"
+      title={t("Prune branches")}
       wide
       error={error}
       onCancel={onCancel}
@@ -133,27 +133,25 @@ export function PruneDialog({ repoPath, fetchFirst, pinned, protectedNames, onCa
         <>
           {candidates.length > 0 && (
             <Button kind="link" className="dialog-note" onClick={() => setChosen(new Set(allChosen ? [] : candidates.map((c) => c.name)))}>
-              {allChosen ? "Select none" : "Select all"}
+              {allChosen ? t("Select none") : t("Select all")}
             </Button>
           )}
           <Button kind="secondary" onClick={onCancel}>
-            Cancel
+            {t("Cancel")}
           </Button>
           <Button kind="danger" disabled={chosen.size === 0} onClick={remove}>
-            {chosen.size === 1 ? "Delete 1 branch" : `Delete ${chosen.size} branches`}
+            {chosen.size === 1 ? t("Delete 1 branch") : t("Delete {0} branches", chosen.size)}
           </Button>
         </>
       }
     >
       {stage !== "ready" ? (
-        <p className="hint">{stage === "fetching" ? "Fetching, to see which branches are gone from the remote…" : "Looking at your branches…"}</p>
+        <p className="hint">{stage === "fetching" ? t("Fetching, to see which branches are gone from the remote…") : t("Looking at your branches…")}</p>
       ) : candidates.length === 0 ? (
         !error && (
           <>
             <p className="hint">
-              Nothing to prune: no local branches are merged into {base}, gone from their remote
-              {idleMonths > 0 ? " or without commits for that long" : ""}. The checked-out branch, long-lived ones like main, and
-              protected or pinned branches are never offered.
+              {tx("Nothing to prune: no local branches are merged into {0}, gone from their remote{1}. The checked-out branch, long-lived ones like main, and protected or pinned branches are never offered.", base, idleMonths > 0 ? t(" or without commits for that long") : "")}
             </p>
             {idleChoice}
           </>
@@ -161,12 +159,10 @@ export function PruneDialog({ repoPath, fetchFirst, pinned, protectedNames, onCa
       ) : (
         <>
           <p className="hint">
-            Local branches whose remote branch was deleted, or whose commits are all in {base}
-            {idleMonths > 0 ? ", and old ones nobody has committed to lately" : ""}. Those all in {base} are ticked; the remote
-            branches aren't touched. You can undo this.
+            {tx("Local branches whose remote branch was deleted, or whose commits are all in {0}{1}. Those all in {2} are ticked; the remote branches aren't touched. You can undo this.", base, idleMonths > 0 ? t(", and old ones nobody has committed to lately") : "", base)}
           </p>
           {idleChoice}
-          {offline && <p className="dialog-note-line">Couldn't reach the remote, so this is as of the last fetch.</p>}
+          {offline && <p className="dialog-note-line">{t("Couldn't reach the remote, so this is as of the last fetch.")}</p>}
           <ul className="prune-list">
             {candidates.map((candidate) => (
               <li key={candidate.name} className={`prune-row${chosen.has(candidate.name) ? " chosen" : ""}`}>
@@ -175,13 +171,13 @@ export function PruneDialog({ repoPath, fetchFirst, pinned, protectedNames, onCa
                   <span className="prune-main">
                     <span className="prune-top">
                       <span className="prune-name">{candidate.name}</span>
-                      {candidate.gone && <span className="prune-tag gone">gone from {remoteOf(candidate)}</span>}
-                      {candidate.idle && <span className="prune-tag idle">no commits for {idleFor(candidate.time)}</span>}
+                      {candidate.gone && <span className="prune-tag gone">{tx("gone from {0}", remoteOf(candidate))}</span>}
+                      {candidate.idle && <span className="prune-tag idle">{tx("no commits for {0}", idleFor(candidate.time))}</span>}
                       {candidate.merged ? (
-                        <span className="prune-tag merged">merged</span>
+                        <span className="prune-tag merged">{t("merged")}</span>
                       ) : (
                         <span className="prune-tag unmerged">
-                          {candidate.unmerged} {candidate.unmerged === 1 ? "commit" : "commits"} not in {base}
+                          {tx("{0} not in {1}", plural(candidate.unmerged, "commit"), base)}
                         </span>
                       )}
                     </span>
@@ -195,10 +191,12 @@ export function PruneDialog({ repoPath, fetchFirst, pinned, protectedNames, onCa
           {risky.length > 0 && (
             <div className="dialog-warning">
               {riskyChosen.length > 0
-                ? `${riskyChosen.map((c) => c.name).join(", ")} ${riskyChosen.length === 1 ? "has" : "have"} commits that aren't in ${base}. If ${riskyChosen.length === 1 ? "it was" : "they were"} squash-merged, that's expected; otherwise that work is only in this repository.`
+                ? riskyChosen.length === 1
+                  ? t("{0} has commits that aren't in {1}. If it was squash-merged, that's expected; otherwise that work is only in this repository.", riskyChosen[0].name, base)
+                  : t("{0} have commits that aren't in {1}. If they were squash-merged, that's expected; otherwise that work is only in this repository.", riskyChosen.map((c) => c.name).join(", "), base)
                 : risky.some((candidate) => candidate.idle)
-                  ? `Branches with commits that aren't in ${base} are left unticked. Some are squash-merged pull requests, but an old one may hold work that's nowhere else: check before deleting them.`
-                  : `Branches with commits that aren't in ${base} are left unticked. They're often squash-merged pull requests, but check before deleting them.`}
+                  ? t("Branches with commits that aren't in {0} are left unticked. Some are squash-merged pull requests, but an old one may hold work that's nowhere else: check before deleting them.", base)
+                  : t("Branches with commits that aren't in {0} are left unticked. They're often squash-merged pull requests, but check before deleting them.", base)}
             </div>
           )}
         </>

@@ -5,6 +5,7 @@ import { changeLineKind, describeRewrite, rewrittenVersions, summarizePairs } fr
 import { ChevronDownIcon, ChevronRightIcon, CloseIcon, RebaseIcon } from "./Icons";
 import { Loader } from "./Loader";
 import { Button } from "./ui/Button";
+import { t, tx } from "../lib/i18n";
 
 interface Props {
   repoPath: string;
@@ -15,7 +16,7 @@ interface Props {
   onClose: () => void;
 }
 
-const STATUS: Record<CommitPair["status"], string> = { same: "Same", changed: "Changed", added: "New", removed: "Dropped" };
+const STATUS: Record<CommitPair["status"], string> = { same: t("Same"), changed: t("Changed"), added: t("New"), removed: t("Dropped") };
 
 /**
  * What changed when a branch was rewritten (rebased, amended or force-pushed): each commit of
@@ -88,48 +89,47 @@ export function RewriteView({ repoPath, branch, base, onClose }: Props) {
     });
 
   return (
-    <section className="diff-view request-view rewrite-view" aria-label={`What changed in ${branch}`}>
+    <section className="diff-view request-view rewrite-view" aria-label={t("What changed in {0}", branch)}>
       <header className="diff-header">
         <div className="diff-title" title={branch}>
           <RebaseIcon size={14} />
-          <span className="request-title">What changed in {branch}</span>
+          <span className="request-title">{tx("What changed in {0}", branch)}</span>
         </div>
         {choices.length > 0 && (
-          <select className="text-input rewrite-choice" value={old ?? ""} onChange={(event) => setOld(event.target.value)} aria-label="Compared with">
+          <select className="text-input rewrite-choice" value={old ?? ""} onChange={(event) => setOld(event.target.value)} aria-label={t("Compared with")}>
             {choices.map(({ before, rewrite }) => (
               <option key={rewrite.id + rewrite.at} value={before.id}>
-                Since before it was {describeRewrite(rewrite.how).toLowerCase()} {relativeTime(rewrite.at)}
+                {t("Since before it was")}{" "}{describeRewrite(rewrite.how).toLowerCase()} {relativeTime(rewrite.at)}
               </option>
             ))}
           </select>
         )}
-        <Button kind="icon" onClick={onClose} title="Close (Esc)" aria-label="Close">
+        <Button kind="icon" onClick={onClose} title={t("Close (Esc)")} aria-label={t("Close")}>
           <CloseIcon />
         </Button>
       </header>
       <div className="diff-body request-body-scroll">
         {error ? (
           <div className="diff-message">
-            <strong>Couldn't compare its versions</strong>
+            <strong>{t("Couldn't compare its versions")}</strong>
             <span>{error}</span>
           </div>
         ) : !versions ? (
-          <Loader size={88} title="Reading what changed" />
+          <Loader size={88} title={t("Reading what changed")} />
         ) : choices.length === 0 ? (
           <div className="diff-message">
-            <strong>{branch} hasn't been rewritten</strong>
+            <strong>{tx("{0} hasn't been rewritten", branch)}</strong>
             <span>
-              Not since this copy of the repository has known it: it's only moved forward. When it's rebased or force-pushed, what changed
-              shows here.
+              {t("Not since this copy of the repository has known it: it's only moved forward. When it's rebased or force-pushed, what changed shows here.")}
             </span>
           </div>
         ) : !diff ? (
-          <div className="diff-message muted">Comparing…</div>
+          <div className="diff-message muted">{t("Comparing…")}</div>
         ) : (
           <div className="request-content">
             <div className="request-meta">
               <strong>{summarizePairs(diff.pairs)}</strong>
-              {diff.base && <span className="muted">compared on top of {diff.base}</span>}
+              {diff.base && <span className="muted">{tx("compared on top of {0}", diff.base)}</span>}
             </div>
             <ol className="rewrite-pairs">
               {diff.pairs.map((pair, index) => {
@@ -153,7 +153,7 @@ export function RewriteView({ repoPath, branch, base, onClose }: Props) {
                             {"\n"}
                           </span>
                         ))}
-                        {pair.cut && <span className="muted">…and more</span>}
+                        {pair.cut && <span className="muted">{t("…and more")}</span>}
                       </pre>
                     )}
                   </li>

@@ -3,10 +3,10 @@ import { BisectMarksContext, type BisectMark } from "../../lib/bisect";
 import { CiStatesContext, describeCiState } from "../../lib/ciStates";
 
 const BISECT_TITLES: Record<BisectMark, string> = {
-  good: "Marked good while bisecting: it works",
-  bad: "Marked bad while bisecting: it's broken",
-  skipped: "Skipped while bisecting",
-  found: "The first bad commit, found by bisecting",
+  good: t("Marked good while bisecting: it works"),
+  bad: t("Marked bad while bisecting: it's broken"),
+  skipped: t("Skipped while bisecting"),
+  found: t("The first bad commit, found by bisecting"),
 };
 import type { CommitRow } from "../../api";
 import type { ChangeCounts as Counts } from "../../lib/changes";
@@ -23,6 +23,7 @@ import { ChangeCounts } from "../ChangeCounts";
 import { laneX, type GraphMetrics } from "../graphPainter";
 import { RefPills } from "../RefPills";
 import { ciOffset, nodeAvatarSize, REFS_PADDING, type ColumnOptions, type VisibleColumns } from "./layout";
+import { t } from "../../lib/i18n";
 
 /** What a row does when it's clicked, hovered, … (the list's latest, read at the time). */
 export interface RowHandlers {
@@ -95,7 +96,7 @@ export const ListRow = memo(function ListRow(props: RowProps) {
   const hint = useHint();
   const dateTitle =
     commit.commitTime !== commit.time
-      ? `Authored ${fullDate(commit.time)}\nCommitted ${fullDate(commit.commitTime)}`
+      ? t("Authored {0}\nCommitted {1}", fullDate(commit.time), fullDate(commit.commitTime))
       : fullDate(commit.time);
   return (
     <div
@@ -186,7 +187,7 @@ export const ListRow = memo(function ListRow(props: RowProps) {
               ["--lane" as string]: color,
               ["--ci-offset" as string]: onDot ? "0px" : `${ciOffset({ avatar: authorNode, dense, head, merge: commit.parents.length > 1 })}px`,
             }}
-            {...hint(`${describeCiState(ci)}: click to see them`)}
+            {...hint(t("{0}: click to see them", describeCiState(ci)))}
             aria-label={describeCiState(ci)}
             // The row's own press has selected the commit; this opens its checks too.
             onClick={() => on().onShowChecks(commit)}
@@ -196,7 +197,7 @@ export const ListRow = memo(function ListRow(props: RowProps) {
       {commit.kind === "worktree" ? (
         <>
           <div className="cell description">
-            <span className="summary wip">Uncommitted changes</span>
+            <span className="summary wip">{t("Uncommitted changes")}</span>
             {changes && <ChangeCounts counts={changes} />}
           </div>
           {visible.author && <div />}
@@ -208,14 +209,14 @@ export const ListRow = memo(function ListRow(props: RowProps) {
           <div className="cell description">
             {bisectMark && (
               <span className={`bisect-tag ${bisectMark}`} {...hint(BISECT_TITLES[bisectMark])}>
-                {bisectMark === "found" ? "first bad" : bisectMark}
+                {bisectMark === "found" ? t("first bad") : bisectMark}
               </span>
             )}
             <span
               className={`summary${commit.kind === "stash" ? " stash" : commit.parents.length > 1 ? " merge" : ""}`}
               title={inCard ? undefined : commit.summary}
             >
-              {commit.summary || "(no message)"}
+              {commit.summary || t("(no message)")}
             </span>
           </div>
           {visible.author && (

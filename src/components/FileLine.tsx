@@ -7,16 +7,17 @@ import { relativeTime } from "../lib/format";
 import { FileKindIcon } from "./FileKindIcon";
 import { BranchIcon, ChevronRightIcon, CommentIcon, FolderIcon, LockIcon } from "./Icons";
 import type { FolderRow } from "../lib/fileTree";
+import { locale, t } from "../lib/i18n";
 
 /** Each status's letter, and its colour role in the stylesheet (--added, --added-rgb, …). */
 const STATUS: Record<FileChange["status"], { letter: string; role: string; label: string }> = {
-  added: { letter: "A", role: "added", label: "Added" },
-  modified: { letter: "M", role: "warning", label: "Modified" },
-  deleted: { letter: "D", role: "removed", label: "Deleted" },
-  renamed: { letter: "R", role: "info", label: "Renamed" },
-  copied: { letter: "C", role: "purple", label: "Copied" },
-  untracked: { letter: "?", role: "teal", label: "Untracked" },
-  conflicted: { letter: "!", role: "danger", label: "Conflicted" },
+  added: { letter: "A", role: "added", label: t("Added") },
+  modified: { letter: "M", role: "warning", label: t("Modified") },
+  deleted: { letter: "D", role: "removed", label: t("Deleted") },
+  renamed: { letter: "R", role: "info", label: t("Renamed") },
+  copied: { letter: "C", role: "purple", label: t("Copied") },
+  untracked: { letter: "?", role: "teal", label: t("Untracked") },
+  conflicted: { letter: "!", role: "danger", label: t("Conflicted") },
 };
 
 interface FileLineProps {
@@ -45,7 +46,7 @@ interface FileLineProps {
 /** "Locked by you" or "Locked by rosa 2 days ago". */
 export function lockTitle(lock: Lock): string {
   const when = lock.lockedAt ? Date.parse(lock.lockedAt) : NaN;
-  return `Locked by ${lockOwner(lock)}${Number.isNaN(when) ? "" : ` ${relativeTime(when / 1000)}`}`;
+  return t("Locked by {0}{1}", lockOwner(lock), Number.isNaN(when) ? "" : ` ${relativeTime(when / 1000)}`);
 }
 
 export function FileLine({ file, action, choices, lock, highlighted, onContextMenu, elsewhere, onOpen, shown, depth, comments }: FileLineProps) {
@@ -109,7 +110,7 @@ export function FileLine({ file, action, choices, lock, highlighted, onContextMe
         </span>
       )}
       {comments ? (
-        <span className="file-comments" title={`${comments} ${comments === 1 ? "comment" : "comments"} on its lines`}>
+        <span className="file-comments" title={t("{0} {1} on its lines", comments, comments === 1 ? "comment" : "comments")}>
           <CommentIcon size={12} />
           {comments}
         </span>
@@ -152,7 +153,7 @@ export function FileLine({ file, action, choices, lock, highlighted, onContextMe
 export function FolderLine({ row, onToggle, action }: { row: FolderRow; onToggle: () => void; action?: { label: string; icon: ReactNode; onClick: () => void; disabled?: boolean } }) {
   const { added, changed, deleted } = row.counts;
   // Shown as "+2 −1", read out as words ("2 added, 1 deleted") after the folder's name.
-  const said = [added > 0 && `${added.toLocaleString()} added`, changed > 0 && `${changed.toLocaleString()} changed`, deleted > 0 && `${deleted.toLocaleString()} deleted`];
+  const said = [added > 0 && t("{0} added", added.toLocaleString(locale())), changed > 0 && t("{0} changed", changed.toLocaleString(locale())), deleted > 0 && t("{0} deleted", deleted.toLocaleString(locale()))];
   const countsId = useId();
   return (
     <li className="file in-tree file-folder" style={{ "--depth": row.depth } as CSSProperties}>

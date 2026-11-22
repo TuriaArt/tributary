@@ -1,6 +1,7 @@
 // CI for every commit: each commit's overall state, for a dot in the list.
 import { createContext, useEffect, useState } from "react";
 import { commitStates, type RepoSnapshot } from "../api";
+import { t } from "./i18n";
 
 export type CiState = "success" | "failure" | "pending" | "cancelled";
 
@@ -26,7 +27,7 @@ export function askAgainIn(states: Iterable<CiState>): number | null {
 
 /** "Checks passed", for a dot's tooltip. */
 export function describeCiState(state: CiState): string {
-  return { success: "Checks passed", failure: "Checks failed", pending: "Checks running", cancelled: "Checks cancelled" }[state];
+  return { success: t("Checks passed"), failure: t("Checks failed"), pending: t("Checks running"), cancelled: t("Checks cancelled") }[state];
 }
 
 /**

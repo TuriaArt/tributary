@@ -6,10 +6,11 @@ import { formatBytes, plural } from "../lib/format";
 import { kindOf, squarify } from "../lib/repoSize";
 import { Dialog } from "./Dialog";
 import { Button } from "./ui/Button";
+import { t, tx } from "../lib/i18n";
 
 /** Which lane colours the five kinds of file that take the most get, in order (apart for colour-blind eyes too). */
 const KIND_LANES = [0, 1, 2, 4, 3];
-const OTHER = "Other";
+const OTHER = t("Other");
 /** How tall the map is, and its folders' headings. */
 const MAP_HEIGHT = 300;
 const HEADING = 20;
@@ -134,7 +135,7 @@ export function RepoSizeDialog({
 
   return (
     <Dialog
-      title="What makes this repository big"
+      title={t("What makes this repository big")}
       className="big-window"
       closable
       error={error}
@@ -142,7 +143,7 @@ export function RepoSizeDialog({
       buttons={
         <>
           <Button kind="secondary" onClick={onClose}>
-            Close
+            {t("Close")}
           </Button>
           <span className="spacer" />
           {offered.length > 0 && (
@@ -150,13 +151,13 @@ export function RepoSizeDialog({
               <Button
                 kind="outline"
                 disabled={!canChange || patterns.length === 0}
-                title="New versions go into Git LFS; what's in the history stays"
+                title={t("New versions go into Git LFS; what's in the history stays")}
                 onClick={() => {
                   onClose();
                   run({ kind: "trackWithLfs", patterns, paths: [] });
                 }}
               >
-                <span className="button-label">Into Git LFS from now on</span>
+                <span className="button-label">{t("Into Git LFS from now on")}</span>
               </Button>
               <button
                 className={everything ? "danger-outline-button" : "primary-small-button"}
@@ -166,7 +167,7 @@ export function RepoSizeDialog({
                   run({ kind: "migrateToLfs", patterns, everything });
                 }}
               >
-                {everything ? "Rewrite every branch" : `Rewrite ${branch ?? "the branch"}'s new commits`}
+                {everything ? t("Rewrite every branch") : t("Rewrite {0}'s new commits", branch ?? t("the branch"))}
               </button>
             </>
           )}
@@ -174,15 +175,14 @@ export function RepoSizeDialog({
       }
     >
       {!size ? (
-        !error && <p className="muted">Looking through the whole history… (a big repository takes a while)</p>
+        !error && <p className="muted">{t("Looking through the whole history… (a big repository takes a while)")}</p>
       ) : (
         <div className="big" onMouseLeave={tip.hide}>
           <p className="big-intro">
-            The history takes <strong>{formatBytes(size.historyBytes)}</strong> on disk, in {plural(size.versions, "file version")}. Everyone who
-            clones the repository downloads all of it, deleted files included (Git LFS files aside).
+            {tx("The history takes {0} on disk, in {1}. Everyone who clones the repository downloads all of it, deleted files included (Git LFS files aside).", <strong>{formatBytes(size.historyBytes)}</strong>, plural(size.versions, "file version"))}
           </p>
           <SizeMap size={size} files={files} paintOf={paintOf} tip={tip} />
-          <ul className="big-legend" aria-label="Kinds of file">
+          <ul className="big-legend" aria-label={t("Kinds of file")}>
             {legend.map((kind) => (
               <li key={kind}>
                 <span className="big-swatch" style={{ background: paintOf(kind).fill }} />
@@ -192,11 +192,11 @@ export function RepoSizeDialog({
             {hasRest && (
               <li>
                 <span className="big-swatch rest" />
-                <span>Smaller files</span>
+                <span>{t("Smaller files")}</span>
               </li>
             )}
           </ul>
-          <ul className="big-folders" aria-label="Folders">
+          <ul className="big-folders" aria-label={t("Folders")}>
             {size.folders.map((folder) => (
               <li key={folder.name} title={plural(folder.versions, "version")}>
                 <span className="mono">{folder.name}</span>
@@ -207,8 +207,8 @@ export function RepoSizeDialog({
           {offered.length > 0 && (
             <section className="big-card big-lfs">
               <header>
-                <h3>Move into Git LFS</h3>
-                <span className="muted">Kinds of big file that aren't in Git LFS yet</span>
+                <h3>{t("Move into Git LFS")}</h3>
+                <span className="muted">{t("Kinds of big file that aren't in Git LFS yet")}</span>
               </header>
               <div className="big-chips">
                 {offered.map(([kind, bytes]) => (
@@ -220,13 +220,10 @@ export function RepoSizeDialog({
                 ))}
               </div>
               <p className="dialog-note-line">
-                <strong>From now on</strong> keeps the history as it is. <strong>Rewriting</strong> takes them out of the history too: the commits
-                get new ids (backed up first, for Restore Branch).
+                {tx("{0} keeps the history as it is. {1} takes them out of the history too: the commits get new ids (backed up first, for Restore Branch).", <strong>{t("From now on")}</strong>, <strong>{t("Rewriting")}</strong>)}
               </p>
               <label className="checkbox">
-                <input type="checkbox" checked={everything} onChange={(event) => setEverything(event.target.checked)} />
-                Every branch's whole history, not only {branch ?? "this branch"}'s commits that aren't pushed yet. Every branch then needs
-                force-pushing, and everyone else has to clone again.
+                {tx("{0}Every branch's whole history, not only {1}'s commits that aren't pushed yet. Every branch then needs force-pushing, and everyone else has to clone again.", <input type="checkbox" checked={everything} onChange={(event) => setEverything(event.target.checked)} />, branch ?? t("this branch"))}
               </label>
             </section>
           )}
@@ -251,7 +248,7 @@ function SizeMap({ size, files, paintOf, tip }: { size: RepoSize; files: FileEnt
   const folders = squarify(size.folders, (group) => group.diskBytes, { x: 0, y: 0, w: width, h: MAP_HEIGHT });
   const described = size.folders.map((folder) => `${folder.name} ${formatBytes(folder.diskBytes)}`).join(", ");
   return (
-    <div ref={frame} className="big-map" style={{ height: MAP_HEIGHT }} role="img" aria-label={`What each folder takes: ${described}`}>
+    <div ref={frame} className="big-map" style={{ height: MAP_HEIGHT }} role="img" aria-label={t("What each folder takes: {0}", described)}>
       {width > 0 &&
         folders.map(({ item: folder, x, y, w, h }) => {
           // A folder too small to see isn't drawn, and one too small for its files is a plain
@@ -298,11 +295,11 @@ function SizeMap({ size, files, paintOf, tip }: { size: RepoSize; files: FileEnt
                       key={item.file?.path ?? "rest"}
                       className={`big-map-tile${item.file ? "" : " rest"}${label ? " labelled" : ""}`}
                       style={{ left: x + 1, top: y + 1, width: Math.max(0, w - 2), height: Math.max(0, h - 2), background: paint?.fill, color: paint?.ink }}
-                      {...tip.on(item.file ? describe(item.file) : `${folder.name}: its smaller files, ${formatBytes(item.bytes)}`)}
+                      {...tip.on(item.file ? describe(item.file) : t("{0}: its smaller files, {1}", folder.name, formatBytes(item.bytes)))}
                     >
                       {label && (
                         <>
-                          <span className="big-map-name">{item.file ? item.file.name : "Smaller files"}</span>
+                          <span className="big-map-name">{item.file ? item.file.name : t("Smaller files")}</span>
                           <span className="big-map-amount">{formatBytes(item.bytes)}</span>
                         </>
                       )}
@@ -320,10 +317,10 @@ function SizeMap({ size, files, paintOf, tip }: { size: RepoSize; files: FileEnt
 /** "Content/Hero.psd: 2.1 MB on disk, 3 versions, deleted", for a tile's tip. */
 function describe(file: FileEntry): string {
   const notes = [
-    `${formatBytes(file.diskBytes)} on disk`,
+    t("{0} on disk", formatBytes(file.diskBytes)),
     file.versions > 1 ? plural(file.versions, "version") : null,
     file.current ? null : "deleted",
-    file.inLfs ? "in Git LFS now" : null,
+    file.inLfs ? t("in Git LFS now") : null,
   ];
   return `${file.path}: ${notes.filter(Boolean).join(", ")}`;
 }

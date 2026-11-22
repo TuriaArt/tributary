@@ -13,6 +13,7 @@ import { ConflictList } from "./worktree/ConflictList";
 import { ElsewhereWarning } from "./worktree/ElsewhereWarning";
 import { FileSection } from "./worktree/FileSection";
 import { Button } from "./ui/Button";
+import { t } from "../lib/i18n";
 
 export { EMPTY_DRAFT, type CommitDraft } from "./worktree/CommitBox";
 export { lfsPattern } from "./worktree/ChangeWarnings";
@@ -53,8 +54,8 @@ interface Props {
 export function conflictSides(snapshot: RepoSnapshot): { mine: string; theirs: string } {
   const operation = snapshot.operation;
   return {
-    mine: operation?.mine ?? snapshot.headBranch ?? "your branch",
-    theirs: operation?.theirs ?? "the other side",
+    mine: operation?.mine ?? snapshot.headBranch ?? t("your branch"),
+    theirs: operation?.theirs ?? t("the other side"),
   };
 }
 
@@ -84,21 +85,21 @@ export function WorktreeDetailsPanel(props: Props) {
 
   return (
     <ActorNames.Provider value={actors}>
-      <aside className="details" aria-label="Uncommitted changes">
+      <aside className="details" aria-label={t("Uncommitted changes")}>
         <header className="details-header">
-          <span className="details-label">Working tree</span>
+          <span className="details-label">{t("Working tree")}</span>
           <span className="spacer" />
           {total > 1 && <FilesLayoutSwitch />}
-          <Button kind="icon" onClick={props.onShelve} disabled={busy} title="Shelve changes for the team…" aria-label="Shelve changes">
+          <Button kind="icon" onClick={props.onShelve} disabled={busy} title={t("Shelve changes for the team…")} aria-label={t("Shelve changes")}>
             <ShelfIcon />
           </Button>
-          <Button kind="icon" onClick={props.onStash} disabled={busy} title="Stash changes…" aria-label="Stash changes">
+          <Button kind="icon" onClick={props.onStash} disabled={busy} title={t("Stash changes…")} aria-label={t("Stash changes")}>
             <StashIcon />
           </Button>
-          <Button kind="icon" onClick={props.onDiscard} disabled={busy || !snapshot.headCommit} title="Discard all changes…" aria-label="Discard all changes">
+          <Button kind="icon" onClick={props.onDiscard} disabled={busy || !snapshot.headCommit} title={t("Discard all changes…")} aria-label={t("Discard all changes")}>
             <TrashIcon />
           </Button>
-          <Button kind="icon" onClick={props.onClose} title="Close (Esc)" aria-label="Close details">
+          <Button kind="icon" onClick={props.onClose} title={t("Close (Esc)")} aria-label={t("Close details")}>
             <CloseIcon />
           </Button>
         </header>
@@ -121,39 +122,39 @@ export function WorktreeDetailsPanel(props: Props) {
             />
           )}
           <FileSection
-            title="Staged"
+            title={t("Staged")}
             files={staged}
             source={{ kind: "staged" }}
             {...opening}
-            empty={filtering ? "No staged files match." : "Nothing staged yet. Stage the files you want to commit."}
+            empty={filtering ? t("No staged files match.") : t("Nothing staged yet. Stage the files you want to commit.")}
             bulk={
               filtering
-                ? { label: `Unstage these ${staged.length.toLocaleString()}`, onClick: () => quietly({ kind: "unstage", paths: staged.flatMap(paths) }) }
-                : { label: "Unstage all", onClick: () => quietly({ kind: "unstageAll" }) }
+                ? { label: t("Unstage these {0}", staged.length.toLocaleString()), onClick: () => quietly({ kind: "unstage", paths: staged.flatMap(paths) }) }
+                : { label: t("Unstage all"), onClick: () => quietly({ kind: "unstageAll" }) }
             }
             lockOf={lockOf}
             onFileMenu={onFileMenu}
             elsewhereOf={elsewhereOf}
-            fileAction={(file) => ({ label: "Unstage", icon: <MinusIcon size={13} />, onClick: () => quietly({ kind: "unstage", paths: paths(file) }) })}
-            folderAction={(files) => ({ label: "Unstage folder", icon: <MinusIcon size={13} />, onClick: () => quietly({ kind: "unstage", paths: files.flatMap(paths) }) })}
+            fileAction={(file) => ({ label: t("Unstage"), icon: <MinusIcon size={13} />, onClick: () => quietly({ kind: "unstage", paths: paths(file) }) })}
+            folderAction={(files) => ({ label: t("Unstage folder"), icon: <MinusIcon size={13} />, onClick: () => quietly({ kind: "unstage", paths: files.flatMap(paths) }) })}
             busy={busy}
           />
           <FileSection
-            title="Unstaged"
+            title={t("Unstaged")}
             files={unstaged}
             source={{ kind: "unstaged" }}
             {...opening}
-            empty={filtering ? "No other changes match." : "No other changes."}
+            empty={filtering ? t("No other changes match.") : t("No other changes.")}
             bulk={
               filtering
-                ? { label: `Stage these ${unstaged.length.toLocaleString()}`, onClick: () => quietly({ kind: "stage", paths: unstaged.flatMap(paths) }) }
-                : { label: "Stage all", onClick: () => quietly({ kind: "stageAll" }) }
+                ? { label: t("Stage these {0}", unstaged.length.toLocaleString()), onClick: () => quietly({ kind: "stage", paths: unstaged.flatMap(paths) }) }
+                : { label: t("Stage all"), onClick: () => quietly({ kind: "stageAll" }) }
             }
             lockOf={lockOf}
             onFileMenu={onFileMenu}
             elsewhereOf={elsewhereOf}
-            fileAction={(file) => ({ label: "Stage", icon: <PlusIcon size={13} />, onClick: () => quietly({ kind: "stage", paths: paths(file) }) })}
-            folderAction={(files) => ({ label: "Stage folder", icon: <PlusIcon size={13} />, onClick: () => quietly({ kind: "stage", paths: files.flatMap(paths) }) })}
+            fileAction={(file) => ({ label: t("Stage"), icon: <PlusIcon size={13} />, onClick: () => quietly({ kind: "stage", paths: paths(file) }) })}
+            folderAction={(files) => ({ label: t("Stage folder"), icon: <PlusIcon size={13} />, onClick: () => quietly({ kind: "stage", paths: files.flatMap(paths) }) })}
             busy={busy}
           />
         </div>

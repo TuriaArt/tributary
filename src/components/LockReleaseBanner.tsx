@@ -2,6 +2,7 @@ import type { Lock } from "../api";
 import { baseName } from "../lib/paths";
 import { CloseIcon, UnlockIcon } from "./Icons";
 import { Button } from "./ui/Button";
+import { t, tx } from "../lib/i18n";
 
 interface Props {
   /** Your locks on files you've just pushed. */
@@ -18,22 +19,23 @@ export function LockReleaseBanner({ locks, busy, onRelease, onKeep, onAlways }: 
   const names = locks.map((lock) => baseName(lock.path));
   const what =
     locks.length === 1
-      ? `the lock on ${names[0]}`
-      : `the locks on ${locks.length} files (${names.slice(0, 3).join(", ")}${locks.length > 3 ? ", …" : ""})`;
+      ? t("the lock on {0}", names[0])
+      : t("the locks on {0} files ({1}{2})", locks.length, names.slice(0, 3).join(", "), locks.length > 3 ? ", …" : "");
   return (
     <div className="notice-banner info" role="status">
       <UnlockIcon size={14} />
       <span>
-        You pushed your changes but still hold {what}. Release {locks.length === 1 ? "it" : "them"} so your teammates can work on{" "}
-        {locks.length === 1 ? "it" : "them"}?
+        {locks.length === 1
+          ? tx("You pushed your changes but still hold {0}. Release it so your teammates can work on it?", what)
+          : tx("You pushed your changes but still hold {0}. Release them so your teammates can work on them?", what)}
       </span>
-      <Button kind="link" onClick={onAlways} disabled={busy} title="Release them now, and after every push from now on (Settings, Large files and Git LFS)">
-        Always
+      <Button kind="link" onClick={onAlways} disabled={busy} title={t("Release them now, and after every push from now on (Settings, Large files and Git LFS)")}>
+        {t("Always")}
       </Button>
       <button className="notice-action" onClick={onRelease} disabled={busy}>
-        <span className="button-label">Release {locks.length === 1 ? "lock" : "locks"}</span>
+        <span className="button-label">{tx("Release {0}", locks.length === 1 ? "lock" : "locks")}</span>
       </button>
-      <Button kind="icon" onClick={onKeep} aria-label="Keep them" title="Keep them">
+      <Button kind="icon" onClick={onKeep} aria-label={t("Keep them")} title={t("Keep them")}>
         <CloseIcon size={14} />
       </Button>
     </div>

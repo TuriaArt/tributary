@@ -6,6 +6,7 @@ import { issueKeys, issueUrl, useIssueTracker } from "../lib/issues";
 import { releaseMarkdown } from "../lib/releaseNotes";
 import { Dialog } from "./Dialog";
 import { Button } from "./ui/Button";
+import { t, tx } from "../lib/i18n";
 
 /**
  * Release notes for a tag: the changes since an earlier tag (pull requests by title, and
@@ -60,7 +61,7 @@ export function ReleaseNotesDialog({
     try {
       const url = await publishRelease(repoPath, tag, tag, text);
       setPublished(url || null);
-      notify(`Published ${tag} on ${site}`);
+      notify(t("Published {0} on {1}", tag, site));
     } catch (e) {
       setError(String(e));
     }
@@ -69,7 +70,7 @@ export function ReleaseNotesDialog({
 
   return (
     <Dialog
-      title={`Release notes for ${tag}`}
+      title={t("Release notes for {0}", tag)}
       error={error}
       busy={publishing}
       wide
@@ -77,7 +78,7 @@ export function ReleaseNotesDialog({
       buttons={
         <>
           <Button kind="secondary" onClick={onClose}>
-            Close
+            {t("Close")}
           </Button>
           <span className="spacer" />
           <Button
@@ -85,45 +86,45 @@ export function ReleaseNotesDialog({
             disabled={!notes}
             onClick={() => {
               void copyText(text);
-              notify("Copied the release notes");
+              notify(t("Copied the release notes"));
             }}
           >
-            <span className="button-label">Copy as Markdown</span>
+            <span className="button-label">{t("Copy as Markdown")}</span>
           </Button>
           {site &&
             (published ? (
               <Button kind="primary" onClick={() => openUrl(published)} data-url={published}>
-                Open on {site}
+                {tx("Open on {0}", site)}
               </Button>
             ) : (
-              <Button kind="primary" disabled={!notes || publishing} onClick={() => void publish()} title={`Publish ${tag} as a release on ${site} (push the tag first)`}>
-                {publishing ? "Publishing…" : `Publish on ${site}`}
+              <Button kind="primary" disabled={!notes || publishing} onClick={() => void publish()} title={t("Publish {0} as a release on {1} (push the tag first)", tag, site)}>
+                {publishing ? t("Publishing…") : t("Publish on {0}", site)}
               </Button>
             ))}
         </>
       }
     >
       {!notes ? (
-        !error && <p className="muted">Reading the history…</p>
+        !error && <p className="muted">{t("Reading the history…")}</p>
       ) : (
         <div className="dialog-form">
           <div className="release-range">
-            <span>Since</span>
+            <span>{t("Since")}</span>
             <select
               className="text-input mono"
               value={from === undefined ? (notes.from ?? "") : (from ?? "")}
               onChange={(event) => setFrom(event.target.value || null)}
-              aria-label="Since"
+              aria-label={t("Since")}
             >
               {notes.earlier.map((name) => (
                 <option key={name} value={name}>
                   {name}
                 </option>
               ))}
-              <option value="">the first commit</option>
+              <option value="">{t("the first commit")}</option>
             </select>
             <span className="muted">
-              {plural(notes.items.length, "change")} from {plural(notes.commits, "commit")}
+              {tx("{0} from {1}", plural(notes.items.length, "change"), plural(notes.commits, "commit"))}
             </span>
           </div>
           <textarea className="text-input mono release-text" rows={14} value={text} onChange={(event) => setText(event.target.value)} spellCheck />

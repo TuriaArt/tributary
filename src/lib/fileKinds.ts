@@ -1,3 +1,4 @@
+import { t } from "./i18n";
 /** What kind of file a path is, by its extension or its name, for the icon next to it. */
 export type FileKind =
   | "image"
@@ -61,17 +62,17 @@ export function fileKind(path: string): FileKind {
 
 /** What people call each kind, for the icon's tooltip. */
 export const KIND_LABELS: Record<FileKind, string> = {
-  image: "Picture",
-  audio: "Sound",
-  video: "Video",
-  model: "3D model",
-  engine: "Game engine asset",
+  image: t("Picture"),
+  audio: t("Sound"),
+  video: t("Video"),
+  model: t("3D model"),
+  engine: t("Game engine asset"),
   code: "Code",
-  data: "Data or settings",
-  text: "Text",
-  archive: "Archive",
+  data: t("Data or settings"),
+  text: t("Text"),
+  archive: t("Archive"),
   font: "Font",
-  program: "Program or library",
-  folder: "Folder",
+  program: t("Program or library"),
+  folder: t("Folder"),
   file: "File",
 };

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { diffToolSettings, type DiffToolSettings } from "../api";
+import { t } from "./i18n";
 
 /** Names people know the tools by, for buttons like "Open in Meld". */
 const LABELS: Record<string, string> = {
@@ -30,8 +31,7 @@ const LABELS: Record<string, string> = {
 
 /** "Meld" for "meld"; "your diff tool" for a command of your own. */
 export function toolLabel(name: string | null, kind: "diff" | "merge" = "diff"): string {
-  if (!name) return `your ${kind} tool`;
-  if (name === "custom") return `your ${kind} tool`;
+  if (!name || name === "custom") return kind === "merge" ? t("your merge tool") : t("your diff tool");
   return LABELS[name] ?? name;
 }
 

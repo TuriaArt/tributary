@@ -16,6 +16,7 @@ import { SidebarFilter, VisibilityBar } from "./sidebar/SidebarTop";
 import { IssueList, RequestList, SIDEBAR_SECTIONS, useMyIssues, useRequests } from "./sidebar/WorkLists";
 import { ContextMenu } from "./ContextMenu";
 import { Button } from "./ui/Button";
+import { t } from "../lib/i18n";
 
 interface Props {
   /** Open Settings → Sidebar. */
@@ -179,7 +180,7 @@ export function Sidebar(props: Props) {
       ref={aside}
       className="sidebar"
       style={{ width }}
-      aria-label="Branches and tags"
+      aria-label={t("Branches and tags")}
       onKeyDown={(event) => {
         // ↑ ↓ Home End move between the entries, across sections.
         const target = event.target as HTMLElement;
@@ -200,8 +201,8 @@ export function Sidebar(props: Props) {
             const box = event.currentTarget.getBoundingClientRect();
             setSectionsMenu({ x: box.left, y: box.bottom + 4 });
           }}
-          title="Choose what the sidebar shows"
-          aria-label="Sidebar sections"
+          title={t("Choose what the sidebar shows")}
+          aria-label={t("Sidebar sections")}
           aria-haspopup="menu"
         >
           <ViewIcon size={15} />
@@ -216,7 +217,7 @@ export function Sidebar(props: Props) {
           onClose={() => setSectionsMenu(null)}
           items={[
             ...SIDEBAR_SECTIONS.map((entry) => ({ label: entry.title, checked: shows(entry.id), onSelect: () => toggleSection(entry.id) })),
-            ...(props.onSidebarSettings ? [{ label: "Sidebar settings…", separated: true, onSelect: props.onSidebarSettings }] : []),
+            ...(props.onSidebarSettings ? [{ label: t("Sidebar settings…"), separated: true, onSelect: props.onSidebarSettings }] : []),
           ]}
         />,
           document.body,
@@ -224,7 +225,7 @@ export function Sidebar(props: Props) {
       {hiddenCount > 0 && <VisibilityBar count={hiddenCount} soloing={soloing} onShowAll={props.onShowAll} />}
       <div className="sidebar-scroll">
         {pinned.length > 0 && (
-          <SidebarSection id="pinned" title="Pinned" count={pinned.length} {...section}>
+          <SidebarSection id="pinned" title={t("Pinned")} count={pinned.length} {...section}>
             <ul>{pinned.map((entry) => item(entry, entry.name, <PinIcon size={13} />, 0, `pin:${entry.kind}:${entry.name}`))}</ul>
           </SidebarSection>
         )}
@@ -234,7 +235,7 @@ export function Sidebar(props: Props) {
         {shows("branches") && (
         <SidebarSection
           id="branches"
-          title="Branches"
+          title={t("Branches")}
           count={branches.length}
           empty={branches.length === 0 && remoteOnly.length === 0}
           {...section}
@@ -242,12 +243,12 @@ export function Sidebar(props: Props) {
             (props.onManageRemotes || props.onPrune) && (
               <>
                 {props.onManageRemotes && (
-                  <HeadingAction label="Manage remotes" title="Add, rename or remove remotes" onClick={props.onManageRemotes}>
+                  <HeadingAction label={t("Manage remotes")} title={t("Add, rename or remove remotes")} onClick={props.onManageRemotes}>
                     <GearIcon size={13} />
                   </HeadingAction>
                 )}
                 {props.onPrune && (
-                  <HeadingAction label="Prune branches" title="Prune branches: clean up merged ones and ones gone from the remote" onClick={props.onPrune}>
+                  <HeadingAction label={t("Prune branches")} title={t("Prune branches: clean up merged ones and ones gone from the remote")} onClick={props.onPrune}>
                     <BroomIcon size={13} />
                   </HeadingAction>
                 )}
@@ -265,10 +266,10 @@ export function Sidebar(props: Props) {
                 key={remote}
                 id={`only:${remote}`}
                 icon={<CloudIcon size={13} />}
-                label={`Only on ${remote}`}
+                label={t("Only on {0}", remote)}
                 count={entries.length}
                 folding={foldedFirst}
-                title={`Branches on ${remote} that aren't on this computer: double-click one to check it out`}
+                title={t("Branches on {0} that aren't on this computer: double-click one to check it out", remote)}
               >
                 {tree(`only:${remote}`, entries, (e) => e.name.slice(remote.length + 1), <CloudIcon size={13} />, 1)}
               </SidebarGroup>
@@ -277,50 +278,50 @@ export function Sidebar(props: Props) {
         </SidebarSection>
         )}
         {shows("pullRequests") && requests.length > 0 && (
-          <SidebarSection id="pullRequests" title="Pull requests" count={requests.length} {...section}>
+          <SidebarSection id="pullRequests" title={t("Pull requests")} count={requests.length} {...section}>
             <RequestList filter={needle} />
           </SidebarSection>
         )}
         {shows("issues") && (issues?.length || issuesError) ? (
-          <SidebarSection id="issues" title="Issues" count={issues?.length ?? 0} {...section}>
+          <SidebarSection id="issues" title={t("Issues")} count={issues?.length ?? 0} {...section}>
             <IssueList issues={issues ?? []} error={issuesError} filter={needle} />
           </SidebarSection>
         ) : null}
         {shows("tags") && (
-          <SidebarSection id="tags" title="Tags" count={tags.length} {...section}>
+          <SidebarSection id="tags" title={t("Tags")} count={tags.length} {...section}>
             {tree("tags", tags, (e) => e.name, <TagIcon size={13} />)}
           </SidebarSection>
         )}
         {shows("stashes") && (
-          <SidebarSection id="stashes" title="Stashes" count={stashes.length} {...section}>
+          <SidebarSection id="stashes" title={t("Stashes")} count={stashes.length} {...section}>
             <ul>{stashes.map((e) => item(e, stashLabel(e), <StashIcon size={13} />))}</ul>
           </SidebarSection>
         )}
         {shows("worktrees") && props.worktrees.length > 1 && (
-          <SidebarSection id="worktrees" title="Worktrees" count={props.worktrees.length} {...section}>
+          <SidebarSection id="worktrees" title={t("Worktrees")} count={props.worktrees.length} {...section}>
             <WorktreeList worktrees={props.worktrees} onSelect={props.onSelect} onOpen={props.onOpenWorktree} onMenu={props.onWorktreeMenu} />
           </SidebarSection>
         )}
         {shows("submodules") && submodules.length > 0 && (
-          <SidebarSection id="submodules" title="Submodules" count={submodules.length} {...section}>
+          <SidebarSection id="submodules" title={t("Submodules")} count={submodules.length} {...section}>
             <SubmoduleList submodules={submodules} onOpen={props.onOpenSubmodule} onMenu={props.onSubmoduleMenu} />
           </SidebarSection>
         )}
         {shows("locks") && locks && (
           <SidebarSection
             id="locks"
-            title="Locked files"
+            title={t("Locked files")}
             count={locks.length}
             {...section}
             action={
               <>
                 {props.onReleaseMine && (
-                  <HeadingAction label="Release all my locks" onClick={props.onReleaseMine}>
+                  <HeadingAction label={t("Release all my locks")} onClick={props.onReleaseMine}>
                     <UnlockIcon size={13} />
                   </HeadingAction>
                 )}
                 {props.onLockFiles && (
-                  <HeadingAction label="Lock files" title="Lock files…" onClick={props.onLockFiles}>
+                  <HeadingAction label={t("Lock files")} title={t("Lock files…")} onClick={props.onLockFiles}>
                     <PlusIcon size={13} />
                   </HeadingAction>
                 )}

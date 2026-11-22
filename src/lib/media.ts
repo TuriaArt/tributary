@@ -1,5 +1,6 @@
 import type { FileDiff } from "../api";
 import { formatBytes } from "./format";
+import { t } from "./i18n";
 
 /** A data: URL's bytes (fetching it isn't allowed by the page's content policy). */
 export function dataUrlBytes(url: string): ArrayBuffer {
@@ -24,14 +25,14 @@ export function formatDuration(seconds: number): string {
 export function describeSizes(diff: FileDiff): string {
   const { sizeBefore: before, sizeAfter: after } = diff;
   if (before === null && after !== null) return `Added, ${formatBytes(after)}`;
-  if (before !== null && after === null) return `Deleted (it was ${formatBytes(before)})`;
-  if (before !== null && after !== null) return before === after ? `${formatBytes(after)}, the same size` : `${formatBytes(before)} → ${formatBytes(after)}`;
+  if (before !== null && after === null) return t("Deleted (it was {0})", formatBytes(before));
+  if (before !== null && after !== null) return before === after ? t("{0}, the same size", formatBytes(after)) : `${formatBytes(before)} → ${formatBytes(after)}`;
   return "";
 }
 
 /** Why one side has nothing to show: it wasn't there, was deleted, or is too big. */
 export function missingSide(diff: Pick<FileDiff, "sizeBefore" | "sizeAfter">, side: "before" | "after"): string {
   const size = side === "before" ? diff.sizeBefore : diff.sizeAfter;
-  if (size !== null) return `Too big to show here (${formatBytes(size)})`;
-  return side === "before" ? "Not there yet" : "Deleted";
+  if (size !== null) return t("Too big to show here ({0})", formatBytes(size));
+  return side === "before" ? t("Not there yet") : t("Deleted");
 }

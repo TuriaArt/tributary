@@ -7,6 +7,7 @@ import { Loader } from "./Loader";
 import { MarkdownField } from "./MarkdownField";
 import { Button } from "./ui/Button";
 import { Field } from "./ui/Field";
+import { t, tx } from "../lib/i18n";
 
 interface Props {
   repoPath: string;
@@ -83,7 +84,7 @@ export function CreatePullRequestDialog({ repoPath, branch, local, checkedOut, b
       setRunning("push");
       if (!(await push())) {
         setRunning(null);
-        setError(`Couldn't push ${local}: see the message in the window.`);
+        setError(t("Couldn't push {0}: see the message in the window.", local));
         return;
       }
     }
@@ -98,37 +99,37 @@ export function CreatePullRequestDialog({ repoPath, branch, local, checkedOut, b
 
   const browserButton = browserUrl && (
     <Button kind="secondary" onClick={() => openUrl(browserUrl)} disabled={running !== null} data-url={browserUrl}>
-      Open on {site} instead
+      {tx("Open on {0} instead", site)}
     </Button>
   );
 
   if (loadError) {
     return (
       <Dialog
-        title="New pull request"
+        title={t("New pull request")}
         error={loadError}
         onCancel={onCancel}
         buttons={
           <>
             <Button kind="secondary" onClick={onCancel}>
-              Close
+              {t("Close")}
             </Button>
             {browserUrl && (
               <Button kind="primary" onClick={() => openUrl(browserUrl)} data-url={browserUrl}>
-                Open in the browser
+                {t("Open in the browser")}
               </Button>
             )}
           </>
         }
       >
-        <p>Couldn't get ready to open it here.</p>
+        <p>{t("Couldn't get ready to open it here.")}</p>
       </Dialog>
     );
   }
 
   return (
     <Dialog
-      title={`New ${noun}`}
+      title={t("New {0}", noun)}
       error={error}
       busy={running !== null}
       wide
@@ -139,16 +140,16 @@ export function CreatePullRequestDialog({ repoPath, branch, local, checkedOut, b
           {browserButton}
           <span className="spacer" />
           <Button kind="secondary" onClick={onCancel} disabled={running !== null}>
-            Cancel
+            {t("Cancel")}
           </Button>
           <Button kind="primary" onClick={() => void create()} disabled={!canCreate}>
-            {running === "push" ? `Pushing ${local}…` : running === "create" ? "Opening…" : `${willPush ? "Push and open" : "Open"} ${noun}`}
+            {running === "push" ? t("Pushing {0}…", local) : running === "create" ? t("Opening…") : `${willPush ? t("Push and open") : t("Open")} ${noun}`}
           </Button>
         </>
       }
     >
       {!info ? (
-        <Loader size={56} title="Reading its commits" />
+        <Loader size={56} title={t("Reading its commits")} />
       ) : (
         <form
           className="dialog-form"
@@ -161,8 +162,8 @@ export function CreatePullRequestDialog({ repoPath, branch, local, checkedOut, b
             <span className="request-branch mono" title={`${info.remote}/${branch}`}>
               {branch}
             </span>
-            <span className="request-into">into</span>
-            <select className="text-input mono request-base" value={base} onChange={(event) => setBase(event.target.value)} aria-label="The branch to merge it into">
+            <span className="request-into">{t("into")}</span>
+            <select className="text-input mono request-base" value={base} onChange={(event) => setBase(event.target.value)} aria-label={t("The branch to merge it into")}>
               {info.bases
                 .filter((name) => name !== branch)
                 .map((name) => (
@@ -173,25 +174,24 @@ export function CreatePullRequestDialog({ repoPath, branch, local, checkedOut, b
             </select>
             {info.commits.length > 0 && <span className="request-commits">{plural(info.commits.length, "commit")}</span>}
           </div>
-          <Field label="Title">
+          <Field label={t("Title")}>
             <input className="text-input" value={title} onChange={(event) => setTitle(event.target.value)} autoFocus spellCheck />
           </Field>
-          <Field label="Description">
+          <Field label={t("Description")}>
             <MarkdownField
               className="request-body"
               rows={8}
               value={body}
               onChange={(event) => setBody(event.target.value)}
-              placeholder="What it changes and why, how to try it…"
+              placeholder={t("What it changes and why, how to try it…")}
             />
           </Field>
           <label className="checkbox">
-            <input type="checkbox" checked={draft} onChange={(event) => setDraft(event.target.checked)} />
-            Draft: not ready for review yet
+            {tx("{0}Draft: not ready for review yet", <input type="checkbox" checked={draft} onChange={(event) => setDraft(event.target.checked)} />)}
           </label>
           {info.owners.length > 0 && (
-            <div className="request-owners" role="group" aria-label="Ask for reviews">
-              <span className="request-owners-label">Ask the owners of the files it changes to review (CODEOWNERS):</span>
+            <div className="request-owners" role="group" aria-label={t("Ask for reviews")}>
+              <span className="request-owners-label">{t("Ask the owners of the files it changes to review (CODEOWNERS):")}</span>
               <div className="request-owner-list">
                 {info.owners.slice(0, 12).map((owner) => {
                   const askable = canAsk(owner, info.forge);
@@ -199,7 +199,7 @@ export function CreatePullRequestDialog({ repoPath, branch, local, checkedOut, b
                     <label
                       key={owner}
                       className="checkbox"
-                      title={askable ? undefined : info.forge === "gitlab" && owner.includes("/") ? "GitLab can't ask a group" : "Only people with an account can be asked"}
+                      title={askable ? undefined : info.forge === "gitlab" && owner.includes("/") ? t("GitLab can't ask a group") : t("Only people with an account can be asked")}
                     >
                       <input
                         type="checkbox"
@@ -217,27 +217,26 @@ export function CreatePullRequestDialog({ repoPath, branch, local, checkedOut, b
           {checkedOut && unpushed > 0 && (
             <label className="checkbox">
               <input type="checkbox" checked={pushFirst || mustPush} disabled={mustPush} onChange={(event) => setPushFirst(event.target.checked)} />
-              {mustPush ? `Push ${local} to ${info.remote} first (it isn't there yet)` : `Push ${local}'s ${plural(unpushed, "new commit")} first`}
+              {mustPush ? t("Push {0} to {1} first (it isn't there yet)", local, info.remote) : t("Push {0}'s {1} first", local, plural(unpushed, "new commit"))}
             </label>
           )}
           {!checkedOut && local && unpushed > 0 && (
             <p className="dialog-note-line">
               {mustPush
-                ? `${local} isn't on ${info.remote} yet: check it out and push it first.`
-                : `${plural(unpushed, "commit")} of ${local} aren't pushed yet, so they won't be part of it until you push them.`}
+                ? t("{0} isn't on {1} yet: check it out and push it first.", local, info.remote)
+                : t("{0} of {1} aren't pushed yet, so they won't be part of it until you push them.", plural(unpushed, "commit"), local)}
             </p>
           )}
           {!info.signedIn && (
             <p className="dialog-note-line request-sign-in">
               {info.forge === "github" ? (
                 <>
-                  To open it from here, sign in to GitHub.{" "}
-                  <Button type="button" kind="link" onClick={signIn}>
-                    Sign in…
-                  </Button>
+                  {tx("To open it from here, sign in to GitHub. {0}", <Button type="button" kind="link" onClick={signIn}>
+                    {t("Sign in…")}
+                  </Button>)}
                 </>
               ) : (
-                "Git has no token for this GitLab server yet (pushing or fetching once signs in): open it on GitLab instead."
+                t("Git has no token for this GitLab server yet (pushing or fetching once signs in): open it on GitLab instead.")
               )}
             </p>
           )}

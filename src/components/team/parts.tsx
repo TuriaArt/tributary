@@ -5,6 +5,7 @@ import type { BranchActivity, Lock, RecentRequest, TeamActivity, TeamPerson, Tea
 import { plural } from "../../lib/format";
 import { baseName } from "../../lib/paths";
 import { Avatar } from "../Avatar";
+import { t, tx } from "../../lib/i18n";
 
 export interface TeamData {
   team: TeamActivity;
@@ -45,7 +46,7 @@ export function Swatch({ color }: { color: string }) {
 export function YouTag() {
   return (
     <span className="team-you">
-      <span className="chip-text">you</span>
+      <span className="chip-text">{t("you")}</span>
     </span>
   );
 }
@@ -60,10 +61,10 @@ export function Divergence({ branch, main, scale, labels = false }: { branch: Br
     <span
       className={`team-diverge${labels ? " labelled" : ""}`}
       role="img"
-      aria-label={`${plural(branch.behind, "commit")} behind ${main}, ${plural(branch.ahead, "commit")} ahead`}
-      title={`${plural(branch.ahead, "commit")} that ${main} doesn't have; ${plural(branch.behind, "commit")} on ${main} that it doesn't have`}
+      aria-label={t("{0} behind {1}, {2} ahead", plural(branch.behind, "commit"), main, plural(branch.ahead, "commit"))}
+      title={t("{0} that {1} doesn't have; {2} on {1} that it doesn't have", plural(branch.ahead, "commit"), main, plural(branch.behind, "commit"))}
     >
-      {labels && <span className="team-diverge-label">{branch.behind > 0 ? `${branch.behind.toLocaleString()} behind` : "up to date"}</span>}
+      {labels && <span className="team-diverge-label">{branch.behind > 0 ? `${branch.behind.toLocaleString()} behind` : t("up to date")}</span>}
       <span className="team-diverge-side behind">
         <span style={{ width: width(branch.behind) }} />
       </span>
@@ -71,7 +72,7 @@ export function Divergence({ branch, main, scale, labels = false }: { branch: Br
       <span className="team-diverge-side ahead">
         <span style={{ width: width(branch.ahead) }} />
       </span>
-      {labels && <span className="team-diverge-label">{branch.ahead.toLocaleString()} ahead</span>}
+      {labels && <span className="team-diverge-label">{tx("{0} ahead", branch.ahead.toLocaleString())}</span>}
     </span>
   );
 }
@@ -80,8 +81,8 @@ export function Divergence({ branch, main, scale, labels = false }: { branch: Br
 export function Overlap({ files }: { files: string[] }) {
   if (files.length === 0) return null;
   return (
-    <span className="team-overlap" title={`Also changes ${files.map(baseName).join(", ")}, which you're changing`}>
-      {files.length === 1 ? "1 of your files" : `${files.length} of your files`}
+    <span className="team-overlap" title={t("Also changes {0}, which you're changing", files.map(baseName).join(", "))}>
+      {files.length === 1 ? t("1 of your files") : t("{0} of your files", files.length)}
     </span>
   );
 }
@@ -105,7 +106,7 @@ export function useTip() {
       const x = mark.left + mark.width / 2 - box.left + area.scrollLeft;
       if (place === "beside") {
         // To the right of the day, or to its left near the right edge.
-        const side = x > area.clientWidth - 240 ? "beside before" : "beside after";
+        const side = x > area.clientWidth - 240 ? t("beside before") : t("beside after");
         setShown({ x, y: mark.top + mark.height / 2 - box.top + area.scrollTop, side, content });
         return;
       }

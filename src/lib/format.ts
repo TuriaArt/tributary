@@ -1,9 +1,10 @@
-const relative = new Intl.RelativeTimeFormat(undefined, { numeric: "auto" });
-const shortDate = new Intl.DateTimeFormat(undefined, { year: "numeric", month: "short", day: "numeric" });
-const longDate = new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" });
+import { locale, pluralWord, t } from "./i18n";
+const relative = new Intl.RelativeTimeFormat(locale(), { numeric: "auto" });
+const shortDate = new Intl.DateTimeFormat(locale(), { year: "numeric", month: "short", day: "numeric" });
+const longDate = new Intl.DateTimeFormat(locale(), { dateStyle: "medium", timeStyle: "short" });
 
-const relativeShort = new Intl.RelativeTimeFormat(undefined, { numeric: "auto", style: "short" });
-const dayInYear = new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" });
+const relativeShort = new Intl.RelativeTimeFormat(locale(), { numeric: "auto", style: "short" });
+const dayInYear = new Intl.DateTimeFormat(locale(), { month: "short", day: "numeric" });
 
 const MINUTE = 60;
 const HOUR = 60 * MINUTE;
@@ -13,7 +14,7 @@ const DAY = 24 * HOUR;
 export function relativeTime(seconds: number, now = Date.now() / 1000): string {
   const diff = seconds - now;
   const abs = Math.abs(diff);
-  if (abs < MINUTE) return "just now";
+  if (abs < MINUTE) return t("just now");
   if (abs < HOUR) return relative.format(Math.round(diff / MINUTE), "minute");
   if (abs < DAY) return relative.format(Math.round(diff / HOUR), "hour");
   if (abs < 7 * DAY) return relative.format(Math.round(diff / DAY), "day");
@@ -27,7 +28,7 @@ export function relativeTime(seconds: number, now = Date.now() / 1000): string {
 export function compactTime(seconds: number, now = Date.now() / 1000): string {
   const diff = seconds - now;
   const abs = Math.abs(diff);
-  if (abs < MINUTE) return "just now";
+  if (abs < MINUTE) return t("just now");
   if (abs < HOUR) return relativeShort.format(Math.round(diff / MINUTE), "minute");
   if (abs < DAY) return relativeShort.format(Math.round(diff / HOUR), "hour");
   if (abs < 7 * DAY) return relativeShort.format(Math.round(diff / DAY), "day");
@@ -40,10 +41,10 @@ export function idleFor(seconds: number, now = Date.now() / 1000): string {
   const months = Math.floor((now - seconds) / (30.44 * DAY));
   if (months < 12) return plural(Math.max(months, 1), "month");
   const years = Math.floor(months / 12);
-  return years === 1 ? "over a year" : `over ${years} years`;
+  return years === 1 ? t("over a year") : t("over {0} years", years);
 }
 
-const longDateUtc = new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" });
+const longDateUtc = new Intl.DateTimeFormat(locale(), { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" });
 
 export function fullDate(seconds: number): string {
   return longDate.format(new Date(seconds * 1000));
@@ -74,19 +75,26 @@ export function shortId(id: string): string {
   return id.slice(0, 7);
 }
 
-export function plural(count: number, word: string, pluralWord = `${word}s`): string {
-  return `${count.toLocaleString()} ${count === 1 ? word : pluralWord}`;
+/** "3 commits": a count and its noun, given in English, in the language in use. */
+export function plural(count: number, word: string, pluralWordEn = `${word}s`): string {
+  return `${count.toLocaleString(locale())} ${pluralWord(count, word, pluralWordEn)}`;
+}
+
+/** A list in words: "a", "a and b", "a, b and c". */
+export function joinAnd(items: string[]): string {
+  if (items.length <= 1) return items[0] ?? "";
+  return t("{0} and {1}", items.slice(0, -1).join(", "), items[items.length - 1]);
 }
 
 /** "48 MB", like Git LFS shows sizes (powers of 1000). */
 export function formatBytes(bytes: number): string {
-  const units = ["bytes", "KB", "MB", "GB", "TB"];
+  const units = ["bytes", t("KB"), t("MB"), t("GB"), t("TB")];
   let value = bytes;
   let unit = 0;
   while (value >= 1000 && unit < units.length - 1) {
     value /= 1000;
     unit += 1;
   }
-  if (unit === 0) return `${bytes} ${bytes === 1 ? "byte" : "bytes"}`;
+  if (unit === 0) return `${bytes} ${pluralWord(bytes, "byte")}`;
   return `${value >= 100 ? Math.round(value) : value.toFixed(1).replace(/\.0$/, "")} ${units[unit]}`;
 }

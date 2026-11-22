@@ -3,6 +3,7 @@ import { plural } from "../../lib/format";
 import { FileLine } from "../FileLine";
 import { PlusIcon } from "../Icons";
 import { Button } from "../ui/Button";
+import { t, tx } from "../../lib/i18n";
 
 interface Props {
   conflicted: FileChange[];
@@ -28,19 +29,14 @@ export function ConflictList({ conflicted, mine, theirs, busy, lockOf, onFileMen
   return (
     <section className="files conflicts">
       <h3>
-        Conflicts
-        <span className="hint">{plural(conflicted.length, "file")}</span>
-        <span className="spacer" />
-        <Button kind="link" onClick={() => resolve(conflicted.map((file) => file.path), "mine")} disabled={busy} title={`Keep ${mine}'s version of every conflicted file`}>
-          All mine
-        </Button>
-        <Button kind="link" onClick={() => resolve(conflicted.map((file) => file.path), "theirs")} disabled={busy} title={`Take ${theirs}'s version of every conflicted file`}>
-          All theirs
-        </Button>
+        {tx("Conflicts{0}{1}{2}{3}", <span className="hint">{plural(conflicted.length, "file")}</span>, <span className="spacer" />, <Button kind="link" onClick={() => resolve(conflicted.map((file) => file.path), "mine")} disabled={busy} title={t("Keep {0}'s version of every conflicted file", mine)}>
+          {t("All mine")}
+        </Button>, <Button kind="link" onClick={() => resolve(conflicted.map((file) => file.path), "theirs")} disabled={busy} title={t("Take {0}'s version of every conflicted file", theirs)}>
+          {t("All theirs")}
+        </Button>)}
       </h3>
       <div className="conflict-help">
-        Pick a whole version of each file (best for files that can't be merged, like assets), or click a text file to resolve its conflicts one by one.
-        {smartMerge && conflicted.some((file) => isUnityYaml(file.path)) && " Scenes and prefabs can be merged with Unity's Smart Merge."}
+        {tx("Pick a whole version of each file (best for files that can't be merged, like assets), or click a text file to resolve its conflicts one by one.{0}", smartMerge && conflicted.some((file) => isUnityYaml(file.path)) && t(" Scenes and prefabs can be merged with Unity's Smart Merge."))}
       </div>
       <ul className="file-list">
         {conflicted.map((file) => (
@@ -56,18 +52,18 @@ export function ConflictList({ conflicted, mine, theirs, busy, lockOf, onFileMen
               ...(smartMerge && isUnityYaml(file.path)
                 ? [
                     {
-                      label: "Smart Merge",
-                      title: "Merge both versions with Unity's Smart Merge, by what changed in the scene or prefab",
+                      label: t("Smart Merge"),
+                      title: t("Merge both versions with Unity's Smart Merge, by what changed in the scene or prefab"),
                       onClick: () => run({ kind: "unitySmartMerge", file: file.path, tool: smartMerge }),
                       disabled: busy,
                     },
                   ]
                 : []),
-              { label: "Mine", title: `Keep ${mine}'s version`, onClick: () => resolve([file.path], "mine"), disabled: busy },
-              { label: "Theirs", title: `Take ${theirs}'s version`, onClick: () => resolve([file.path], "theirs"), disabled: busy },
+              { label: t("Mine"), title: t("Keep {0}'s version", mine), onClick: () => resolve([file.path], "mine"), disabled: busy },
+              { label: t("Theirs"), title: t("Take {0}'s version", theirs), onClick: () => resolve([file.path], "theirs"), disabled: busy },
             ]}
             action={{
-              label: "Stage (mark as resolved)",
+              label: t("Stage (mark as resolved)"),
               icon: <PlusIcon size={13} />,
               onClick: () => run({ kind: "stage", paths: [file.path] }, { quiet: true }),
               disabled: busy,

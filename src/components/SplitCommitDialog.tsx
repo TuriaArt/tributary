@@ -7,6 +7,7 @@ import { FileKindIcon } from "./FileKindIcon";
 import { Loader } from "./Loader";
 import { Button } from "./ui/Button";
 import { Field } from "./ui/Field";
+import { t, tx } from "../lib/i18n";
 
 /**
  * Split a commit in two: choose the files that move into a new commit right after it, and
@@ -62,30 +63,29 @@ export function SplitCommitDialog({
   const paths = files.filter((file) => moving.has(file.path)).flatMap((file) => (file.oldPath ? [file.oldPath, file.path] : [file.path]));
   return (
     <Dialog
-      title={`Split ${shortId(commit.id)} in two`}
+      title={t("Split {0} in two", shortId(commit.id))}
       error={error}
       wide
       onCancel={onCancel}
       buttons={
         <>
           <Button kind="secondary" onClick={onCancel}>
-            Cancel
+            {t("Cancel")}
           </Button>
           <Button kind="primary" disabled={!ready} onClick={() => onSplit(paths, first, second)}>
-            Split it
+            {t("Split it")}
           </Button>
         </>
       }
     >
       {!details ? (
-        !error && <Loader size={56} title="Reading the commit" />
+        !error && <Loader size={56} title={t("Reading the commit")} />
       ) : files.length < 2 ? (
-        <p>It changes only one file: there's nothing to split.</p>
+        <p>{t("It changes only one file: there's nothing to split.")}</p>
       ) : (
         <div className="dialog-form split-commit">
           <p className="dialog-note-line">
-            Tick the files that move into a new commit right after it. They end up just as they are now
-            {later > 0 ? `; the ${plural(later, "commit")} after it ${later === 1 ? "is" : "are"} made again on top` : ""}.
+            {tx("Tick the files that move into a new commit right after it. They end up just as they are now{0}.", later === 0 ? "" : later === 1 ? t("; the commit after it is made again on top") : t("; the {0} after it are made again on top", plural(later, "commit")))}
           </p>
           <ul className="split-files">
             {files.map((file) => (
@@ -99,16 +99,16 @@ export function SplitCommitDialog({
               </li>
             ))}
           </ul>
-          <Field label={<>First commit: {plural(keeping, "file")}</>}>
+          <Field label={<>{tx("First commit: {0}", plural(keeping, "file"))}</>}>
             <textarea className="text-input" rows={2} value={first} onChange={(event) => setFirst(event.target.value)} spellCheck />
           </Field>
-          <Field label={<>New commit: {plural(moving.size, "file")}</>}>
+          <Field label={<>{tx("New commit: {0}", plural(moving.size, "file"))}</>}>
             <textarea
               className="text-input"
               rows={2}
               value={second}
               onChange={(event) => setSecond(event.target.value)}
-              placeholder="What these files change"
+              placeholder={t("What these files change")}
               spellCheck
             />
           </Field>

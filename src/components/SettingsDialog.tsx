@@ -5,6 +5,7 @@ import { CloseIcon } from "./Icons";
 import { Loader } from "./Loader";
 import { Button } from "./ui/Button";
 import { Switch } from "./ui/Switch";
+import { t } from "../lib/i18n";
 
 /** One setting: an on/off switch, a choice, or something of its own. */
 export type SettingRow =
@@ -43,7 +44,7 @@ export interface SettingsSection {
 export function SettingsDialog({
   sections,
   initial,
-  title = "Settings",
+  title = t("Settings"),
   onClose,
 }: {
   sections: SettingsSection[];
@@ -61,12 +62,12 @@ export function SettingsDialog({
       onCancel={onClose}
       buttons={
         <Button kind="secondary" onClick={onClose} autoFocus>
-          Done
+          {t("Done")}
         </Button>
       }
     >
       <div className="settings">
-        <nav className="settings-nav" role="tablist" aria-orientation="vertical" aria-label="Settings sections">
+        <nav className="settings-nav" role="tablist" aria-orientation="vertical" aria-label={t("Settings sections")}>
           {sections.map((candidate, index) => {
             const selected = candidate === section;
             // A section inside another: lines join it to that one (the last one ends them).
@@ -172,7 +173,7 @@ export function NameList({ names, onChange, placeholder }: { names: string[]; on
       {names.map((name) => (
         <span key={name} className="name-chip">
           <span className="chip-text">{name}</span>
-          <button onClick={() => onChange(names.filter((other) => other !== name))} aria-label={`Remove ${name}`} title={`Remove ${name}`}>
+          <button onClick={() => onChange(names.filter((other) => other !== name))} aria-label={t("Remove {0}", name)} title={t("Remove {0}", name)}>
             <CloseIcon size={10} />
           </button>
         </span>

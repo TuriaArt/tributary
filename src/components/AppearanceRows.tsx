@@ -27,11 +27,12 @@ import { turn } from "./graphPainter";
 import { CheckIcon, PlusIcon } from "./Icons";
 import type { SettingRow } from "./SettingsDialog";
 import { Button } from "./ui/Button";
+import { t } from "../lib/i18n";
 
 const THEMES: { value: ThemeChoice; label: string }[] = [
-  { value: "dark", label: "Dark" },
-  { value: "light", label: "Light" },
-  { value: "system", label: "Same as the system" },
+  { value: "dark", label: t("Dark") },
+  { value: "light", label: t("Light") },
+  { value: "system", label: t("Same as the system") },
 ];
 
 /** Arrow keys move between a radio group's buttons, as in any radio group. */
@@ -50,7 +51,7 @@ function arrowKeys(event: KeyboardEvent<HTMLElement>) {
 /** Dark, light or the system's, each with a small picture of the window in it. */
 function ThemePicker({ value, onChange }: { value: ThemeChoice; onChange: (value: ThemeChoice) => void }) {
   return (
-    <div className="theme-picker" role="radiogroup" aria-label="Theme" onKeyDown={arrowKeys}>
+    <div className="theme-picker" role="radiogroup" aria-label={t("Theme")} onKeyDown={arrowKeys}>
       {THEMES.map((theme) => (
         <button
           key={theme.value}
@@ -68,7 +69,7 @@ function ThemePicker({ value, onChange }: { value: ThemeChoice; onChange: (value
               <span />
             </span>
           </span>
-          <span className="theme-choice-label">{theme.value === "system" ? "System" : theme.label}</span>
+          <span className="theme-choice-label">{theme.value === "system" ? t("System") : theme.label}</span>
         </button>
       ))}
     </div>
@@ -113,7 +114,7 @@ function AccentPicker({ value, onChange }: { value: string; onChange: (value: st
   const custom = !ACCENTS.some((accent) => accent.color === value);
   return (
     <div className="accent-row">
-      <div className="accent-picker" role="radiogroup" aria-label="Accent colour" onKeyDown={arrowKeys}>
+      <div className="accent-picker" role="radiogroup" aria-label={t("Accent colour")} onKeyDown={arrowKeys}>
         {ACCENTS.map((accent) => {
           const chosen = accent.color === value;
           return (
@@ -132,17 +133,17 @@ function AccentPicker({ value, onChange }: { value: string; onChange: (value: st
             </button>
           );
         })}
-        <label className={`accent-swatch accent-custom${custom ? " chosen" : ""}`} title="Pick any colour" style={custom ? { background: value } : undefined}>
-          <input type="color" value={value} aria-label="Pick any accent colour" onChange={(event) => onChange(event.target.value)} />
+        <label className={`accent-swatch accent-custom${custom ? " chosen" : ""}`} title={t("Pick any colour")} style={custom ? { background: value } : undefined}>
+          <input type="color" value={value} aria-label={t("Pick any accent colour")} onChange={(event) => onChange(event.target.value)} />
           {custom ? <CheckIcon size={12} /> : <PlusIcon size={12} />}
         </label>
       </div>
-      <HexField value={value} onChange={onChange} label="Accent colour, as a hex code" />
+      <HexField value={value} onChange={onChange} label={t("Accent colour, as a hex code")} />
     </div>
   );
 }
 
-const CHECK_NAMES: Record<CheckState, string> = { pending: "Running", success: "Passed", failure: "Failed" };
+const CHECK_NAMES: Record<CheckState, string> = { pending: t("Running"), success: t("Passed"), failure: t("Failed") };
 
 /**
  * The checks' colours, running, passed and failed: the theme's, or yours. Click one to pick
@@ -163,12 +164,12 @@ function CheckColorsPicker({
       {CHECK_STATES.map((state) => {
         const color = value[state] ?? CHECK_DEFAULTS[theme][state];
         return (
-          <label key={state} className="check-color" title={`${CHECK_NAMES[state]}: ${color}${value[state] ? "" : ", the theme's"}. Click to pick another.`}>
+          <label key={state} className="check-color" title={t("{0}: {1}{2}. Click to pick another.", CHECK_NAMES[state], color, value[state] ? "" : t(", the theme's"))}>
             <span className="check-color-swatch" style={{ background: color }}>
               <input
                 type="color"
                 value={color}
-                aria-label={`${CHECK_NAMES[state]} checks' colour`}
+                aria-label={t("{0} checks' colour", CHECK_NAMES[state])}
                 onChange={(event) => onChange({ ...value, [state]: event.target.value })}
               />
             </span>
@@ -177,7 +178,7 @@ function CheckColorsPicker({
         );
       })}
       <Button kind="outline" size="small" disabled={!own} onClick={() => onChange({})}>
-        The theme's
+        {t("The theme's")}
       </Button>
     </div>
   );
@@ -187,7 +188,7 @@ function CheckColorsPicker({
 function LanePicker({ value, custom, theme, onChange }: { value: LaneChoice; custom: string[]; theme: Theme; onChange: (value: LaneChoice) => void }) {
   const choices: LaneChoice[] = [...(Object.keys(LANE_PALETTES) as LanePaletteName[]), "custom"];
   return (
-    <div className="lane-picker" role="radiogroup" aria-label="Graph colours" onKeyDown={arrowKeys}>
+    <div className="lane-picker" role="radiogroup" aria-label={t("Graph colours")} onKeyDown={arrowKeys}>
       {choices.map((name) => {
         const colors = name === "custom" ? custom : LANE_PALETTES[name][theme];
         return (
@@ -204,7 +205,7 @@ function LanePicker({ value, custom, theme, onChange }: { value: LaneChoice; cus
                   <PlusIcon size={12} />
                 </span>}
             </span>
-            <span>{name === "custom" ? "Your own" : LANE_PALETTE_LABELS[name]}</span>
+            <span>{name === "custom" ? t("Your own") : LANE_PALETTE_LABELS[name]}</span>
           </button>
         );
       })}
@@ -212,9 +213,9 @@ function LanePicker({ value, custom, theme, onChange }: { value: LaneChoice; cus
   );
 }
 
-const CI_DOT_LABELS: Record<CiDots, string> = { beside: "Beside", ringed: "Ringed", halo: "Halo", filled: "Filled" };
+const CI_DOT_LABELS: Record<CiDots, string> = { beside: t("Beside"), ringed: t("Ringed"), halo: t("Halo"), filled: t("Filled") };
 
-const BEND_LABELS: Record<CurveStyle, string> = { mixed: "Mixed", round: "Round", smooth: "Smooth", tight: "Tight", sweep: "Sweep" };
+const BEND_LABELS: Record<CurveStyle, string> = { mixed: t("Mixed"), round: t("Round"), smooth: t("Smooth"), tight: t("Tight"), sweep: t("Sweep") };
 
 /** A sample's size, in CSS pixels, as .bend-sample has it. */
 const BEND_SAMPLE = { width: 58, height: 36 };
@@ -263,7 +264,7 @@ function BendSample({ style, lanes }: { style: CurveStyle; lanes: string[] }) {
 /** How the graph's lines turn, each drawn as the graph draws it. */
 function BendPicker({ value, lanes, onChange }: { value: CurveStyle; lanes: string[]; onChange: (value: CurveStyle) => void }) {
   return (
-    <div className="lane-picker" role="radiogroup" aria-label="Graph line bends" onKeyDown={arrowKeys}>
+    <div className="lane-picker" role="radiogroup" aria-label={t("Graph line bends")} onKeyDown={arrowKeys}>
       {CURVE_STYLES.map((style) => (
         <button
           key={style}
@@ -285,7 +286,7 @@ function BendPicker({ value, lanes, onChange }: { value: CurveStyle; lanes: stri
 function CiDotPicker({ value, lanes, onChange }: { value: CiDots; lanes: string[]; onChange: (value: CiDots) => void }) {
   const style = { ["--lane" as string]: lanes[0], ["--lane-2" as string]: lanes[1] ?? lanes[0] };
   return (
-    <div className="lane-picker" role="radiogroup" aria-label="Checks on dots" onKeyDown={arrowKeys}>
+    <div className="lane-picker" role="radiogroup" aria-label={t("Checks on dots")} onKeyDown={arrowKeys}>
       {CI_DOTS.map((look) => (
         <button
           key={look}
@@ -395,11 +396,11 @@ function LaneEditor({ colors, onChange }: { colors: string[]; onChange: (colors:
             event.stopPropagation();
           }}
         >
-          <label style={{ background: color }} title={`Lane ${index + 1}: ${color}. Click to change it, drag to move it (or Alt+← →).`}>
+          <label style={{ background: color }} title={t("Lane {0}: {1}. Click to change it, drag to move it (or Alt+← →).", index + 1, color)}>
             <input
               type="color"
               value={color}
-              aria-label={`Lane ${index + 1} colour (Alt+arrow keys move it)`}
+              aria-label={t("Lane {0} colour (Alt+arrow keys move it)", index + 1)}
               onChange={(event) => set(index, event.target.value)}
               onKeyDown={(event) => moveWithKeys(index, event)}
             />
@@ -409,8 +410,8 @@ function LaneEditor({ colors, onChange }: { colors: string[]; onChange: (colors:
               className="lane-editor-remove"
               onPointerDown={(event) => event.stopPropagation()}
               onClick={() => onChange(colors.filter((_, i) => i !== index))}
-              aria-label={`Remove lane ${index + 1}'s colour`}
-              title="Take it out"
+              aria-label={t("Remove lane {0}'s colour", index + 1)}
+              title={t("Take it out")}
             >
               ×
             </button>
@@ -418,11 +419,11 @@ function LaneEditor({ colors, onChange }: { colors: string[]; onChange: (colors:
         </span>
       ))}
       {colors.length < MAX_CUSTOM_LANES && (
-        <label className="lane-editor-add" title="Add a colour">
+        <label className="lane-editor-add" title={t("Add a colour")}>
           <input
             type="color"
             value="#888888"
-            aria-label="Add a lane colour"
+            aria-label={t("Add a lane colour")}
             onChange={(event) => onChange([...colors, event.target.value])}
           />
           <PlusIcon size={12} />
@@ -447,20 +448,20 @@ export function appearanceRows(stored: Partial<Appearance>, set: (value: Partial
   const rows: SettingRow[] = [
     {
       kind: "custom",
-      label: "Theme",
-      hint: appearance.theme === "system" ? `Light or dark with your system (${theme} now).` : undefined,
+      label: t("Theme"),
+      hint: appearance.theme === "system" ? t("Light or dark with your system ({0} now).", theme) : undefined,
       content: <ThemePicker value={appearance.theme} onChange={(value) => change({ theme: value })} />,
     },
     {
       kind: "custom",
-      label: "Accent colour",
-      hint: "Buttons, selections, links, focus and the checked-out branch.",
+      label: t("Accent colour"),
+      hint: t("Buttons, selections, links, focus and the checked-out branch."),
       content: <AccentPicker value={appearance.accent} onChange={(value) => change({ accent: value })} />,
     },
     {
       kind: "custom",
-      label: "Graph colours",
-      hint: "The branches' lines and labels in the commit list.",
+      label: t("Graph colours"),
+      hint: t("The branches' lines and labels in the commit list."),
       content: (
         <LanePicker
           value={appearance.lanes}
@@ -481,64 +482,64 @@ export function appearanceRows(stored: Partial<Appearance>, set: (value: Partial
       ? [
           {
             kind: "custom" as const,
-            label: "Your graph colours",
-            hint: "Click a colour to change it, or drag it to another place. The branches take them in turn, in light and dark themes alike.",
+            label: t("Your graph colours"),
+            hint: t("Click a colour to change it, or drag it to another place. The branches take them in turn, in light and dark themes alike."),
             content: <LaneEditor colors={appearance.customLanes} onChange={(colors) => change({ customLanes: colors })} />,
           },
         ]
       : []),
     {
       kind: "select",
-      label: "Commits on the graph",
-      hint: "Merges are small dots either way.",
+      label: t("Commits on the graph"),
+      hint: t("Merges are small dots either way."),
       value: appearance.nodes,
       options: [
-        { value: "authors", label: "Their authors' pictures" },
-        { value: "dots", label: "Dots" },
+        { value: "authors", label: t("Their authors' pictures") },
+        { value: "dots", label: t("Dots") },
       ],
       set: (value) => change({ nodes: value as Appearance["nodes"] }),
     },
     {
       kind: "custom",
-      label: "Checks on dots",
-      hint: "How a merge shows its checks, and every commit when the graph shows dots. An author's picture has them beside it.",
+      label: t("Checks on dots"),
+      hint: t("How a merge shows its checks, and every commit when the graph shows dots. An author's picture has them beside it."),
       content: <CiDotPicker value={appearance.ciDots} lanes={lanePalette(appearance, theme)} onChange={(value) => change({ ciDots: value })} />,
     },
     {
       kind: "custom",
-      label: "Graph line bends",
-      hint: "How the lines turn from one branch's lane to another's. Mixed turns smoothly to the lane next door and round further; Smooth eases in and out, like Apple's corners.",
+      label: t("Graph line bends"),
+      hint: t("How the lines turn from one branch's lane to another's. Mixed turns smoothly to the lane next door and round further; Smooth eases in and out, like Apple's corners."),
       content: <BendPicker value={appearance.curves} lanes={lanePalette(appearance, theme)} onChange={(curves) => change({ curves })} />,
     },
     {
       kind: "select",
-      label: "Added and removed lines",
-      hint: "Blue and orange are easier to tell apart with red–green colour blindness.",
+      label: t("Added and removed lines"),
+      hint: t("Blue and orange are easier to tell apart with red–green colour blindness."),
       value: appearance.diffColors,
       options: [
-        { value: "green-red", label: "Green and red" },
-        { value: "blue-orange", label: "Blue and orange" },
+        { value: "green-red", label: t("Green and red") },
+        { value: "blue-orange", label: t("Blue and orange") },
       ],
       set: (value) => change({ diffColors: value as Appearance["diffColors"] }),
     },
     {
       kind: "custom",
-      label: "Checks' colours",
-      hint: "Pull requests' badges, the dots on commits, and a commit's or pull request's checks. Pick your own when one is too close to a branch's colour, or to tell them apart more easily.",
+      label: t("Checks' colours"),
+      hint: t("Pull requests' badges, the dots on commits, and a commit's or pull request's checks. Pick your own when one is too close to a branch's colour, or to tell them apart more easily."),
       content: <CheckColorsPicker value={appearance.checkColors} theme={theme} onChange={(checkColors) => change({ checkColors })} />,
     },
     {
       kind: "custom",
-      label: "Start over",
-      hint: "Dark, with the azure accent and vivid graph colours.",
+      label: t("Start over"),
+      hint: t("Dark, with the azure accent and vivid graph colours."),
       content: (
         <Button kind="outline" onClick={() => set({})} disabled={!changed}>
-          <span className="button-label">Reset appearance</span>
+          <span className="button-label">{t("Reset appearance")}</span>
         </Button>
       ),
     },
   ];
-  const graph = new Set(["Graph colours", "Your graph colours", "Commits on the graph", "Checks on dots", "Graph line bends"]);
+  const graph = new Set([t("Graph colours"), t("Your graph colours"), t("Commits on the graph"), t("Checks on dots"), t("Graph line bends")]);
   return {
     look: rows.filter((row) => !graph.has(row.label) && row.label !== "Start over"),
     graph: rows.filter((row) => graph.has(row.label)),

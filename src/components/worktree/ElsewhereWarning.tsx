@@ -5,6 +5,7 @@ import { relativeTime } from "../../lib/format";
 import { baseName } from "../../lib/paths";
 import { BranchIcon } from "../Icons";
 import { Button } from "../ui/Button";
+import { t } from "../../lib/i18n";
 
 /** How many files are listed before "Show all". */
 const SHOWN = 4;
@@ -31,8 +32,8 @@ export function ElsewhereWarning({ overlaps, onShow }: Props) {
         <div>
           {overlapHeadline(overlaps)}{" "}
           {assets
-            ? "Files like these can't be merged, so one version will have to win: check with whoever changed them before you go further."
-            : "Git can usually merge both changes, though you may get conflicts."}
+            ? t("Files like these can't be merged, so one version will have to win: check with whoever changed them before you go further.")
+            : t("Git can usually merge both changes, though you may get conflicts.")}
         </div>
         <ul className="elsewhere-list">
           {shown.map((overlap) => {
@@ -40,8 +41,8 @@ export function ElsewhereWarning({ overlaps, onShow }: Props) {
             return (
               <li key={overlap.path} title={overlap.path}>
                 <span className="elsewhere-file">{baseName(overlap.path)}</span>
-                {!overlap.uncommitted && <span className="elsewhere-note">in your commits</span>}
-                <Button kind="link" className="elsewhere-branch" onClick={() => onShow(latest.commit)} title={`Show "${latest.summary}"`}>
+                {!overlap.uncommitted && <span className="elsewhere-note">{t("in your commits")}</span>}
+                <Button kind="link" className="elsewhere-branch" onClick={() => onShow(latest.commit)} title={t("Show \"{0}\"", latest.summary)}>
                   {latest.branch}
                 </Button>
                 <span className="elsewhere-who">
@@ -54,7 +55,7 @@ export function ElsewhereWarning({ overlaps, onShow }: Props) {
         </ul>
         {overlaps.length > SHOWN && (
           <Button kind="link" onClick={() => setAll(!all)}>
-            {all ? "Show fewer" : `Show all ${overlaps.length}`}
+            {all ? t("Show fewer") : t("Show all {0}", overlaps.length)}
           </Button>
         )}
       </div>

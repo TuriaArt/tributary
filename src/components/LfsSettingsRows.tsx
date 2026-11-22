@@ -6,6 +6,7 @@ import { DownloadIcon, ExternalLinkIcon, PlusIcon } from "./Icons";
 import { LfsStorageSummary } from "./LfsCleanup";
 import { NameList, type SettingRow } from "./SettingsDialog";
 import { Button } from "./ui/Button";
+import { locale, t } from "../lib/i18n";
 
 /** File types often stored with Git LFS, offered when a repository doesn't use it yet. */
 const COMMON = ["*.psd", "*.png", "*.wav", "*.mp4", "*.fbx", "*.uasset", "*.umap", "*.zip"];
@@ -41,17 +42,17 @@ export function useLfsSettingsRows({ path, run, onCleanUp }: Options): SettingRo
   };
   const track = (patterns: string[]) => change({ kind: "trackWithLfs", patterns, paths: [] });
 
-  if (!settings) return [{ kind: "custom", label: "Git LFS", hint: "Looking…", content: null }];
+  if (!settings) return [{ kind: "custom", label: t("Git LFS"), hint: t("Looking…"), content: null }];
   if (!settings.installed) {
     return [
       {
         kind: "custom",
-        label: "Git LFS isn't installed",
-        hint: "It keeps big files like art, audio and video out of git itself, so clones stay small. Install it, then come back here to choose which files to store with it.",
+        label: t("Git LFS isn't installed"),
+        hint: t("It keeps big files like art, audio and video out of git itself, so clones stay small. Install it, then come back here to choose which files to store with it."),
         content: (
           <Button kind="outline" onClick={() => openInBrowser("https://git-lfs.com")} data-url="https://git-lfs.com">
             <ExternalLinkIcon size={13} />
-            <span className="button-label">Get Git LFS</span>
+            <span className="button-label">{t("Get Git LFS")}</span>
           </Button>
         ),
       },
@@ -62,14 +63,14 @@ export function useLfsSettingsRows({ path, run, onCleanUp }: Options): SettingRo
   const rows: SettingRow[] = [
     {
       kind: "custom",
-      label: using ? "Stored with Git LFS" : "Store big files with Git LFS",
+      label: using ? t("Stored with Git LFS") : t("Store big files with Git LFS"),
       hint: using
-        ? "Files matching these go to Git LFS from their next commit. Files committed before stay in git's history. Commit .gitattributes to share the list."
-        : "Git LFS keeps big files like art, audio and video out of git itself, so clones stay small. Add the kinds of files to store with it, like *.psd.",
+        ? t("Files matching these go to Git LFS from their next commit. Files committed before stay in git's history. Commit .gitattributes to share the list.")
+        : t("Git LFS keeps big files like art, audio and video out of git itself, so clones stay small. Add the kinds of files to store with it, like *.psd."),
       content: (
         <NameList
           names={settings.patterns}
-          placeholder={busy ? "…" : "Add, like *.psd"}
+          placeholder={busy ? "…" : t("Add, like *.psd")}
           onChange={(names) => {
             const added = names.filter((name) => !settings.patterns.includes(name));
             const removed = settings.patterns.filter((name) => !names.includes(name));
@@ -83,8 +84,8 @@ export function useLfsSettingsRows({ path, run, onCleanUp }: Options): SettingRo
   if (settings.suggestions.length > 0) {
     rows.push({
       kind: "custom",
-      label: "Big files here",
-      hint: "Kinds of files over 1 MB in this repository that aren't stored with Git LFS.",
+      label: t("Big files here"),
+      hint: t("Kinds of files over 1 MB in this repository that aren't stored with Git LFS."),
       content: (
         <span className="lfs-suggestions">
           {settings.suggestions.map((suggestion) => (
@@ -93,8 +94,8 @@ export function useLfsSettingsRows({ path, run, onCleanUp }: Options): SettingRo
               className="lfs-suggestion"
               onClick={() => track([suggestion.pattern])}
               disabled={busy}
-              title={`Store ${suggestion.pattern} files with Git LFS`}
-              aria-label={`Store ${suggestion.pattern} files with Git LFS (${plural(suggestion.files, "file")}, ${formatBytes(suggestion.bytes)})`}
+              title={t("Store {0} files with Git LFS", suggestion.pattern)}
+              aria-label={t("Store {0} files with Git LFS ({1}, {2})", suggestion.pattern, plural(suggestion.files, "file"), formatBytes(suggestion.bytes))}
             >
               <PlusIcon size={11} />
               <span className="lfs-suggestion-pattern">{suggestion.pattern}</span>
@@ -109,7 +110,7 @@ export function useLfsSettingsRows({ path, run, onCleanUp }: Options): SettingRo
   } else if (!using) {
     rows.push({
       kind: "custom",
-      label: "Common kinds",
+      label: t("Common kinds"),
       content: (
         <span className="lfs-suggestions">
           {COMMON.map((pattern) => (
@@ -118,8 +119,8 @@ export function useLfsSettingsRows({ path, run, onCleanUp }: Options): SettingRo
               className="lfs-suggestion"
               onClick={() => track([pattern])}
               disabled={busy}
-              title={`Store ${pattern} files with Git LFS`}
-              aria-label={`Store ${pattern} files with Git LFS`}
+              title={t("Store {0} files with Git LFS", pattern)}
+              aria-label={t("Store {0} files with Git LFS", pattern)}
             >
               <PlusIcon size={11} />
               <span className="lfs-suggestion-pattern">{pattern}</span>
@@ -135,8 +136,8 @@ export function useLfsSettingsRows({ path, run, onCleanUp }: Options): SettingRo
   if (using) {
     rows.push({
       kind: "custom",
-      label: "Git LFS files on this computer",
-      hint: "Copies of every version you've downloaded. Cleaning up keeps what you still need.",
+      label: t("Git LFS files on this computer"),
+      hint: t("Copies of every version you've downloaded. Cleaning up keeps what you still need."),
       content: <LfsStorageSummary repoPath={path} onCleanUp={onCleanUp} />,
     });
   }
@@ -168,13 +169,13 @@ function downloadRows(
   const rows: SettingRow[] = [
     {
       kind: "select",
-      label: "Download Git LFS files",
-      hint: "In a big project you may only need some of it. Files in other folders stay small pointer files, and pulling skips them.",
+      label: t("Download Git LFS files"),
+      hint: t("In a big project you may only need some of it. Files in other folders stay small pointer files, and pulling skips them."),
       value: mode,
       options: [
-        { value: "all", label: "From every folder" },
-        { value: "only", label: "Only from some folders" },
-        { value: "except", label: "From every folder but some" },
+        { value: "all", label: t("From every folder") },
+        { value: "only", label: t("Only from some folders") },
+        { value: "except", label: t("From every folder but some") },
       ],
       set: (value) => {
         const next = value as FetchMode;
@@ -188,13 +189,13 @@ function downloadRows(
     const others = settings.folders.filter((folder) => !list.includes(folder.path));
     rows.push({
       kind: "custom",
-      label: mode === "only" ? "Folders to download" : "Folders to skip",
-      hint: list.length === 0 ? "Pick folders below, or type a folder or a pattern like *.wav." : undefined,
+      label: mode === "only" ? t("Folders to download") : t("Folders to skip"),
+      hint: list.length === 0 ? t("Pick folders below, or type a folder or a pattern like *.wav.") : undefined,
       content: (
         <span className="lfs-folders">
           <NameList
             names={list}
-            placeholder={busy ? "…" : "Add, like Content/Art"}
+            placeholder={busy ? "…" : t("Add, like Content/Art")}
             onChange={(names) => {
               setMode(names.length > 0 ? null : mode);
               void save(mode, names);
@@ -216,12 +217,12 @@ function downloadRows(
   }
   rows.push({
     kind: "custom",
-    label: "Download now",
-    hint: `${downloaded.toLocaleString()} of the ${plural(files, "file")} stored with Git LFS are on this computer. Pulling downloads the ones you chose; this gets them now.`,
+    label: t("Download now"),
+    hint: t("{0} of the {1} stored with Git LFS are on this computer. Pulling downloads the ones you chose; this gets them now.", downloaded.toLocaleString(locale()), plural(files, "file")),
     content: (
       <Button kind="outline" disabled={busy} onClick={() => void change({ kind: "downloadLfsFiles" })}>
         <DownloadIcon size={13} />
-        <span className="button-label">Download</span>
+        <span className="button-label">{t("Download")}</span>
       </Button>
     ),
   });
@@ -230,7 +231,7 @@ function downloadRows(
 
 function FolderChip({ folder, disabled, onAdd }: { folder: LfsFolder; disabled: boolean; onAdd: () => void }) {
   return (
-    <button className="lfs-suggestion" onClick={onAdd} disabled={disabled} title={`Add ${folder.path}`} aria-label={`Add ${folder.path} (${plural(folder.files, "file")}, ${formatBytes(folder.bytes)})`}>
+    <button className="lfs-suggestion" onClick={onAdd} disabled={disabled} title={t("Add {0}", folder.path)} aria-label={t("Add {0} ({1}, {2})", folder.path, plural(folder.files, "file"), formatBytes(folder.bytes))}>
       <PlusIcon size={11} />
       <span className="lfs-suggestion-pattern">{folder.path}</span>
       <span className="lfs-suggestion-size">

@@ -1,5 +1,6 @@
 import { useOpenApps } from "../lib/apps";
 import type { SettingRow } from "./SettingsDialog";
+import { t } from "../lib/i18n";
 
 /** Settings: the editor and terminal that "Open in …" uses, among those installed here. */
 export function useAppRows(): SettingRow[] {
@@ -12,7 +13,7 @@ export function useAppRows(): SettingRow[] {
       ? { kind: "select", label, value: chosen ?? list[0].id, options: list.map((app) => ({ value: app.id, label: app.name })), set }
       : { kind: "custom", label, hint: none, content: null };
   return [
-    row("Editor", editors, editor?.id, setEditorId, "None found (Visual Studio Code, Rider, Visual Studio, Zed, Sublime Text, …)."),
-    row("Terminal", terminals, terminal?.id, setTerminalId, "None found."),
+    row(t("Editor"), editors, editor?.id, setEditorId, t("None found (Visual Studio Code, Rider, Visual Studio, Zed, Sublime Text, …).")),
+    row(t("Terminal"), terminals, terminal?.id, setTerminalId, t("None found.")),
   ];
 }

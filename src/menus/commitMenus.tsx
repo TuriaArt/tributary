@@ -1,6 +1,7 @@
 // Right-click menus of commit rows: a commit, several selected commits, the uncommitted changes and a stash.
 import type { CommitRow } from "../api";
 import { copyText } from "../lib/clipboard";
+import { plural } from "../lib/format";
 import { copyPatch, savePatch } from "../lib/patches";
 import { stashIndexOf } from "../lib/refs";
 import { commitUrl, siteName, webRemote } from "../lib/weblinks";
@@ -34,6 +35,7 @@ import {
   DownloadIcon,
   SplitCommitIcon } from "../components/Icons";
 import { worktreeOf, canResetTo, splitRemoteBranch, commitLabel, headSide, type MenuContext } from "./context";
+import { t } from "../lib/i18n";
 
 /** Right-click while several commits are selected. */
 export function selectionMenu(ctx: MenuContext, commits: CommitRow[]): MenuItem[] {
@@ -44,7 +46,7 @@ export function selectionMenu(ctx: MenuContext, commits: CommitRow[]): MenuItem[
     commits.length === 2 && commits.every((commit) => commit.kind === "commit")
       ? [
           {
-            label: "Compare these two commits",
+            label: t("Compare these two commits"),
             icon: <CompareIcon />,
             // The older one first: what changed from it to the newer one.
             onSelect: () =>
@@ -55,33 +57,33 @@ export function selectionMenu(ctx: MenuContext, commits: CommitRow[]): MenuItem[
   return [
     ...compare,
     {
-      label: `Cherry-pick ${commits.length} commits onto ${branch ?? "HEAD"}`,
+      label: t("Cherry-pick {0} commits onto {1}", commits.length, branch ?? "HEAD"),
       separated: compare.length > 0,
       icon: <CherryIcon />,
       disabled: blocked,
       onSelect: () => ctx.run({ kind: "cherryPickMany", ids: oldestFirst }),
     },
     {
-      label: `Revert ${commits.length} commits`,
+      label: t("Revert {0} commits", commits.length),
       icon: <RevertIcon />,
       disabled: blocked,
       onSelect: () => ctx.run({ kind: "revertMany", ids: commits.map((commit) => commit.id) }),
     },
     {
-      label: `Save ${commits.length} commits as a patch…`,
+      label: t("Save {0} commits as a patch…", commits.length),
       icon: <DownloadIcon />,
       separated: true,
       disabled: commits.some((commit) => commit.kind !== "commit"),
       onSelect: () => void savePatch(oldestFirst, commits[0].summary, ctx.run),
     },
     {
-      label: "Copy as a patch",
+      label: t("Copy as a patch"),
       icon: <CopyIcon />,
       disabled: commits.some((commit) => commit.kind !== "commit"),
       onSelect: () => void copyPatch(ctx.snapshot.path, oldestFirst, ctx.notify),
     },
     {
-      label: "Copy SHAs",
+      label: t("Copy SHAs"),
       icon: <CopyIcon />,
       separated: true,
       onSelect: () => copyText(commits.map((commit) => commit.id).join("\n")),
@@ -94,13 +96,13 @@ export function commitMenu(ctx: MenuContext, commit: CommitRow): MenuItem[] {
   if (commit.kind === "worktree") return uncommittedMenu(ctx);
   if (commit.kind === "stash") return stashMenu(ctx, commit);
   const { snapshot, canChange } = ctx;
-  const items: MenuItem[] = [{ label: "Copy SHA", icon: <CopyIcon />, onSelect: () => copyText(commit.id) }];
+  const items: MenuItem[] = [{ label: t("Copy SHA"), icon: <CopyIcon />, onSelect: () => copyText(commit.id) }];
   const remote = webRemote(snapshot);
   const page = remote && commitUrl(remote, commit.id);
   if (page && remote) {
-    items.push({ label: `Open on ${siteName(remote)}`, icon: <ExternalLinkIcon />, url: page, onSelect: () => ctx.openUrl(page) });
+    items.push({ label: t("Open on {0}", siteName(remote)), icon: <ExternalLinkIcon />, url: page, onSelect: () => ctx.openUrl(page) });
   }
-  if (ctx.hasChecks(commit.id)) items.push({ label: "Show checks", icon: <WorkflowIcon />, onSelect: () => ctx.showChecks(commit) });
+  if (ctx.hasChecks(commit.id)) items.push({ label: t("Show checks"), icon: <WorkflowIcon />, onSelect: () => ctx.showChecks(commit) });
 
   const checkouts: MenuItem[] = [];
   for (const ref of commit.refs) {
@@ -108,9 +110,9 @@ export function commitMenu(ctx: MenuContext, commit: CommitRow): MenuItem[] {
       const elsewhere = worktreeOf(ctx, ref.name);
       checkouts.push(
         elsewhere
-          ? { label: `Open ${ref.name}'s worktree`, icon: <FolderIcon />, onSelect: () => ctx.openWorktree(elsewhere.path) }
+          ? { label: t("Open {0}'s worktree", ref.name), icon: <FolderIcon />, onSelect: () => ctx.openWorktree(elsewhere.path) }
           : {
-              label: `Check out ${ref.name}`,
+              label: t("Check out {0}", ref.name),
               icon: <BranchIcon />,
               disabled: !canChange,
               onSelect: () => ctx.run({ kind: "checkoutBranch", name: ref.name }),
@@ -120,7 +122,7 @@ export function commitMenu(ctx: MenuContext, commit: CommitRow): MenuItem[] {
       const { branch } = splitRemoteBranch(ref.name, snapshot.remotes);
       if (ctx.localBranches.has(branch)) continue;
       checkouts.push({
-        label: `Check out ${branch} (tracking ${ref.name})`,
+        label: t("Check out {0} (tracking {1})", branch, ref.name),
         icon: <CloudIcon />,
         disabled: !canChange,
         onSelect: () => ctx.run({ kind: "checkoutRemoteBranch", name: ref.name }),
@@ -129,7 +131,7 @@ export function commitMenu(ctx: MenuContext, commit: CommitRow): MenuItem[] {
   }
   if (!commit.refs.some((ref) => ref.kind === "branch") && commit.id !== snapshot.headCommit) {
     checkouts.push({
-      label: "Check out this commit (detached)",
+      label: t("Check out this commit (detached)"),
       icon: <CommitIcon />,
       disabled: !canChange,
       onSelect: () => ctx.run({ kind: "checkoutCommit", id: commit.id }),
@@ -137,7 +139,7 @@ export function commitMenu(ctx: MenuContext, commit: CommitRow): MenuItem[] {
   }
   items.push(...checkouts.slice(0, 6).map((item, i) => ({ ...item, separated: i === 0 })));
   items.push({
-    label: "New worktree here…",
+    label: t("New worktree here…"),
     icon: <FolderIcon />,
     separated: checkouts.length === 0,
     disabled: !canChange || snapshot.bare,
@@ -147,20 +149,20 @@ export function commitMenu(ctx: MenuContext, commit: CommitRow): MenuItem[] {
   const isHead = commit.id === snapshot.headCommit;
   items.push(
     {
-      label: `Cherry-pick onto ${snapshot.headBranch ?? "HEAD"}`,
+      label: t("Cherry-pick onto {0}", snapshot.headBranch ?? "HEAD"),
       icon: <CherryIcon />,
       separated: true,
       disabled: busy || isHead,
       onSelect: () => ctx.run({ kind: "cherryPick", id: commit.id }),
     },
     {
-      label: "Revert this commit",
+      label: t("Revert this commit"),
       icon: <RevertIcon />,
       disabled: busy,
       onSelect: () => ctx.run({ kind: "revert", id: commit.id }),
     },
     {
-      label: "Highlight history up to here",
+      label: t("Highlight history up to here"),
       icon: <EyeIcon />,
       onSelect: () => ctx.focus(commit.summary || commit.id.slice(0, 7), commit.id),
     },
@@ -169,7 +171,7 @@ export function commitMenu(ctx: MenuContext, commit: CommitRow): MenuItem[] {
       return head && !isHead
         ? [
             {
-              label: `Compare with ${head.label}`,
+              label: t("Compare with {0}", head.label),
               icon: <CompareIcon />,
               onSelect: () => ctx.compare({ from: head, to: { id: commit.id, label: commitLabel(commit) }, split: false }),
             },
@@ -177,7 +179,7 @@ export function commitMenu(ctx: MenuContext, commit: CommitRow): MenuItem[] {
         : [];
     })(),
     {
-      label: `Highlight ${commit.authorName || commit.authorEmail}'s commits`,
+      label: t("Highlight {0}'s commits", commit.authorName || commit.authorEmail),
       icon: <UserIcon />,
       onSelect: () => ctx.focusAuthor(commit.authorName, commit.authorEmail),
     },
@@ -186,8 +188,8 @@ export function commitMenu(ctx: MenuContext, commit: CommitRow): MenuItem[] {
   items.push({
     label:
       typeof rewritable === "string"
-        ? `Interactive rebase: ${rewritable}`
-        : `Interactive rebase of the ${rewritable.length === 1 ? "commit" : `${rewritable.length} commits`} after this…`,
+        ? t("Interactive rebase: {0}", rewritable)
+        : rewritable.length === 1 ? t("Interactive rebase of the commit after this…") : t("Interactive rebase of the {0} commits after this…", rewritable.length),
     icon: <RewriteIcon />,
     separated: true,
     disabled: busy || typeof rewritable === "string",
@@ -196,13 +198,13 @@ export function commitMenu(ctx: MenuContext, commit: CommitRow): MenuItem[] {
   if (snapshot.bisect) {
     const mark = (verdict: "good" | "bad" | "skip") => () => ctx.run({ kind: "bisectMark", verdict, id: commit.id });
     items.push(
-      { label: "Bisect: this one is good", icon: <CheckIcon />, separated: true, disabled: !ctx.canChange, onSelect: mark("good") },
-      { label: "Bisect: this one is bad", icon: <CloseIcon />, disabled: !ctx.canChange, onSelect: mark("bad") },
-      { label: "Bisect: skip this one", icon: <SkipIcon />, disabled: !ctx.canChange, onSelect: mark("skip") },
+      { label: t("Bisect: this one is good"), icon: <CheckIcon />, separated: true, disabled: !ctx.canChange, onSelect: mark("good") },
+      { label: t("Bisect: this one is bad"), icon: <CloseIcon />, disabled: !ctx.canChange, onSelect: mark("bad") },
+      { label: t("Bisect: skip this one"), icon: <SkipIcon />, disabled: !ctx.canChange, onSelect: mark("skip") },
     );
   } else {
     items.push({
-      label: ctx.beforeHead(commit) ? "Find what broke since this commit (bisect)…" : "Bisect: only for commits before the checked-out one",
+      label: ctx.beforeHead(commit) ? t("Find what broke since this commit (bisect)…") : t("Bisect: only for commits before the checked-out one"),
       icon: <TargetIcon />,
       separated: true,
       disabled: busy || !snapshot.headCommit || !ctx.beforeHead(commit),
@@ -212,65 +214,65 @@ export function commitMenu(ctx: MenuContext, commit: CommitRow): MenuItem[] {
   // Folding the staged changes into this commit rewrites it and the commits after it.
   const staged = snapshot.worktree?.staged.length ?? 0;
   const fixupBlocked = !snapshot.headBranch
-    ? "check out a branch first"
+    ? t("check out a branch first")
     : commit.parents.length > 1
-      ? "a merge commit can't be fixed up"
+      ? t("a merge commit can't be fixed up")
       : !isHead && typeof rewritable === "string"
         ? rewritable
         : staged === 0
-          ? "stage the changes to fold in first"
+          ? t("stage the changes to fold in first")
           : null;
   items.push({
-    label: fixupBlocked ? `Fix up this commit: ${fixupBlocked}` : `Fix up this commit with the staged changes (${staged === 1 ? "1 file" : `${staged} files`})`,
+    label: fixupBlocked ? t("Fix up this commit: {0}", fixupBlocked) : t("Fix up this commit with the staged changes ({0})", plural(staged, "file")),
     icon: <FixupIcon />,
     disabled: busy || fixupBlocked !== null,
     onSelect: () => ctx.run({ kind: "fixupInto", id: commit.id }),
   });
   // Moving some of its files into a commit of their own rewrites it and the commits after it.
   const splitBlocked = !snapshot.headBranch
-    ? "check out a branch first"
+    ? t("check out a branch first")
     : commit.parents.length > 1
-      ? "a merge commit can't be split"
+      ? t("a merge commit can't be split")
       : commit.parents.length === 0
-        ? "the very first commit can't be"
+        ? t("the very first commit can't be")
         : !isHead && typeof rewritable === "string"
           ? rewritable
           : null;
   items.push({
-    label: splitBlocked ? `Split this commit: ${splitBlocked}` : "Split this commit in two…",
+    label: splitBlocked ? t("Split this commit: {0}", splitBlocked) : t("Split this commit in two…"),
     icon: <SplitCommitIcon />,
     disabled: busy || splitBlocked !== null,
     onSelect: () => ctx.open({ kind: "splitCommit", commit, later: typeof rewritable === "string" ? 0 : rewritable.length }),
   });
   items.push(
     {
-      label: "New branch here…",
+      label: t("New branch here…"),
       icon: <BranchPlusIcon />,
       separated: true,
       disabled: !canChange,
       onSelect: () => ctx.open({ kind: "newBranch", target: commit }),
     },
     {
-      label: "New tag here…",
+      label: t("New tag here…"),
       icon: <TagIcon />,
       disabled: !canChange,
       onSelect: () => ctx.open({ kind: "tag", target: commit }),
     },
     {
-      label: commit.parents.length > 1 ? "Save as a patch: merge commits can't be" : "Save as a patch…",
+      label: commit.parents.length > 1 ? t("Save as a patch: merge commits can't be") : t("Save as a patch…"),
       icon: <DownloadIcon />,
       separated: true,
       disabled: commit.parents.length > 1,
       onSelect: () => void savePatch([commit.id], commit.summary, ctx.run),
     },
     {
-      label: "Copy as a patch",
+      label: t("Copy as a patch"),
       icon: <CopyIcon />,
       disabled: commit.parents.length > 1,
       onSelect: () => void copyPatch(snapshot.path, [commit.id], ctx.notify),
     },
     {
-      label: `Hard reset ${snapshot.headBranch ?? "HEAD"} to this commit…`,
+      label: t("Hard reset {0} to this commit…", snapshot.headBranch ?? "HEAD"),
       icon: <ResetIcon />,
       danger: true,
       separated: true,
@@ -286,22 +288,22 @@ export function uncommittedMenu(ctx: MenuContext): MenuItem[] {
   const { snapshot, canChange } = ctx;
   const head = snapshot.commits.find((commit) => commit.id === snapshot.headCommit);
   return [
-    { label: "Stage all changes", icon: <PlusIcon />, disabled: !canChange, onSelect: () => ctx.run({ kind: "stageAll" }) },
+    { label: t("Stage all changes"), icon: <PlusIcon />, disabled: !canChange, onSelect: () => ctx.run({ kind: "stageAll" }) },
     {
-      label: "Unstage all changes",
+      label: t("Unstage all changes"),
       icon: <MinusIcon />,
       disabled: !canChange || !snapshot.worktree?.staged.length,
       onSelect: () => ctx.run({ kind: "unstageAll" }),
     },
     {
-      label: "Stash changes…",
+      label: t("Stash changes…"),
       icon: <StashIcon />,
       separated: true,
       disabled: !canChange,
       onSelect: () => ctx.open({ kind: "stash" }),
     },
     {
-      label: "Discard all changes…",
+      label: t("Discard all changes…"),
       icon: <TrashIcon />,
       danger: true,
       separated: true,
@@ -319,19 +321,19 @@ export function stashMenu(ctx: MenuContext, commit: CommitRow): MenuItem[] {
     const disabled = !ctx.canChange;
     items.push(
       {
-        label: "Apply stash",
+        label: t("Apply stash"),
         icon: <StashIcon />,
         disabled,
         onSelect: () => ctx.run({ kind: "stashApply", index, id: commit.id }),
       },
       {
-        label: "Pop stash",
+        label: t("Pop stash"),
         icon: <StashIcon />,
         disabled,
         onSelect: () => ctx.run({ kind: "stashPop", index, id: commit.id }),
       },
       {
-        label: "Drop stash…",
+        label: t("Drop stash…"),
         icon: <TrashIcon />,
         danger: true,
         disabled,
@@ -340,7 +342,7 @@ export function stashMenu(ctx: MenuContext, commit: CommitRow): MenuItem[] {
     );
   }
   items.push({
-    label: "Copy SHA",
+    label: t("Copy SHA"),
     icon: <CopyIcon />,
     separated: items.length > 0,
     onSelect: () => copyText(commit.id),

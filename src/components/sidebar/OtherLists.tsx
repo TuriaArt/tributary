@@ -5,6 +5,7 @@ import { submoduleName, submoduleNote, submoduleTitle } from "../../lib/submodul
 import { worktreeName, worktreeNote } from "../../lib/worktrees";
 import { lockTitle } from "../FileLine";
 import { CheckIcon, FolderIcon, LockIcon, SubmoduleIcon } from "../Icons";
+import { t } from "../../lib/i18n";
 
 interface WorktreeProps {
   worktrees: Worktree[];
@@ -25,7 +26,7 @@ export function WorktreeList({ worktrees, onSelect, onOpen, onMenu }: WorktreePr
             className={`sidebar-item sidebar-worktree${worktree.current ? " current" : ""}${worktree.prunable ? " hidden-ref" : ""}`}
             role="button"
             tabIndex={0}
-            title={`${worktree.path}${worktree.prunable ? " (its folder is gone)" : worktree.current ? " (open)" : ""}`}
+            title={`${worktree.path}${worktree.prunable ? t(" (its folder is gone)") : worktree.current ? " (open)" : ""}`}
             onDoubleClick={() => onOpen(worktree)}
             onKeyDown={(event) => event.key === "Enter" && onOpen(worktree)}
             onClick={(event) => (worktree.prunable ? onMenu(worktree, event.clientX, event.clientY) : worktree.head && onSelect(worktree.head))}
@@ -123,7 +124,7 @@ export function LockedFileList({ repoPath, locks, error, onMenu }: LockProps) {
       ))}
       {error && (
         <li className="sidebar-empty" title={error}>
-          Couldn't refresh the locks
+          {t("Couldn't refresh the locks")}
         </li>
       )}
     </ul>

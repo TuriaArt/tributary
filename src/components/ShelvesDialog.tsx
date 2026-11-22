@@ -6,6 +6,7 @@ import { Avatar } from "./Avatar";
 import { Dialog } from "./Dialog";
 import { ShelfIcon } from "./Icons";
 import { Button } from "./ui/Button";
+import { t, tx } from "../lib/i18n";
 
 interface Props {
   repoPath: string;
@@ -86,19 +87,18 @@ export function ShelvesDialog({ repoPath, status, paths, head, canChange, run, o
 
   return (
     <Dialog
-      title="Shelves"
+      title={t("Shelves")}
       wide
       className="shelves-dialog"
       onCancel={onClose}
       buttons={
         <Button kind="secondary" onClick={onClose}>
-          Close
+          {t("Close")}
         </Button>
       }
     >
       <p className="dialog-note-line">
-        Unfinished work, shared with your team without committing it to a branch. Anyone can open a shelf: its files are taken into their copy as they were
-        shelved.
+        {t("Unfinished work, shared with your team without committing it to a branch. Anyone can open a shelf: its files are taken into their copy as they were shelved.")}
       </p>
 
       {files.length > 0 && (
@@ -109,13 +109,13 @@ export function ShelvesDialog({ repoPath, status, paths, head, canChange, run, o
             shelve();
           }}
         >
-          <h3>Shelve your changes</h3>
+          <h3>{t("Shelve your changes")}</h3>
           <input
             className="text-input"
             value={description}
             onChange={(event) => setDescription(event.target.value)}
-            placeholder="What it is, like “Tavern sign, darker wood: for Rosa to look at”"
-            aria-label="What the shelf is for"
+            placeholder={t("What it is, like “Tavern sign, darker wood: for Rosa to look at”")}
+            aria-label={t("What the shelf is for")}
             autoFocus
           />
           <ul className="stash-files shelve-files">
@@ -130,9 +130,8 @@ export function ShelvesDialog({ repoPath, status, paths, head, canChange, run, o
             ))}
           </ul>
           <div className="shelve-actions">
-            <label className="checkbox" title="Unticked, they're taken out of your copy once shelved (Undo puts them back)">
-              <input type="checkbox" checked={keep} onChange={(event) => setKeep(event.target.checked)} />
-              Keep them in my copy too
+            <label className="checkbox" title={t("Unticked, they're taken out of your copy once shelved (Undo puts them back)")}>
+              {tx("{0}Keep them in my copy too", <input type="checkbox" checked={keep} onChange={(event) => setKeep(event.target.checked)} />)}
             </label>
             <span className="spacer" />
             <Button
@@ -140,25 +139,24 @@ export function ShelvesDialog({ repoPath, status, paths, head, canChange, run, o
               kind="link"
               onClick={() => setChosen(new Set(chosen.size === files.length ? [] : files.map((file) => file.path)))}
             >
-              {chosen.size === files.length ? "Select none" : "Select all"}
+              {chosen.size === files.length ? t("Select none") : t("Select all")}
             </Button>
             <Button type="submit" kind="primary" disabled={picked.length === 0 || !description.trim()}>
-              <ShelfIcon size={13} />
-              Shelve {plural(picked.length, "file")}
+              {tx("{0}Shelve {1}", <ShelfIcon size={13} />, plural(picked.length, "file"))}
             </Button>
           </div>
         </form>
       )}
 
       <div className="shelves-head">
-        <h3>On the shelves</h3>
-        {fetching && <span className="shelves-status">Fetching the team's…</span>}
+        <h3>{t("On the shelves")}</h3>
+        {fetching && <span className="shelves-status">{t("Fetching the team's…")}</span>}
         {!fetching && fetchError && <span className="shelves-status error">{fetchError}</span>}
       </div>
       {list === null ? (
-        <p className="shelves-empty">Looking…</p>
+        <p className="shelves-empty">{t("Looking…")}</p>
       ) : list.length === 0 ? (
-        <p className="shelves-empty">{fetching ? "None here yet." : "None yet. Shelve your changes to share them."}</p>
+        <p className="shelves-empty">{fetching ? t("None here yet.") : t("None yet. Shelve your changes to share them.")}</p>
       ) : (
         <ul className="shelves-list">
           {list.map((shelf) => {
@@ -170,11 +168,10 @@ export function ShelvesDialog({ repoPath, status, paths, head, canChange, run, o
                 <div className="shelf-text">
                   <strong className="shelf-description">{shelf.description}</strong>
                   <span className="shelf-meta">
-                    {shelf.mine ? "You" : shelf.author} · {relativeTime(shelf.time)}
+                    {shelf.mine ? t("You") : shelf.author} · {relativeTime(shelf.time)}
                     {shelf.branch && (
                       <>
-                        {" · on "}
-                        <span className="mono">{shelf.branch}</span>
+                        {" "}{tx("· on {0}", <span className="mono">{shelf.branch}</span>)}
                       </>
                     )}
                     {" · "}
@@ -190,7 +187,7 @@ export function ShelvesDialog({ repoPath, status, paths, head, canChange, run, o
                           <span className="mono">{file.path}</span>
                         </li>
                       ))}
-                      {elsewhere && <li className="shelf-note">Shelved on another commit than yours: its files come as they were shelved.</li>}
+                      {elsewhere && <li className="shelf-note">{t("Shelved on another commit than yours: its files come as they were shelved.")}</li>}
                     </ul>
                   )}
                 </div>
@@ -198,21 +195,21 @@ export function ShelvesDialog({ repoPath, status, paths, head, canChange, run, o
                   <Button
                     kind="outline"
                     disabled={!canChange}
-                    title={canChange ? "Take its files into your copy, as they were shelved" : undefined}
+                    title={canChange ? t("Take its files into your copy, as they were shelved") : undefined}
                     onClick={() => {
                       onClose();
                       void run({ kind: "openShelf", reference: shelf.reference });
                     }}
                   >
-                    <span className="button-label">Open</span>
+                    <span className="button-label">{t("Open")}</span>
                   </Button>
                   <Button
                     kind="outline" className={deleting === shelf.reference ? "danger" : undefined}
                     onClick={() => void remove(shelf)}
                     onBlur={() => deleting === shelf.reference && setDeleting(null)}
-                    title={shelf.mine ? "Delete it, for everyone" : `Delete ${shelf.author}'s shelf, for everyone`}
+                    title={shelf.mine ? t("Delete it, for everyone") : t("Delete {0}'s shelf, for everyone", shelf.author)}
                   >
-                    <span className="button-label">{deleting === shelf.reference ? (shelf.mine ? "Delete it?" : `Delete ${shelf.author.split(" ")[0]}'s?`) : "Delete"}</span>
+                    <span className="button-label">{deleting === shelf.reference ? (shelf.mine ? t("Delete it?") : t("Delete {0}'s?", shelf.author.split(" ")[0])) : t("Delete")}</span>
                   </Button>
                 </div>
               </li>

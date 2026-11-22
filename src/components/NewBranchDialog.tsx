@@ -5,6 +5,7 @@ import { Dialog } from "./Dialog";
 import { CommitRef } from "./ResetDialog";
 import { Button } from "./ui/Button";
 import { Field } from "./ui/Field";
+import { t, tx } from "../lib/i18n";
 
 interface Props {
   repoPath: string;
@@ -55,14 +56,14 @@ export function NewBranchDialog({ repoPath, target, canCheckout, onCancel, onDon
   const inTheWay = checkout && error?.kind?.kind === "changesInTheWay" ? error.kind : null;
   const stashRetry = inTheWay
     ? {
-        label: "Stash changes and retry",
+        label: t("Stash changes and retry"),
         onClick: () => run({ kind: "stashAndRetry", action: createAction(), includeUntracked: inTheWay.untracked }),
       }
     : null;
 
   return (
     <Dialog
-      title="New branch"
+      title={t("New branch")}
       error={error?.message ?? null}
       errorAction={stashRetry}
       busy={running}
@@ -70,16 +71,16 @@ export function NewBranchDialog({ repoPath, target, canCheckout, onCancel, onDon
       buttons={
         <>
           <Button kind="secondary" onClick={onCancel} disabled={running}>
-            Cancel
+            {t("Cancel")}
           </Button>
           <Button kind="primary" onClick={create} disabled={running || !name.trim()}>
-            {running ? "Creating…" : "Create branch"}
+            {running ? t("Creating…") : t("Create branch")}
           </Button>
         </>
       }
     >
       <p>
-        Starting at <CommitRef commit={target} />
+        {tx("Starting at {0}", <CommitRef commit={target} />)}
       </p>
       <form
         className="dialog-form"
@@ -89,7 +90,7 @@ export function NewBranchDialog({ repoPath, target, canCheckout, onCancel, onDon
         }}
       >
         {tracker && (
-          <Field label="From an issue">
+          <Field label={t("From an issue")}>
             {issues && issues.length > 0 ? (
               <select
                 className="settings-select"
@@ -100,7 +101,7 @@ export function NewBranchDialog({ repoPath, target, canCheckout, onCancel, onDon
                   if (chosen) setName(branchNameFor(chosen));
                 }}
               >
-                <option value="">None: name it yourself</option>
+                <option value="">{t("None: name it yourself")}</option>
                 {issues.map((each) => (
                   <option key={each.key} value={each.key}>
                     {each.key} {each.title}
@@ -109,11 +110,11 @@ export function NewBranchDialog({ repoPath, target, canCheckout, onCancel, onDon
                 ))}
               </select>
             ) : (
-              <span className="field-note">{issuesNote ?? (issues ? "No open issues are assigned to you." : "Looking for your issues…")}</span>
+              <span className="field-note">{issuesNote ?? (issues ? t("No open issues are assigned to you.") : t("Looking for your issues…"))}</span>
             )}
           </Field>
         )}
-        <Field label="Name">
+        <Field label={t("Name")}>
           <input
             className="text-input"
             value={name}
@@ -129,13 +130,12 @@ export function NewBranchDialog({ repoPath, target, canCheckout, onCancel, onDon
           />
         </Field>
         <label className="checkbox">
-          <input
+          {tx("{0}Check out the new branch", <input
             type="checkbox"
             checked={checkout}
             disabled={!canCheckout}
             onChange={(event) => setCheckout(event.target.checked)}
-          />
-          Check out the new branch
+          />)}
         </label>
       </form>
     </Dialog>

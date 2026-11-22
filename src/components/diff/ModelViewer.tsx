@@ -12,6 +12,7 @@ import type { FileDiff, Media } from "../../api";
 import { useThemeColors } from "../../app/useAppearance";
 import { dataUrlBytes, missingSide } from "../../lib/media";
 import { Loader } from "../Loader";
+import { t, tx } from "../../lib/i18n";
 
 /** What's in a model, to compare. */
 export interface ModelFacts {
@@ -51,7 +52,7 @@ async function load(format: string, bytes: ArrayBuffer): Promise<THREE.Object3D>
     case "ply":
       return mesh(new PLYLoader().parse(bytes));
     default:
-      throw new Error(`${format} models can't be shown`);
+      throw new Error(t("{0} models can't be shown", format));
   }
 }
 
@@ -236,20 +237,20 @@ export default function ModelViewer({ diff, media }: { diff: FileDiff; media: Me
         const model = loaded[side];
         return (
           <figure key={side} className="diff-media-side">
-            <figcaption>{side === "before" ? "Before" : "After"}</figcaption>
+            <figcaption>{side === "before" ? t("Before") : t("After")}</figcaption>
             {!media[side] ? (
               <div className="diff-media-missing diff-model-frame">{missingSide(diff, side)}</div>
             ) : model && "error" in model ? (
-              <div className="diff-media-missing diff-model-frame">Couldn't read this model: {model.error}</div>
+              <div className="diff-media-missing diff-model-frame">{tx("Couldn't read this model: {0}", model.error)}</div>
             ) : (
               <div className="diff-model-frame">
-                <canvas ref={canvases[side]} className="diff-model-canvas" aria-label={`${diff.path}, ${side}, in 3D`} />
+                <canvas ref={canvases[side]} className="diff-model-canvas" aria-label={t("{0}, {1}, in 3D", diff.path, side)} />
                 {!model && (
                   <span className="diff-model-loading">
-                    <Loader inline size={22} title="Loading the model…" />
+                    <Loader inline size={22} title={t("Loading the model…")} />
                   </span>
                 )}
-                {model && noWebGL && <span className="diff-model-loading">This computer can't show 3D here (no WebGL). The numbers below still compare them.</span>}
+                {model && noWebGL && <span className="diff-model-loading">{t("This computer can't show 3D here (no WebGL). The numbers below still compare them.")}</span>}
               </div>
             )}
           </figure>
@@ -257,10 +258,9 @@ export default function ModelViewer({ diff, media }: { diff: FileDiff; media: Me
       })}
       <ModelFacts before={facts("before")} after={facts("after")} />
       <div className="diff-media-actions">
-        <span className="muted">Drag to turn, scroll to zoom, right-drag to move.</span>
+        <span className="muted">{t("Drag to turn, scroll to zoom, right-drag to move.")}</span>
         <label className="checkbox">
-          <input type="checkbox" checked={wireframe} onChange={(event) => setWireframe(event.target.checked)} />
-          Wireframe
+          {tx("{0}Wireframe", <input type="checkbox" checked={wireframe} onChange={(event) => setWireframe(event.target.checked)} />)}
         </label>
       </div>
     </div>
@@ -272,10 +272,10 @@ function ModelFacts({ before, after }: { before: ModelFacts | null; after: Model
   if (!before && !after) return null;
   const size = (facts: ModelFacts | null) => (facts ? facts.size.map((n) => Number(n.toPrecision(3)).toLocaleString()).join(" × ") : "—");
   const rows: [string, (facts: ModelFacts) => number | string][] = [
-    ["Meshes", (facts) => facts.meshes],
-    ["Vertices", (facts) => facts.vertices],
-    ["Triangles", (facts) => facts.triangles],
-    ["Materials", (facts) => facts.materials],
+    [t("Meshes"), (facts) => facts.meshes],
+    [t("Vertices"), (facts) => facts.vertices],
+    [t("Triangles"), (facts) => facts.triangles],
+    [t("Materials"), (facts) => facts.materials],
   ];
   return (
     <table className="diff-model-facts">
@@ -292,7 +292,7 @@ function ModelFacts({ before, after }: { before: ModelFacts | null; after: Model
           );
         })}
         <tr className={before && after && size(before) !== size(after) ? "changed" : undefined}>
-          <th>Size</th>
+          <th>{t("Size")}</th>
           <td>{size(before)}</td>
           <td>{size(after)}</td>
         </tr>

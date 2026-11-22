@@ -1,8 +1,9 @@
 import { useState } from "react";
 import type { CommitRow } from "../api";
-import { shortId } from "../lib/format";
+import { plural, shortId } from "../lib/format";
 import { Dialog } from "./Dialog";
 import { Button } from "./ui/Button";
+import { t, tx } from "../lib/i18n";
 
 /** A commit before the checked-out one that may have worked, named by its tag when it has one. */
 export interface GoodChoice {
@@ -31,26 +32,26 @@ export function BisectDialog({ good, bad, between, onCancel, onStart }: Props) {
   const tests = Math.max(1, Math.ceil(Math.log2(count + 1)));
   return (
     <Dialog
-      title="Find the commit that broke it"
+      title={t("Find the commit that broke it")}
       onCancel={onCancel}
       buttons={
         <>
           <Button kind="secondary" onClick={onCancel}>
-            Cancel
+            {t("Cancel")}
           </Button>
           <Button kind="primary" onClick={() => worked && onStart(worked)} disabled={!worked} autoFocus>
-            Start bisecting
+            {t("Start bisecting")}
           </Button>
         </>
       }
     >
       <dl className="bisect-ends">
-        <dt className="good">{choices ? <label htmlFor="bisect-good">Worked</label> : "Worked"}</dt>
+        <dt className="good">{choices ? <label htmlFor="bisect-good">{t("Worked")}</label> : t("Worked")}</dt>
         <dd>
           {choices ? (
             <select id="bisect-good" className="text-input bisect-good" value={chosen} onChange={(event) => setChosen(event.target.value)}>
               {choices.some((choice) => choice.tag) && (
-                <optgroup label="Tags">
+                <optgroup label={t("Tags")}>
                   {choices
                     .filter((choice) => choice.tag)
                     .map(({ commit, tag }) => (
@@ -60,7 +61,7 @@ export function BisectDialog({ good, bad, between, onCancel, onStart }: Props) {
                     ))}
                 </optgroup>
               )}
-              <optgroup label="Commits">
+              <optgroup label={t("Commits")}>
                 {choices
                   .filter((choice) => !choice.tag)
                   .map(({ commit }) => (
@@ -76,15 +77,13 @@ export function BisectDialog({ good, bad, between, onCancel, onStart }: Props) {
             </>
           )}
         </dd>
-        <dt className="bad">Broken</dt>
+        <dt className="bad">{t("Broken")}</dt>
         <dd>
           <span className="mono">{bad.label}</span> {bad.summary}
         </dd>
       </dl>
       <p className="dialog-note-line">
-        Tributary checks out the commit halfway between them. Try it (build it, run it), then say whether it's <strong>good</strong> or <strong>bad</strong>, and
-        it halves what's left, until it finds the first bad commit: about {tests === 1 ? "1 test" : `${tests} tests`} for these {count} commits. <strong>Stop</strong>{" "}
-        takes you back to where you are now.
+        {tx("Tributary checks out the commit halfway between them. Try it (build it, run it), then say whether it's {0} or {1}, and it halves what's left, until it finds the first bad commit: about {2} for these {3} commits. {4} takes you back to where you are now.", <strong>{t("good")}</strong>, <strong>{t("bad")}</strong>, plural(tests, "test"), count, <strong>{t("Stop")}</strong>)}
       </p>
     </Dialog>
   );

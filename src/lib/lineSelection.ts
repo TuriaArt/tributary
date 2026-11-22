@@ -2,6 +2,8 @@
 // known by its sign and number: "+12" is line 12 after the change (added), "-7" line 7
 // before it (removed). Unchanged lines can't be chosen.
 import type { DiffLine, Hunk } from "../api";
+import { t } from "./i18n";
+import { plural } from "./format";
 
 export function lineKey(line: DiffLine): string | null {
   if (line.kind === "added" && line.new !== null) return `+${line.new}`;
@@ -41,5 +43,5 @@ export function linesOf(keys: Iterable<string>): { added: number[]; removed: num
 
 /** "3 lines" or "1 line". */
 export function linesLabel(count: number): string {
-  return count === 1 ? "1 line" : `${count} lines`;
+  return count === 1 ? t("1 line") : plural(count, "line");
 }

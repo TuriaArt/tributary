@@ -1,5 +1,6 @@
 import { Fragment, useMemo, type ReactNode } from "react";
 import { openable, parseInline, parseMarkdown, type Block, type Inline } from "../lib/markdown";
+import { t } from "../lib/i18n";
 
 /**
  * Markdown from GitHub or GitLab (a pull request's description, a comment), shown as it
@@ -41,7 +42,7 @@ function renderBlock(block: Block, key: number, openUrl: (url: string) => void):
     case "list": {
       const items = block.items.map((item, index) => (
         <li key={index} className={item.checked !== null ? "markdown-task" : undefined}>
-          {item.checked !== null && <span className={`markdown-box${item.checked ? " checked" : ""}`} role="img" aria-label={item.checked ? "Done" : "Not done"} />}
+          {item.checked !== null && <span className={`markdown-box${item.checked ? " checked" : ""}`} role="img" aria-label={item.checked ? t("Done") : t("Not done")} />}
           <div className="markdown-item">{item.blocks.map((inner, index) => renderBlock(inner, index, openUrl))}</div>
         </li>
       ));

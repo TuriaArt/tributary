@@ -1,4 +1,5 @@
 import type { PointerEvent } from "react";
+import { t } from "../lib/i18n";
 
 interface Props {
   /** Called while dragging, with how far the pointer moved since the drag started. */
@@ -37,7 +38,7 @@ export function ResizeHandle({ onResize, onResizeStart, onReset, className, titl
       className={`resize-handle${className ? ` ${className}` : ""}`}
       onPointerDown={start}
       onDoubleClick={onReset}
-      title={title ?? (onReset ? "Drag to resize, double-click to reset" : "Drag to resize")}
+      title={title ?? (onReset ? t("Drag to resize, double-click to reset") : t("Drag to resize"))}
       role="separator"
       aria-orientation="vertical"
     />

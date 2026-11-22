@@ -3,6 +3,7 @@ import { setDiffTool, type DiffToolSettings } from "../api";
 import { diffToolsChanged, toolLabel, useDiffTools } from "../lib/diffTools";
 import type { SettingRow } from "./SettingsDialog";
 import { Button } from "./ui/Button";
+import { t } from "../lib/i18n";
 
 interface Options {
   /** Only looked up while Settings is open. */
@@ -12,7 +13,7 @@ interface Options {
 }
 
 /** The commands' placeholders, for the "Custom command" field. */
-const PLACEHOLDERS = { diff: 'mytool "$LOCAL" "$REMOTE"', merge: 'mytool "$BASE" "$LOCAL" "$REMOTE" "$MERGED"' };
+const PLACEHOLDERS = { diff: "mytool \"$LOCAL\" \"$REMOTE\"", merge: "mytool \"$BASE\" \"$LOCAL\" \"$REMOTE\" \"$MERGED\"" };
 
 /**
  * Settings' "Diff and merge" rows: which tool opens a file's changes, and which one
@@ -22,7 +23,7 @@ export function useDiffToolRows({ open, repoPath, notify }: Options): SettingRow
   const settings = useDiffTools(repoPath, true, open);
   const [custom, setCustom] = useState<{ diff: string | null; merge: string | null }>({ diff: null, merge: null });
   if (!open) return [];
-  if (!settings) return [{ kind: "custom", label: "Looking for tools…", content: null }];
+  if (!settings) return [{ kind: "custom", label: t("Looking for tools…"), content: null }];
 
   const save = (kind: "diff" | "merge", tool: string | null, command: string | null = null) =>
     setDiffTool(repoPath, kind === "merge", tool, command)
@@ -51,20 +52,20 @@ function toolRows(
   const command = kind === "diff" ? settings.diffCommand : settings.mergeCommand;
   const tools = settings.available.filter((tool) => tool[kind]);
   const options = [
-    { value: "", label: "Not chosen" },
+    { value: "", label: t("Not chosen") },
     ...tools.map((tool) => ({ value: tool.name, label: tool.label })),
     ...(current && current !== "custom" && !tools.some((tool) => tool.name === current) ? [{ value: current, label: toolLabel(current) }] : []),
-    { value: "custom", label: "A command of my own…" },
+    { value: "custom", label: t("A command of my own…") },
   ];
   const editing = draft !== null || current === "custom";
   const rows: SettingRow[] = [
     {
       kind: "select",
-      label: kind === "diff" ? "Diff tool" : "Merge tool",
+      label: kind === "diff" ? t("Diff tool") : t("Merge tool"),
       hint:
         kind === "diff"
-          ? "Opens a file's changes side by side, from “Open in diff tool”. Saved in git's settings (diff.tool), so git difftool uses it too."
-          : "Resolves a conflicted file, from “Open in merge tool”. Saved in git's settings (merge.tool), so git mergetool uses it too.",
+          ? t("Opens a file's changes side by side, from “Open in diff tool”. Saved in git's settings (diff.tool), so git difftool uses it too.")
+          : t("Resolves a conflicted file, from “Open in merge tool”. Saved in git's settings (merge.tool), so git mergetool uses it too."),
       value: draft !== null ? "custom" : (current ?? ""),
       options,
       set: (value) => {
@@ -77,8 +78,8 @@ function toolRows(
     const text = draft ?? command ?? "";
     rows.push({
       kind: "custom",
-      label: "Command",
-      hint: kind === "diff" ? "$LOCAL and $REMOTE are the two versions." : "$MERGED is the file to resolve; $BASE, $LOCAL and $REMOTE are the versions it came from.",
+      label: t("Command"),
+      hint: kind === "diff" ? t("$LOCAL and $REMOTE are the two versions.") : t("$MERGED is the file to resolve; $BASE, $LOCAL and $REMOTE are the versions it came from."),
       content: (
         <span className="settings-inline">
           <input
@@ -88,10 +89,10 @@ function toolRows(
             onChange={(event) => setDraft(event.target.value)}
             onKeyDown={(event) => event.key === "Enter" && text.trim() && save(kind, "custom", text)}
             spellCheck={false}
-            aria-label={`Command for the ${kind} tool`}
+            aria-label={t("Command for the {0} tool", kind)}
           />
           <Button kind="outline" onClick={() => save(kind, "custom", text)} disabled={!text.trim() || (draft === null && current === "custom")}>
-            <span className="button-label">Save</span>
+            <span className="button-label">{t("Save")}</span>
           </Button>
         </span>
       ),

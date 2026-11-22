@@ -9,6 +9,7 @@ import { FileFilter, FileList } from "./FileList";
 import { CloseIcon, CompareIcon } from "./Icons";
 import { Loader } from "./Loader";
 import { Button } from "./ui/Button";
+import { t, tx } from "../lib/i18n";
 
 interface Props {
   comparing: Comparing;
@@ -50,11 +51,11 @@ export function ComparePanel({ comparing, onOpenFile, isShown, onSelect, hasComm
   const files = comparison ? (comparison.files.length > FILTER_FROM && query.trim() ? filterFiles(comparison.files, query, actors) : comparison.files) : [];
   return (
     <ActorNames.Provider value={actors}>
-      <aside className="details compare-panel" aria-label={`${to.label} compared with ${from.label}`}>
+      <aside className="details compare-panel" aria-label={t("{0} compared with {1}", to.label, from.label)}>
         <header className="details-header">
-          <span className="details-label">Compare</span>
+          <span className="details-label">{t("Compare")}</span>
           <span className="spacer" />
-          <Button kind="icon" onClick={comparing.close} title="Close (Esc)" aria-label="Close the comparison">
+          <Button kind="icon" onClick={comparing.close} title={t("Close (Esc)")} aria-label={t("Close the comparison")}>
             <CloseIcon />
           </Button>
         </header>
@@ -63,30 +64,30 @@ export function ComparePanel({ comparing, onOpenFile, isShown, onSelect, hasComm
             <span className="compare-side mono" title={from.id}>
               {from.label}
             </span>
-            <Button kind="icon" className="compare-swap" onClick={comparing.swap} title="Swap them" aria-label="Swap the two sides">
+            <Button kind="icon" className="compare-swap" onClick={comparing.swap} title={t("Swap them")} aria-label={t("Swap the two sides")}>
               <CompareIcon size={14} />
             </Button>
             <span className="compare-side mono to" title={to.id}>
               {to.label}
             </span>
           </div>
-          <div className="diff-switch compare-how" role="group" aria-label="Compare">
-            <button className={split ? "selected" : undefined} aria-pressed={split} onClick={() => comparing.setSplit(true)} title={`What ${to.label} changed since the two split, like a pull request`}>
-              <span className="button-label">Since they split</span>
+          <div className="diff-switch compare-how" role="group" aria-label={t("Compare")}>
+            <button className={split ? "selected" : undefined} aria-pressed={split} onClick={() => comparing.setSplit(true)} title={t("What {0} changed since the two split, like a pull request", to.label)}>
+              <span className="button-label">{t("Since they split")}</span>
             </button>
-            <button className={!split ? "selected" : undefined} aria-pressed={!split} onClick={() => comparing.setSplit(false)} title={`Everything that's different between ${from.label} and ${to.label}`}>
-              <span className="button-label">Directly</span>
+            <button className={!split ? "selected" : undefined} aria-pressed={!split} onClick={() => comparing.setSplit(false)} title={t("Everything that's different between {0} and {1}", from.label, to.label)}>
+              <span className="button-label">{t("Directly")}</span>
             </button>
           </div>
           {comparison && <Facts comparison={comparison} from={from.label} to={to.label} split={split} onSelect={onSelect} hasCommit={hasCommit} />}
           <section className="files">
-            <h3>{comparison ? plural(comparison.files.length, "different file") : "Different files"}</h3>
+            <h3>{comparison ? plural(comparison.files.length, "different file") : t("Different files")}</h3>
             {error ? (
               <div className="details-error">{error}</div>
             ) : !comparison ? (
-              <Loader size={48} title="Comparing them" />
+              <Loader size={48} title={t("Comparing them")} />
             ) : comparison.files.length === 0 ? (
-              <div className="muted">{split ? `${to.label} hasn't changed any files since they split.` : "The files are the same in both."}</div>
+              <div className="muted">{split ? t("{0} hasn't changed any files since they split.", to.label) : t("The files are the same in both.")}</div>
             ) : (
               <>
                 {comparison.files.length > FILTER_FROM && <FileFilter value={query} onChange={setQuery} shown={files.length} total={comparison.files.length} />}
@@ -95,7 +96,7 @@ export function ComparePanel({ comparing, onOpenFile, isShown, onSelect, hasComm
                   keyOf={(file) => `${file.status}:${file.oldPath ?? ""}:${file.path}`}
                   render={(file) => <FileLine file={file} onOpen={onOpenFile} shown={isShown(file.path)} />}
                 />
-                {files.length === 0 && <div className="muted">No files match “{query.trim()}”.</div>}
+                {files.length === 0 && <div className="muted">{tx("No files match “{0}”.", query.trim())}</div>}
               </>
             )}
           </section>
@@ -110,25 +111,22 @@ function Facts({ comparison, from, to, split, onSelect, hasCommit }: { compariso
   return (
     <div className="compare-facts">
       <p>
-        <strong>{to}</strong> has {plural(onlyTo, "commit")} that <strong>{from}</strong> doesn't
-        {onlyFrom > 0 ? (
+        {tx("{0} has {1} that {2} doesn't{3}", <strong>{to}</strong>, plural(onlyTo, "commit"), <strong>{from}</strong>, onlyFrom > 0 ? (
           <>
-            , and <strong>{from}</strong> has {plural(onlyFrom, "commit")} that <strong>{to}</strong> doesn't.
+            {tx(", and {0} has {1} that {2} doesn't.", <strong>{from}</strong>, plural(onlyFrom, "commit"), <strong>{to}</strong>)}
           </>
         ) : (
           "."
-        )}
+        ))}
       </p>
       {splitAt ? (
         <p className="muted">
-          They split at{" "}
-          <button className="sha-link" onClick={() => onSelect(splitAt)} disabled={!hasCommit(splitAt)} title={hasCommit(splitAt) ? "Go to that commit" : "Not loaded"}>
+          {tx("They split at {0}{1}", <button className="sha-link" onClick={() => onSelect(splitAt)} disabled={!hasCommit(splitAt)} title={hasCommit(splitAt) ? t("Go to that commit") : t("Not loaded")}>
             <span className="button-label">{shortId(splitAt)}</span>
-          </button>
-          {split ? `: the files below are ${to}'s changes since then.` : "."}
+          </button>, split ? t(": the files below are {0}'s changes since then.", to) : ".")}
         </p>
       ) : (
-        <p className="muted">They don't share any history.</p>
+        <p className="muted">{t("They don't share any history.")}</p>
       )}
     </div>
   );

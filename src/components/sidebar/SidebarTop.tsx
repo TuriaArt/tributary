@@ -1,5 +1,7 @@
 import { EyeOffIcon, SearchIcon } from "../Icons";
 import { Button } from "../ui/Button";
+import { plural } from "../../lib/format";
+import { t } from "../../lib/i18n";
 
 /** The box that narrows the sidebar to what matches. Esc empties it. */
 export function SidebarFilter({ value, onChange }: { value: string; onChange: (value: string) => void }) {
@@ -15,9 +17,9 @@ export function SidebarFilter({ value, onChange }: { value: string; onChange: (v
             onChange("");
           }
         }}
-        placeholder="Filter the sidebar"
+        placeholder={t("Filter the sidebar")}
         spellCheck={false}
-        aria-label="Filter the sidebar"
+        aria-label={t("Filter the sidebar")}
       />
     </div>
   );
@@ -28,9 +30,9 @@ export function VisibilityBar({ count, soloing, onShowAll }: { count: number; so
   return (
     <div className="sidebar-visibility">
       <EyeOffIcon size={13} />
-      <span>{soloing ? `Showing only ${count === 1 ? "one branch" : `${count} branches`}` : `${count} hidden`}</span>
+      <span>{soloing ? t("Showing only {0}", count === 1 ? t("one branch") : plural(count, "branch", "branches")) : t("{0} hidden", count)}</span>
       <Button kind="link" onClick={onShowAll}>
-        Show all
+        {t("Show all")}
       </Button>
     </div>
   );

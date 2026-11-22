@@ -32,6 +32,7 @@ import { baseName } from "../lib/paths";
 import { deleteAnyway, splitRemoteBranch, type OpenDialog } from "../menus";
 import type { CommitRow } from "../api";
 import { useOpenRepository } from "./OpenRepository";
+import { t, tx } from "../lib/i18n";
 
 /** The dialogs shown elsewhere: cloning on the start screen, and a repository's settings in RepositoryView. */
 type Elsewhere = "clone" | "repoSettings";
@@ -169,7 +170,7 @@ function LocalHistory({ dialog }: Shown<"localHistory">) {
       file={dialog.file}
       canChange={!snapshot.bare}
       run={(action) => act(action)}
-      onOpenSettings={() => openSettings("Local history")}
+      onOpenSettings={() => openSettings(t("Local history"))}
       onClose={() => closeDialog()}
     />
   );
@@ -285,8 +286,8 @@ function ProtectedAction({ dialog }: Shown<"protectedAction">) {
   return (
     <ProtectedActionDialog
       branch={dialog.branch}
-      title={`Rewrite ${dialog.branch}?`}
-      explanation={`${dialog.rewrite.what} rewrites ${dialog.branch}'s history: its commits get new ids, so anyone who already has them will have to reconcile. Tributary keeps a backup of where it was.`}
+      title={t("Rewrite {0}?", dialog.branch)}
+      explanation={t("{0} rewrites {1}'s history: its commits get new ids, so anyone who already has them will have to reconcile. Tributary keeps a backup of where it was.", dialog.rewrite.what, dialog.branch)}
       confirmLabel={dialog.rewrite.confirm}
       onCancel={() => closeDialog()}
       onConfirm={() => {
@@ -408,15 +409,15 @@ function DeleteTag({ dialog }: Shown<"deleteTag">) {
   return (
     <ConfirmDialog
       repoPath={snapshot.path}
-      title={`Delete tag ${dialog.name}?`}
-      confirmLabel="Delete tag"
-      busyLabel="Deleting…"
+      title={t("Delete tag {0}?", dialog.name)}
+      confirmLabel={t("Delete tag")}
+      busyLabel={t("Deleting…")}
       danger
       action={{ kind: "deleteTag", name: dialog.name }}
       onCancel={() => closeDialog()}
       onDone={(message) => finished(message, { kind: "restoreTag", name: dialog.name, id: dialog.restoreId })}
     >
-      <p>The tag is removed from this repository. Copies of it on remotes are kept.</p>
+      <p>{t("The tag is removed from this repository. Copies of it on remotes are kept.")}</p>
     </ConfirmDialog>
   );
 }
@@ -426,17 +427,16 @@ function DeleteRemoteTag({ dialog }: Shown<"deleteRemoteTag">) {
   return (
     <ConfirmDialog
       repoPath={snapshot.path}
-      title={`Delete ${dialog.name} from ${dialog.remote}?`}
-      confirmLabel="Delete from remote"
-      busyLabel="Deleting…"
+      title={t("Delete {0} from {1}?", dialog.name, dialog.remote)}
+      confirmLabel={t("Delete from remote")}
+      busyLabel={t("Deleting…")}
       danger
       action={{ kind: "deleteRemoteTag", name: dialog.name, remote: dialog.remote }}
       onCancel={() => closeDialog()}
       onDone={(message) => finished(message)}
     >
       <p>
-        The tag will be removed from <strong>{dialog.remote}</strong>, for everyone who uses it. The tag in this
-        repository is kept.
+        {tx("The tag will be removed from {0}, for everyone who uses it. The tag in this repository is kept.", <strong>{dialog.remote}</strong>)}
       </p>
     </ConfirmDialog>
   );
@@ -447,9 +447,9 @@ function ForceUnlock({ dialog }: Shown<"forceUnlock">) {
   return (
     <ConfirmDialog
       repoPath={snapshot.path}
-      title={`Unlock ${baseName(dialog.lock.path)}?`}
-      confirmLabel="Force unlock"
-      busyLabel="Unlocking…"
+      title={t("Unlock {0}?", baseName(dialog.lock.path))}
+      confirmLabel={t("Force unlock")}
+      busyLabel={t("Unlocking…")}
       danger
       action={{ kind: "unlockFiles", locks: [{ id: dialog.lock.id, path: dialog.lock.path }], force: true }}
       onCancel={() => closeDialog()}
@@ -459,8 +459,7 @@ function ForceUnlock({ dialog }: Shown<"forceUnlock">) {
       }}
     >
       <p>
-        <strong>{dialog.lock.owner || "Someone else"}</strong> locked <strong>{dialog.lock.path}</strong>. If they're still
-        working on it, their changes and yours will clash, and one of you will lose work. Check with them first.
+        {tx("{0} locked {1}. If they're still working on it, their changes and yours will clash, and one of you will lose work. Check with them first.", <strong>{dialog.lock.owner || t("Someone else")}</strong>, <strong>{dialog.lock.path}</strong>)}
       </p>
     </ConfirmDialog>
   );
@@ -507,15 +506,15 @@ function DropStash({ dialog }: Shown<"dropStash">) {
   return (
     <ConfirmDialog
       repoPath={snapshot.path}
-      title={`Drop ${dialog.label}?`}
-      confirmLabel="Drop stash"
-      busyLabel="Dropping…"
+      title={t("Drop {0}?", dialog.label)}
+      confirmLabel={t("Drop stash")}
+      busyLabel={t("Dropping…")}
       danger
       action={{ kind: "stashDrop", index: dialog.index, id: dialog.id }}
       onCancel={() => closeDialog()}
       onDone={(message) => finished(message)}
     >
-      <p>The changes saved in this stash will be gone.</p>
+      <p>{t("The changes saved in this stash will be gone.")}</p>
     </ConfirmDialog>
   );
 }
@@ -544,22 +543,21 @@ function RemoveWorktree({ dialog }: Shown<"removeWorktree">) {
   return (
     <ConfirmDialog
       repoPath={snapshot.path}
-      title={`Remove the worktree of ${dialog.worktree.branch ?? "a detached HEAD"}?`}
-      confirmLabel="Remove worktree"
-      busyLabel="Removing…"
+      title={t("Remove the worktree of {0}?", dialog.worktree.branch ?? t("a detached HEAD"))}
+      confirmLabel={t("Remove worktree")}
+      busyLabel={t("Removing…")}
       danger
       action={{ kind: "removeWorktree", path: dialog.worktree.path }}
       retryFor={(error) =>
         error.kind?.kind === "worktreeChanged"
-          ? { label: "Remove anyway", action: { kind: "removeWorktree", path: dialog.worktree.path, force: true } }
+          ? { label: t("Remove anyway"), action: { kind: "removeWorktree", path: dialog.worktree.path, force: true } }
           : null
       }
       onCancel={closeDialog}
       onDone={(message) => finished(message)}
     >
       <p>
-        This deletes the folder <strong>{dialog.worktree.path}</strong>.
-        {dialog.worktree.branch ? <> The branch {dialog.worktree.branch} and its commits stay.</> : null}
+        {tx("This deletes the folder {0}.{1}", <strong>{dialog.worktree.path}</strong>, dialog.worktree.branch ? <>{" "}{tx("The branch {0} and its commits stay.", dialog.worktree.branch)}</> : null)}
       </p>
     </ConfirmDialog>
   );

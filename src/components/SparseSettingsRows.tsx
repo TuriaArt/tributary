@@ -3,6 +3,7 @@ import { sparseSettings, type Action, type SparseSettings } from "../api";
 import { plural } from "../lib/format";
 import type { SettingRow } from "./SettingsDialog";
 import { Button } from "./ui/Button";
+import { t } from "../lib/i18n";
 
 /** Whether `folder` is inside one of `chosen` (so choosing it too changes nothing). */
 function inside(folder: string, chosen: ReadonlySet<string>): boolean {
@@ -31,7 +32,7 @@ export function useSparseRows(path: string, run: (action: Action) => Promise<boo
       .catch(() => setSettings(null));
   }, [path]);
   useEffect(load, [load]);
-  if (!settings) return [{ kind: "loading", label: "Reading the settings" }];
+  if (!settings) return [{ kind: "loading", label: t("Reading the settings") }];
 
   const apply = async (folders: string[]) => {
     setBusy(true);
@@ -52,13 +53,13 @@ export function useSparseRows(path: string, run: (action: Action) => Promise<boo
   const rows: SettingRow[] = [
     {
       kind: "custom",
-      label: settings.sparse ? `Only some folders are checked out` : "Every folder is checked out",
+      label: settings.sparse ? t("Only some folders are checked out") : t("Every folder is checked out"),
       hint: settings.sparse
-        ? `${settings.folders.join(", ") || "None"}, and the files at the top.${settings.partial ? " Files in the other folders aren't downloaded." : ""}`
-        : "To work on part of a big repository, check out only the folders you need: the others leave your disk, and the list and searches stay the same.",
+        ? t("{0}, and the files at the top.{1}", settings.folders.join(", ") || t("None"), settings.partial ? t(" Files in the other folders aren't downloaded.") : "")
+        : t("To work on part of a big repository, check out only the folders you need: the others leave your disk, and the list and searches stay the same."),
       content: settings.sparse ? (
         <Button kind="outline" onClick={() => apply([])} disabled={busy}>
-          <span className="button-label">Check out everything</span>
+          <span className="button-label">{t("Check out everything")}</span>
         </Button>
       ) : null,
     },
@@ -66,8 +67,8 @@ export function useSparseRows(path: string, run: (action: Action) => Promise<boo
   if (settings.sparse && !settings.cone) {
     rows.push({
       kind: "custom",
-      label: "Checked out by patterns",
-      hint: "This repository's sparse checkout uses patterns rather than folders, so it's changed with git sparse-checkout instead.",
+      label: t("Checked out by patterns"),
+      hint: t("This repository's sparse checkout uses patterns rather than folders, so it's changed with git sparse-checkout instead."),
       content: null,
     });
     return rows;
@@ -75,10 +76,10 @@ export function useSparseRows(path: string, run: (action: Action) => Promise<boo
   if (settings.available.length === 0) return rows;
   rows.push({
     kind: "custom",
-    label: "Folders to check out",
-    hint: settings.partial || settings.sparse ? "Folders you add are downloaded and checked out; folders you take away leave your disk (commit or stash changes in them first)." : "Folders you take away leave your disk (commit or stash changes in them first). Files at the top always stay.",
+    label: t("Folders to check out"),
+    hint: settings.partial || settings.sparse ? t("Folders you add are downloaded and checked out; folders you take away leave your disk (commit or stash changes in them first).") : t("Folders you take away leave your disk (commit or stash changes in them first). Files at the top always stay."),
     content: (
-      <div className="sparse-folders" role="group" aria-label="Folders to check out">
+      <div className="sparse-folders" role="group" aria-label={t("Folders to check out")}>
         {settings.available.map((folder) => {
           const covered = inside(folder.path, chosen);
           return (
@@ -94,10 +95,10 @@ export function useSparseRows(path: string, run: (action: Action) => Promise<boo
   rows.push({
     kind: "custom",
     label: "",
-    hint: wanted.length > 0 ? `${plural(wanted.length, "folder")} and the files at the top.` : undefined,
+    hint: wanted.length > 0 ? t("{0} and the files at the top.", plural(wanted.length, "folder")) : undefined,
     content: (
       <Button kind="primary" onClick={() => apply(wanted)} disabled={busy || wanted.length === 0 || unchanged}>
-        {busy ? "Checking out…" : "Check out only these"}
+        {busy ? t("Checking out…") : t("Check out only these")}
       </Button>
     ),
   });

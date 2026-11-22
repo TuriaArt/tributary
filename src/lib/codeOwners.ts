@@ -1,6 +1,8 @@
 // Who owns a file, by the repository's CODEOWNERS, for the diff's header.
 import { useEffect, useState } from "react";
 import { codeOwners } from "../api";
+import { joinAnd } from "./format";
+import { t } from "./i18n";
 
 /** Answers are kept this long (the file rarely changes). */
 const KEEP_FOR = 60_000;
@@ -34,6 +36,6 @@ export function useCodeOwners(repo: string, path: string): string[] {
 
 /** "@art", "@art and @maya", "@art, @maya and 2 more". */
 export function describeOwners(owners: string[]): string {
-  if (owners.length <= 2) return owners.join(" and ");
-  return `${owners[0]}, ${owners[1]} and ${owners.length - 2} more`;
+  if (owners.length <= 2) return joinAnd(owners);
+  return t("{0}, {1} and {2} more", owners[0], owners[1], owners.length - 2);
 }

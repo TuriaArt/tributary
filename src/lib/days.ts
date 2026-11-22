@@ -1,4 +1,5 @@
 import type { CommitRow } from "../api";
+import { locale, t } from "./i18n";
 
 /** A period of time commits are grouped into, like "Yesterday" or "October". */
 export interface DayBucket {
@@ -7,8 +8,8 @@ export interface DayBucket {
   label: string;
 }
 
-const monthName = new Intl.DateTimeFormat(undefined, { month: "long" });
-const monthAndYear = new Intl.DateTimeFormat(undefined, { month: "long", year: "numeric" });
+const monthName = new Intl.DateTimeFormat(locale(), { month: "long" });
+const monthAndYear = new Intl.DateTimeFormat(locale(), { month: "long", year: "numeric" });
 const DAY = 24 * 60 * 60 * 1000;
 
 const startOfDay = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
@@ -17,14 +18,14 @@ const startOfDay = (date: Date) => new Date(date.getFullYear(), date.getMonth(),
 export function dayBucket(seconds: number, now = new Date()): DayBucket {
   const date = new Date(seconds * 1000);
   const days = Math.round((startOfDay(now).getTime() - startOfDay(date).getTime()) / DAY);
-  if (days <= 0) return { order: 0, label: "Today" };
-  if (days === 1) return { order: 1, label: "Yesterday" };
+  if (days <= 0) return { order: 0, label: t("Today") };
+  if (days === 1) return { order: 1, label: t("Yesterday") };
   // Weeks start on Monday.
   const intoWeek = (now.getDay() + 6) % 7;
-  if (days <= intoWeek) return { order: 2, label: "Earlier this week" };
-  if (days <= intoWeek + 7) return { order: 3, label: "Last week" };
+  if (days <= intoWeek) return { order: 2, label: t("Earlier this week") };
+  if (days <= intoWeek + 7) return { order: 3, label: t("Last week") };
   const months = (now.getFullYear() - date.getFullYear()) * 12 + now.getMonth() - date.getMonth();
-  if (months <= 0) return { order: 4, label: "Earlier this month" };
+  if (months <= 0) return { order: 4, label: t("Earlier this month") };
   return {
     order: 4 + months,
     label: date.getFullYear() === now.getFullYear() ? monthName.format(date) : monthAndYear.format(date),

@@ -5,6 +5,7 @@ import { baseName, folderOf } from "../lib/paths";
 import { Dialog } from "./Dialog";
 import { Button } from "./ui/Button";
 import { Field } from "./ui/Field";
+import { t } from "../lib/i18n";
 
 interface Props {
   repoPath: string;
@@ -62,25 +63,25 @@ export function StashDialog({ repoPath, status, paths, onCancel, onDone }: Props
 
   return (
     <Dialog
-      title="Stash changes"
+      title={t("Stash changes")}
       error={error}
       busy={running}
       onCancel={onCancel}
       buttons={
         <>
           <Button kind="link" className="dialog-note" onClick={() => setChosen(new Set(chosen.size === files.length ? [] : files.map((f) => f.path)))}>
-            {chosen.size === files.length ? "Select none" : "Select all"}
+            {chosen.size === files.length ? t("Select none") : t("Select all")}
           </Button>
           <Button kind="secondary" onClick={onCancel} disabled={running}>
-            Cancel
+            {t("Cancel")}
           </Button>
           <Button kind="primary" onClick={stash} disabled={running || picked.length === 0}>
-            {running ? "Stashing…" : everything ? "Stash" : `Stash ${plural(picked.length, "file")}`}
+            {running ? t("Stashing…") : everything ? t("Stash") : t("Stash {0}", plural(picked.length, "file"))}
           </Button>
         </>
       }
     >
-      <p>The changes you pick are saved and removed from the working tree. Apply the stash to get them back.</p>
+      <p>{t("The changes you pick are saved and removed from the working tree. Apply the stash to get them back.")}</p>
       <form
         className="dialog-form"
         onSubmit={(event) => {
@@ -88,12 +89,12 @@ export function StashDialog({ repoPath, status, paths, onCancel, onDone }: Props
           stash();
         }}
       >
-        <Field label="Message (optional)">
+        <Field label={t("Message (optional)")}>
           <input
             className="text-input"
             value={message}
             onChange={(event) => setMessage(event.target.value)}
-            placeholder="What were you working on?"
+            placeholder={t("What were you working on?")}
             autoFocus
           />
         </Field>

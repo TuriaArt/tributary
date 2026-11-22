@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { lostCommits, type LostCommits } from "../api";
-import { compactTime, shortId } from "../lib/format";
+import { compactTime, plural, shortId } from "../lib/format";
 import { Dialog } from "./Dialog";
 import { Button } from "./ui/Button";
+import { t, tx } from "../lib/i18n";
 
 /** The branches protected by default, until you change them for a repository. */
 export const DEFAULT_PROTECTED = ["main", "master", "develop"];
@@ -15,7 +16,7 @@ export function TypeToConfirm({ name, value, onChange }: { name: string; value: 
   return (
     <label className="type-to-confirm">
       <span>
-        <strong>{name}</strong> is protected. Type its name to go ahead.
+        {tx("{0} is protected. Type its name to go ahead.", <strong>{name}</strong>)}
       </span>
       <input
         className="text-input"
@@ -25,7 +26,7 @@ export function TypeToConfirm({ name, value, onChange }: { name: string; value: 
         spellCheck={false}
         autoComplete="off"
         autoFocus
-        aria-label={`Type ${name} to confirm`}
+        aria-label={t("Type {0} to confirm", name)}
       />
     </label>
   );
@@ -63,13 +64,13 @@ export function LostCommitsNote({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lost]);
 
-  const restore = <p className="hint">Tributary keeps a backup for 30 days: Repository → Branches → Restore Branch… puts it back.</p>;
-  if (lost === undefined) return <p className="hint">Checking what would be lost…</p>;
+  const restore = <p className="hint">{t("Tributary keeps a backup for 30 days: Repository → Branches → Restore Branch… puts it back.")}</p>;
+  if (lost === undefined) return <p className="hint">{t("Checking what would be lost…")}</p>;
   if (lost === null) return restore;
   if (lost.count === 0) {
     return (
       <>
-        <p className="safe-note">Nothing is lost: every commit on {name} is also on another branch, remote branch or tag.</p>
+        <p className="safe-note">{tx("Nothing is lost: every commit on {0} is also on another branch, remote branch or tag.", name)}</p>
         {restore}
       </>
     );
@@ -78,8 +79,9 @@ export function LostCommitsNote({
     <>
       <div className="dialog-warning lost-commits">
         <p>
-          {lost.count === 1 ? "1 commit" : `${lost.count} commits`} on {name} {lost.count === 1 ? "isn't" : "aren't"} on any other
-          branch, remote branch or tag:
+          {lost.count === 1
+            ? tx("{0} on {1} isn't on any other branch, remote branch or tag:", t("1 commit"), name)
+            : tx("{0} on {1} aren't on any other branch, remote branch or tag:", plural(lost.count, "commit"), name)}
         </p>
         <ul>
           {lost.commits.map((commit) => (
@@ -89,7 +91,7 @@ export function LostCommitsNote({
             </li>
           ))}
         </ul>
-        {lost.count > lost.commits.length && <p className="muted">…and {lost.count - lost.commits.length} more.</p>}
+        {lost.count > lost.commits.length && <p className="muted">{tx("…and {0} more.", lost.count - lost.commits.length)}</p>}
       </div>
       {restore}
     </>
@@ -121,7 +123,7 @@ export function ProtectedActionDialog({
       buttons={
         <>
           <Button kind="secondary" onClick={onCancel}>
-            Cancel
+            {t("Cancel")}
           </Button>
           <Button kind="danger" disabled={!confirmed} onClick={onConfirm}>
             {confirmLabel}

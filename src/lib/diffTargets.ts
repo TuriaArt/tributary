@@ -1,5 +1,6 @@
 import type { DiffSource, FileChange, WorktreeStatus } from "../api";
 import { shortId } from "./format";
+import { t } from "./i18n";
 
 /** A file's change to show: which file, and against what. */
 export interface DiffTarget {
@@ -21,7 +22,7 @@ export function highlightedFirst(files: FileChange[], isHighlighted?: (path: str
 
 /** A commit's (or stash's) files, in the order they're listed. */
 export function commitTargets(id: string, files: FileChange[], stash = false): DiffTarget[] {
-  const label = stash ? "In the stash" : `In ${shortId(id)}`;
+  const label = stash ? t("In the stash") : t("In {0}", shortId(id));
   return files.filter(showable).map((file) => ({ file, source: { kind: "commit", id }, label }));
 }
 
@@ -36,9 +37,9 @@ export function worktreeTargets(status: WorktreeStatus | null | undefined): Diff
   const conflicted = status.unstaged.filter((file) => file.status === "conflicted");
   const unstaged = status.unstaged.filter((file) => file.status !== "conflicted");
   return [
-    ...conflicted.filter(showable).map((file) => ({ file, source: { kind: "unstaged" } as DiffSource, label: "Conflicted" })),
-    ...status.staged.filter(showable).map((file) => ({ file, source: { kind: "staged" } as DiffSource, label: "Staged" })),
-    ...unstaged.filter(showable).map((file) => ({ file, source: { kind: "unstaged" } as DiffSource, label: file.status === "untracked" ? "New, not staged" : "Not staged" })),
+    ...conflicted.filter(showable).map((file) => ({ file, source: { kind: "unstaged" } as DiffSource, label: t("Conflicted") })),
+    ...status.staged.filter(showable).map((file) => ({ file, source: { kind: "staged" } as DiffSource, label: t("Staged") })),
+    ...unstaged.filter(showable).map((file) => ({ file, source: { kind: "unstaged" } as DiffSource, label: file.status === "untracked" ? t("New, not staged") : t("Not staged") })),
   ];
 }
 

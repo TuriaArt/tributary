@@ -3,6 +3,7 @@ import { lfsStorage, type LfsStorage } from "../api";
 import { formatBytes, plural } from "../lib/format";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { Button } from "./ui/Button";
+import { t, tx } from "../lib/i18n";
 
 /** How much space the repository's Git LFS files take here; null while looking, or without LFS. */
 function useLfsStorage(repoPath: string): LfsStorage | null | undefined {
@@ -22,13 +23,13 @@ function useLfsStorage(repoPath: string): LfsStorage | null | undefined {
 /** For Settings: the space LFS files take, with a button to clean up. */
 export function LfsStorageSummary({ repoPath, onCleanUp }: { repoPath: string; onCleanUp: () => void }) {
   const storage = useLfsStorage(repoPath);
-  if (storage === undefined) return <span className="settings-hint">Measuring…</span>;
-  if (storage === null) return <span className="settings-hint">Not used here</span>;
+  if (storage === undefined) return <span className="settings-hint">{t("Measuring…")}</span>;
+  if (storage === null) return <span className="settings-hint">{t("Not used here")}</span>;
   return (
     <span className="settings-inline">
       <span className="settings-value">{formatBytes(storage.bytes)}</span>
       <Button kind="outline" onClick={onCleanUp} disabled={storage.files === 0}>
-        <span className="button-label">Clean up…</span>
+        <span className="button-label">{t("Clean up…")}</span>
       </Button>
     </span>
   );
@@ -40,24 +41,22 @@ export function PruneLfsDialog({ repoPath, onCancel, onDone }: { repoPath: strin
   return (
     <ConfirmDialog
       repoPath={repoPath}
-      title="Clean up Git LFS files?"
-      confirmLabel="Clean up"
-      busyLabel="Cleaning up…"
+      title={t("Clean up Git LFS files?")}
+      confirmLabel={t("Clean up")}
+      busyLabel={t("Cleaning up…")}
       action={{ kind: "pruneLfs" }}
       onCancel={onCancel}
       onDone={onDone}
     >
       <p>
-        Git LFS keeps a copy of every version of the LFS files you've downloaded
-        {storage ? (
+        {tx("Git LFS keeps a copy of every version of the LFS files you've downloaded{0}. Cleaning up deletes the copies that aren't needed any more: old versions that are already on the server.", storage ? (
           <>
-            : <strong>{formatBytes(storage.bytes)}</strong> in {plural(storage.files, "file")} for this repository
+            {tx(": {0} in {1} for this repository", <strong>{formatBytes(storage.bytes)}</strong>, plural(storage.files, "file"))}
           </>
-        ) : null}
-        . Cleaning up deletes the copies that aren't needed any more: old versions that are already on the server.
+        ) : null)}
       </p>
       <p className="dialog-note-line">
-        The files you have checked out, recent commits, and anything you haven't pushed yet are kept.
+        {t("The files you have checked out, recent commits, and anything you haven't pushed yet are kept.")}
       </p>
     </ConfirmDialog>
   );

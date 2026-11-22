@@ -9,6 +9,7 @@ import { ProgressBars, ProgressText } from "./ProgressStrip";
 import { YourRepositories } from "./YourRepositories";
 import { Button } from "./ui/Button";
 import { Field } from "./ui/Field";
+import { t, tx } from "../lib/i18n";
 
 interface Props {
   onCancel: () => void;
@@ -36,10 +37,10 @@ export function parseFolders(text: string): string[] {
 
 /** How much history to download. */
 const DEPTHS: { label: string; depth: number | null }[] = [
-  { label: "All of it", depth: null },
-  { label: "The last 1,000 commits", depth: 1000 },
-  { label: "The last 100 commits", depth: 100 },
-  { label: "Only the latest commit", depth: 1 },
+  { label: t("All of it"), depth: null },
+  { label: t("The last 1,000 commits"), depth: 1000 },
+  { label: t("The last 100 commits"), depth: 100 },
+  { label: t("Only the latest commit"), depth: 1 },
 ];
 
 /** Joins a folder and a name for display, with the separator the folder already uses. */
@@ -71,7 +72,7 @@ export function CloneDialog({ onCancel, onDone, accounts, onSignIn }: Props) {
   }, [url, nameEdited]);
 
   const choose = async () => {
-    const folder = await open({ directory: true, multiple: false, title: "Clone into which folder?" }).catch(() => null);
+    const folder = await open({ directory: true, multiple: false, title: t("Clone into which folder?") }).catch(() => null);
     if (typeof folder === "string") setParent(folder);
   };
 
@@ -95,22 +96,22 @@ export function CloneDialog({ onCancel, onDone, accounts, onSignIn }: Props) {
 
   return (
     <Dialog
-      title="Clone a repository"
+      title={t("Clone a repository")}
       error={error}
       busy={running}
       onCancel={onCancel}
       buttons={
         running ? (
           <Button kind="secondary" onClick={() => cancelAction().catch(() => {})}>
-            Cancel
+            {t("Cancel")}
           </Button>
         ) : (
           <>
             <Button kind="secondary" onClick={onCancel}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button kind="primary" onClick={clone} disabled={!url.trim() || !parent || !name.trim()}>
-              Clone
+              {t("Clone")}
             </Button>
           </>
         )
@@ -124,7 +125,7 @@ export function CloneDialog({ onCancel, onDone, accounts, onSignIn }: Props) {
         }}
       >
         {signedIn ? (
-          <Field group label="Your repositories">
+          <Field group label={t("Your repositories")}>
             <YourRepositories
               accounts={accounts}
               picked={url.trim()}
@@ -139,12 +140,12 @@ export function CloneDialog({ onCancel, onDone, accounts, onSignIn }: Props) {
         ) : (
           !running && (
             <div className="field clone-sign-in">
-              <span>Sign in to pick one of your repositories</span>
+              <span>{t("Sign in to pick one of your repositories")}</span>
               <AccountChips accounts={accounts} onSignIn={onSignIn} />
             </div>
           )
         )}
-        <Field label={signedIn ? "Or its address" : "Address"}>
+        <Field label={signedIn ? t("Or its address") : t("Address")}>
           <input
             className="text-input"
             value={url}
@@ -160,15 +161,15 @@ export function CloneDialog({ onCancel, onDone, accounts, onSignIn }: Props) {
             disabled={running}
           />
         </Field>
-        <Field group label="Into">
+        <Field group label={t("Into")}>
           <div className="field-row">
-            <input className="text-input" value={parent} readOnly placeholder="Choose a folder" onClick={choose} disabled={running} />
+            <input className="text-input" value={parent} readOnly placeholder={t("Choose a folder")} onClick={choose} disabled={running} />
             <Button type="button" kind="secondary" onClick={choose} disabled={running}>
-              Choose…
+              {t("Choose…")}
             </Button>
           </div>
         </Field>
-        <Field label="Folder name">
+        <Field label={t("Folder name")}>
           <input
             className="text-input"
             value={name}
@@ -180,34 +181,32 @@ export function CloneDialog({ onCancel, onDone, accounts, onSignIn }: Props) {
             disabled={running}
           />
         </Field>
-        {parent && name.trim() && <p className="hint">The repository will be in {join(parent, name.trim())}</p>}
+        {parent && name.trim() && <p className="hint">{tx("The repository will be in {0}", join(parent, name.trim()))}</p>}
         <label className="checkbox clone-submodules">
-          <input type="checkbox" checked={submodules} onChange={(event) => setSubmodules(event.target.checked)} disabled={running} />
-          Also clone its submodules, if it has any
+          {tx("{0}Also clone its submodules, if it has any", <input type="checkbox" checked={submodules} onChange={(event) => setSubmodules(event.target.checked)} disabled={running} />)}
         </label>
         {showOptions ? (
           <fieldset className="clone-options" disabled={running}>
-            <legend>For big repositories</legend>
+            <legend>{t("For big repositories")}</legend>
             <label className="checkbox">
-              <input type="checkbox" checked={skipLfs} onChange={(event) => setSkipLfs(event.target.checked)} />
-              Download Git LFS files later
+              {tx("{0}Download Git LFS files later", <input type="checkbox" checked={skipLfs} onChange={(event) => setSkipLfs(event.target.checked)} />)}
             </label>
-            <p className="hint checkbox-hint">They arrive as small pointer files. Download them all from Repository → Git LFS, or as you check out branches.</p>
-            <Field label="Only these folders">
+            <p className="hint checkbox-hint">{t("They arrive as small pointer files. Download them all from Repository → Git LFS, or as you check out branches.")}</p>
+            <Field label={t("Only these folders")}>
               <input
                 className="text-input"
                 value={folders}
                 onChange={(event) => setFolders(event.target.value)}
-                placeholder="Everything, or like: Content/Maps, Source"
+                placeholder={t("Everything, or like: Content/Maps, Source")}
                 spellCheck={false}
                 autoCapitalize="off"
                 autoCorrect="off"
               />
             </Field>
             {parseFolders(folders).length > 0 && (
-              <p className="hint">Other folders aren't checked out, and their files aren't downloaded. Files at the top are always there.</p>
+              <p className="hint">{t("Other folders aren't checked out, and their files aren't downloaded. Files at the top are always there.")}</p>
             )}
-            <Field label="History">
+            <Field label={t("History")}>
               <select
                 className="text-input"
                 value={depth ?? ""}
@@ -224,13 +223,13 @@ export function CloneDialog({ onCancel, onDone, accounts, onSignIn }: Props) {
         ) : (
           !running && (
             <Button type="button" kind="link" className="clone-options-toggle" onClick={() => setShowOptions(true)}>
-              Options for big repositories…
+              {t("Options for big repositories…")}
             </Button>
           )
         )}
         {running && (
           <div className="clone-progress">
-            <ProgressText label="Cloning" progress={progress} />
+            <ProgressText label={t("Cloning")} progress={progress} />
             <ProgressBars progress={progress} />
           </div>
         )}

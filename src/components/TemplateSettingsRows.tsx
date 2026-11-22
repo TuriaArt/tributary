@@ -3,6 +3,7 @@ import { commitTemplate, type Action, type CommitTemplate } from "../api";
 import { TEMPLATE_CHANGED } from "./worktree/CommitBox";
 import type { SettingRow } from "./SettingsDialog";
 import { Button } from "./ui/Button";
+import { t } from "../lib/i18n";
 
 /**
  * The message new commits start from here: git's commit.template. A team's shared one shows
@@ -35,19 +36,19 @@ export function useTemplateRows(path: string, run: (action: Action) => Promise<b
   return [
     {
       kind: "custom",
-      label: "Message template",
+      label: t("Message template"),
       hint: shared
-        ? `New commits start from your team's template, ${shared.file}. Write one here to use your own in this repository instead.`
-        : "New commits here start from this. Lines starting with # are left out, as with git. The branch's Jira or Linear issue key goes in front of the summary by itself.",
+        ? t("New commits start from your team's template, {0}. Write one here to use your own in this repository instead.", shared.file)
+        : t("New commits here start from this. Lines starting with # are left out, as with git. The branch's Jira or Linear issue key goes in front of the summary by itself."),
       content: (
         <textarea
           className="text-input settings-input template-input"
           value={text}
-          placeholder={shared?.text ?? "FEAST-: \n\nWhy:\n\nHow to test:"}
+          placeholder={shared?.text ?? t("FEAST-: \n\nWhy:\n\nHow to test:")}
           onChange={(event) => setText(event.target.value)}
           rows={5}
           spellCheck={false}
-          aria-label="Commit message template"
+          aria-label={t("Commit message template")}
         />
       ),
     },
@@ -57,11 +58,11 @@ export function useTemplateRows(path: string, run: (action: Action) => Promise<b
       content: (
         <span className="settings-buttons">
           <Button kind="primary" onClick={() => save(text)} disabled={saving || !changed || !text.trim()}>
-            Save template
+            {t("Save template")}
           </Button>
           {template?.ours && (
             <Button kind="outline" onClick={() => save("")} disabled={saving}>
-              <span className="button-label">Remove</span>
+              <span className="button-label">{t("Remove")}</span>
             </Button>
           )}
         </span>

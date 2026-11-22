@@ -12,6 +12,7 @@ import { BranchIcon, CloneIcon, CloseIcon, FolderIcon, Logo, NewRepoIcon, PinIco
 import { Loader } from "./Loader";
 import { Button } from "./ui/Button";
 import { Chip } from "./ui/Chip";
+import { t, tx } from "../lib/i18n";
 
 interface Props {
   recent: RecentRepo[];
@@ -54,7 +55,7 @@ export function Welcome({ recent, summaries, opening, error, onPick, onClone, on
         className="recent-item"
         onClick={() => onOpen(repo.path)}
         disabled={opening !== null}
-        title={missing ? "The folder isn't there any more (or isn't a repository)" : repo.path}
+        title={missing ? t("The folder isn't there any more (or isn't a repository)") : repo.path}
       >
         <span className="recent-dot" style={{ background: avatarColor(repo.path) }} />
         <span className="recent-text">
@@ -66,20 +67,20 @@ export function Welcome({ recent, summaries, opening, error, onPick, onClone, on
                 {branch}
               </span>
             )}
-            {summary?.found && summary.branch === null && <span className="recent-branch">detached</span>}
+            {summary?.found && summary.branch === null && <span className="recent-branch">{t("detached")}</span>}
           </span>
           <span className="recent-path">{repo.path}</span>
         </span>
         <span className="recent-state">
-          {missing && <Chip className="recent-chip missing">Folder not found</Chip>}
+          {missing && <Chip className="recent-chip missing">{t("Folder not found")}</Chip>}
           {summary?.found && summary.conflicts > 0 && <Chip className="recent-chip conflicts">{plural(summary.conflicts, "conflict")}</Chip>}
           {summary?.found && summary.changes > summary.conflicts && (
-            <Chip className="recent-chip changes" title={`${plural(summary.changes, "file")} with uncommitted changes`}>
+            <Chip className="recent-chip changes" title={t("{0} with uncommitted changes", plural(summary.changes, "file"))}>
               {plural(summary.changes - summary.conflicts, "change")}
             </Chip>
           )}
           {summary?.found && (summary.ahead > 0 || summary.behind > 0) && (
-            <Chip className="recent-chip sync" title={`${summary.ahead} to push, ${summary.behind} to pull (as of the last fetch) on ${summary.upstream}`}>
+            <Chip className="recent-chip sync" title={t("{0} to push, {1} to pull (as of the last fetch) on {2}", summary.ahead, summary.behind, summary.upstream)}>
               {summary.ahead > 0 && <span>↑{summary.ahead}</span>}
               {summary.behind > 0 && <span>↓{summary.behind}</span>}
             </Chip>
@@ -90,16 +91,16 @@ export function Welcome({ recent, summaries, opening, error, onPick, onClone, on
       <Button
         kind="icon" className={`recent-pin${repo.pinned ? " pinned" : ""}`}
         onClick={() => onPin(repo.path, !repo.pinned)}
-        title={repo.pinned ? "Unpin" : "Pin to the top"}
-        aria-label={repo.pinned ? `Unpin ${repo.name}` : `Pin ${repo.name}`}
+        title={repo.pinned ? t("Unpin") : t("Pin to the top")}
+        aria-label={repo.pinned ? t("Unpin {0}", repo.name) : t("Pin {0}", repo.name)}
       >
         <PinIcon size={14} />
       </Button>
       <Button
         kind="icon"
         onClick={() => onForget(repo.path)}
-        title="Remove from recent"
-        aria-label={`Remove ${repo.name} from recent`}
+        title={t("Remove from recent")}
+        aria-label={t("Remove {0} from recent", repo.name)}
       >
         <CloseIcon size={14} />
       </Button>
@@ -111,7 +112,7 @@ export function Welcome({ recent, summaries, opening, error, onPick, onClone, on
     const name = recent.find((repo) => repo.path === opening)?.name ?? opening.split(/[\\/]/).filter(Boolean).pop() ?? opening;
     return (
       <div className="welcome">
-        <Loader title={`Opening ${name}`} detail={opening} />
+        <Loader title={t("Opening {0}", name)} detail={opening} />
       </div>
     );
   }
@@ -120,49 +121,45 @@ export function Welcome({ recent, summaries, opening, error, onPick, onClone, on
     <div className="welcome">
       <div className="welcome-card">
         <Logo size={92} tile />
-        <h1>Tributary</h1>
-        <p className="tagline">See the history of a git repository as a graph.</p>
+        <h1>{t("Tributary")}</h1>
+        <p className="tagline">{t("See the history of a git repository as a graph.")}</p>
 
         {git.missing && <GitNeededCard install={git} />}
         <div className="welcome-actions">
           <Button kind="primary" size="large" onClick={onPick} disabled={opening !== null}>
-            <FolderIcon />
-            Open repository…
-            <kbd><span className="chip-text">{modKey}O</span></kbd>
+            {tx("{0}Open repository…{1}", <FolderIcon />, <kbd><span className="chip-text">{modKey}O</span></kbd>)}
           </Button>
           <Button kind="secondary" size="large" onClick={onClone} disabled={opening !== null}>
-            <CloneIcon />
-            Clone…
+            {tx("{0}Clone…", <CloneIcon />)}
           </Button>
           <Button kind="secondary" size="large" onClick={onCreate} disabled={opening !== null}>
-            <NewRepoIcon />
-            New…
+            {tx("{0}New…", <NewRepoIcon />)}
           </Button>
         </div>
         <AccountChips accounts={accounts} onSignIn={onSignIn} />
         {git.install?.old && <GitOldNote install={git} />}
-        <p className="welcome-hint">You can also drop a folder onto this window.</p>
+        <p className="welcome-hint">{t("You can also drop a folder onto this window.")}</p>
 
         {error && <div className="error-banner">{error}</div>}
 
         {recent.length > 0 && (
           <section className="recent">
             <div className="recent-heading">
-              <h2>Recent</h2>
+              <h2>{t("Recent")}</h2>
               {recent.length > 5 && (
                 <label className="recent-filter">
                   <SearchIcon size={12} />
                   <input
                     value={filter}
                     onChange={(event) => setFilter(event.target.value)}
-                    placeholder="Find a repository"
+                    placeholder={t("Find a repository")}
                     spellCheck={false}
-                    aria-label="Find a recent repository"
+                    aria-label={t("Find a recent repository")}
                   />
                 </label>
               )}
             </div>
-            {shown.length === 0 && <div className="muted recent-none">No recent repository matches “{filter}”.</div>}
+            {shown.length === 0 && <div className="muted recent-none">{tx("No recent repository matches “{0}”.", filter)}</div>}
             <ul>
               {pinned.map(row)}
               {pinned.length > 0 && others.length > 0 && <li className="recent-divider" role="separator" />}

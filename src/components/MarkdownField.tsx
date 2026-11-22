@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, useState, type KeyboardEvent, type TextareaHTMLAttributes } from "react";
 import { openInBrowser } from "../lib/weblinks";
 import { Markdown } from "./Markdown";
+import { t } from "../lib/i18n";
 
 type Props = TextareaHTMLAttributes<HTMLTextAreaElement> & { value: string };
 
@@ -40,14 +41,14 @@ export function MarkdownField({ value, className, onKeyDown, ...rest }: Props) {
   };
   return (
     <div className={`markdown-field${previewing ? " previewing" : ""}`}>
-      <div className="markdown-field-tabs" role="tablist" aria-label="Write or preview">
+      <div className="markdown-field-tabs" role="tablist" aria-label={t("Write or preview")}>
         <button type="button" role="tab" aria-selected={!previewing} className={`markdown-field-tab${previewing ? "" : " on"}`} onClick={() => show(false)}>
-          <span className="button-label">Write</span>
+          <span className="button-label">{t("Write")}</span>
         </button>
         <button type="button" role="tab" aria-selected={previewing} className={`markdown-field-tab${previewing ? " on" : ""}`} onClick={() => show(true)}>
-          <span className="button-label">Preview</span>
+          <span className="button-label">{t("Preview")}</span>
         </button>
-        <span className="markdown-field-hint">Markdown</span>
+        <span className="markdown-field-hint">{t("Markdown")}</span>
       </div>
       {previewing ? (
         <div
@@ -55,9 +56,9 @@ export function MarkdownField({ value, className, onKeyDown, ...rest }: Props) {
           tabIndex={0}
           style={{ minHeight: height.current || undefined }}
           onKeyDown={(event) => switchKey(event)}
-          aria-label="Preview"
+          aria-label={t("Preview")}
         >
-          {value.trim() ? <Markdown text={value} openUrl={openInBrowser} /> : <p className="markdown-field-empty">Nothing to preview yet.</p>}
+          {value.trim() ? <Markdown text={value} openUrl={openInBrowser} /> : <p className="markdown-field-empty">{t("Nothing to preview yet.")}</p>}
         </div>
       ) : (
         <textarea

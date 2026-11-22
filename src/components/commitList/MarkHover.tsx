@@ -5,6 +5,7 @@ import { laneColor } from "../../lib/colors";
 import { compactTime, plural } from "../../lib/format";
 import { Avatar } from "../Avatar";
 import { markRect, type ScrollMark } from "./canvases";
+import { t, tx } from "../../lib/i18n";
 
 /** How long the pointer rests on a mark before the card shows, in milliseconds. */
 const DELAY = 80;
@@ -91,12 +92,12 @@ export function MarkHover({ near, strip, commits, headBranch }: Props) {
       branches.length > 0
         ? branches
         : kinds.has("head")
-          ? [headBranch ?? "Checked out"]
+          ? [headBranch ?? t("Checked out")]
           : kinds.has("selected")
-            ? ["Selected"]
+            ? [t("Selected")]
             : kinds.has("leftOff")
-              ? ["Where you left off"]
-              : ["Matches the search"];
+              ? [t("Where you left off")]
+              : [t("Matches the search")];
     const color = kinds.has("branch")
       ? laneColor(commit.graph.column, colors.lanes)
       : kinds.has("head")
@@ -107,10 +108,10 @@ export function MarkHover({ near, strip, commits, headBranch }: Props) {
             ? colors.accent
             : colors.match;
     const states = [
-      kinds.has("head") && branches.length > 0 && "Checked out",
-      kinds.has("selected") && branches.length > 0 && "Selected",
-      kinds.has("leftOff") && branches.length > 0 && "Where you left off",
-      kinds.has("match") && branches.length > 0 && "Matches the search",
+      kinds.has("head") && branches.length > 0 && t("Checked out"),
+      kinds.has("selected") && branches.length > 0 && t("Selected"),
+      kinds.has("leftOff") && branches.length > 0 && t("Where you left off"),
+      kinds.has("match") && branches.length > 0 && t("Matches the search"),
     ]
       .filter(Boolean)
       .join(" · ");
@@ -158,7 +159,7 @@ export function MarkHover({ near, strip, commits, headBranch }: Props) {
             </div>
           </div>
         ))}
-        {more > 0 && <div className="mark-entry-more">and {plural(more, "more commit")} here</div>}
+        {more > 0 && <div className="mark-entry-more">{tx("and {0} here", plural(more, "more commit"))}</div>}
       </div>
     </>
   );

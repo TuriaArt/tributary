@@ -2,6 +2,7 @@ import type { FileDiff } from "../../api";
 import { describeSizes as sizes } from "../../lib/media";
 import { ExternalLinkIcon } from "../Icons";
 import { Button } from "../ui/Button";
+import { t } from "../../lib/i18n";
 
 interface Props {
   diff: FileDiff;
@@ -15,15 +16,15 @@ export function DiffBinary({ diff, tool, onOpen }: Props) {
   return (
     <div className="diff-message">
       <strong>
-        {diff.tooLarge ? "Too long to show here" : diff.lfs ? "Stored with Git LFS" : "Not a text file"}
+        {diff.tooLarge ? t("Too long to show here") : diff.lfs ? t("Stored with Git LFS") : t("Not a text file")}
       </strong>
       <span>{sizes(diff)}</span>
       <span className="muted">
         {diff.tooLarge
-          ? "Your diff tool can show it all."
+          ? t("Your diff tool can show it all.")
           : diff.lfs
-            ? "Its contents aren't text, so they can't be shown line by line here."
-            : "Tributary shows text, pictures, sounds, videos and 3D models, but not this kind of file."}
+            ? t("Its contents aren't text, so they can't be shown line by line here.")
+            : t("Tributary shows text, pictures, sounds, videos and 3D models, but not this kind of file.")}
       </span>
       <Button kind="outline" className="diff-message-action" onClick={onOpen}>
         <ExternalLinkIcon size={13} />

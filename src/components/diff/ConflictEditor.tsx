@@ -6,6 +6,7 @@ import { highlightCode, languageFor, pieces } from "../../lib/syntax";
 import { LineText } from "./DiffLines";
 import { Loader } from "../Loader";
 import { Button } from "../ui/Button";
+import { t, tx } from "../../lib/i18n";
 
 interface Props {
   repoPath: string;
@@ -38,22 +39,22 @@ function Code({ text, language }: { text: string; language: string | null }) {
 }
 
 const CHOICES: { choice: Exclude<Choice, { text: string }>; label: string }[] = [
-  { choice: "ours", label: "Mine" },
-  { choice: "theirs", label: "Theirs" },
-  { choice: "ours-then-theirs", label: "Mine, then theirs" },
-  { choice: "theirs-then-ours", label: "Theirs, then mine" },
+  { choice: "ours", label: t("Mine") },
+  { choice: "theirs", label: t("Theirs") },
+  { choice: "ours-then-theirs", label: t("Mine, then theirs") },
+  { choice: "theirs-then-ours", label: t("Theirs, then mine") },
 ];
 
 const describeChoice = (choice: Choice, mine: string, theirs: string) =>
   typeof choice === "object"
-    ? "Edited"
+    ? t("Edited")
     : choice === "ours"
-      ? `Mine (${mine})`
+      ? t("Mine ({0})", mine)
       : choice === "theirs"
-        ? `Theirs (${theirs})`
+        ? t("Theirs ({0})", theirs)
         : choice === "ours-then-theirs"
-          ? "Both: mine, then theirs"
-          : "Both: theirs, then mine";
+          ? t("Both: mine, then theirs")
+          : t("Both: theirs, then mine");
 
 /**
  * A conflicted text file, conflict by conflict: mine and theirs side by side, to keep
@@ -115,36 +116,36 @@ export function ConflictEditor({ repoPath, path, mine, theirs, version, run }: P
   if (loaded?.path === path && "error" in loaded) {
     return (
       <div className="diff-message">
-        <strong>Couldn't read the file</strong>
+        <strong>{t("Couldn't read the file")}</strong>
         <span>{loaded.error}</span>
       </div>
     );
   }
-  if (!file) return <Loader size={88} title="Reading the conflict" />;
+  if (!file) return <Loader size={88} title={t("Reading the conflict")} />;
   if (file.text === null) {
     return (
       <div className="diff-message">
-        <strong>This conflict can't be resolved here</strong>
+        <strong>{t("This conflict can't be resolved here")}</strong>
         <span>{file.reason}</span>
-        <span className="muted">Keep mine or take theirs from the file's buttons in the list, or open it in the merge tool.</span>
+        <span className="muted">{t("Keep mine or take theirs from the file's buttons in the list, or open it in the merge tool.")}</span>
       </div>
     );
   }
   if (!segments) {
     return (
       <div className="diff-message">
-        <strong>The conflict markers don't add up</strong>
-        <span className="muted">Fix the file in an editor or the merge tool, then stage it to mark it resolved.</span>
+        <strong>{t("The conflict markers don't add up")}</strong>
+        <span className="muted">{t("Fix the file in an editor or the merge tool, then stage it to mark it resolved.")}</span>
       </div>
     );
   }
   if (conflicts.length === 0) {
     return (
       <div className="diff-message">
-        <strong>No conflicts left in this file</strong>
-        <span className="muted">It looks resolved: stage it to mark it resolved.</span>
+        <strong>{t("No conflicts left in this file")}</strong>
+        <span className="muted">{t("It looks resolved: stage it to mark it resolved.")}</span>
         <Button kind="primary" onClick={() => void run({ kind: "stage", paths: [path] })}>
-          Mark as resolved
+          {t("Mark as resolved")}
         </Button>
       </div>
     );
@@ -155,25 +156,24 @@ export function ConflictEditor({ repoPath, path, mine, theirs, version, run }: P
     <div className="conflict-editor">
       <div className="conflict-bar">
         <span className="conflict-progress">
-          <strong>
-            {done} of {plural(conflicts.length, "conflict")}
-          </strong>{" "}
-          resolved
+          {tx("{0} resolved", <strong>
+            {tx("{0} of {1}", done, plural(conflicts.length, "conflict"))}
+          </strong>)}
         </span>
-        <Button kind="link" onClick={() => chooseAll("ours")} title={`Keep ${mine}'s side of every conflict`}>
-          All mine
+        <Button kind="link" onClick={() => chooseAll("ours")} title={t("Keep {0}'s side of every conflict", mine)}>
+          {t("All mine")}
         </Button>
-        <Button kind="link" onClick={() => chooseAll("theirs")} title={`Take ${theirs}'s side of every conflict`}>
-          All theirs
+        <Button kind="link" onClick={() => chooseAll("theirs")} title={t("Take {0}'s side of every conflict", theirs)}>
+          {t("All theirs")}
         </Button>
         <span className="spacer" />
         <Button
           kind="primary"
           disabled={result === null || saving}
           onClick={() => void save()}
-          title={result === null ? "Choose a side for every conflict first" : "Save the file and stage it"}
+          title={result === null ? t("Choose a side for every conflict first") : t("Save the file and stage it")}
         >
-          {saving ? "Saving…" : "Save and mark resolved"}
+          {saving ? t("Saving…") : t("Save and mark resolved")}
         </Button>
       </div>
       <div className="conflict-segments">
@@ -252,16 +252,16 @@ interface CardProps {
 function ConflictCard({ conflict, number, count, mine, theirs, choice, onChoose, editing, onEdit, language }: CardProps) {
   const [showBase, setShowBase] = useState(false);
   const sideText = (text: string) =>
-    text === "" ? <span className="conflict-empty">Nothing (these lines were removed)</span> : <Code text={text.replace(/\r?\n$/, "")} language={language} />;
+    text === "" ? <span className="conflict-empty">{t("Nothing (these lines were removed)")}</span> : <Code text={text.replace(/\r?\n$/, "")} language={language} />;
   return (
-    <section className={`conflict-card${choice !== undefined ? " resolved" : ""}`} aria-label={`Conflict ${number} of ${count}`}>
+    <section className={`conflict-card${choice !== undefined ? " resolved" : ""}`} aria-label={t("Conflict {0} of {1}", number, count)}>
       <header className="conflict-card-header">
         <span className="conflict-number">
-          Conflict {number} of {count}
+          {tx("Conflict {0} of {1}", number, count)}
         </span>
         {choice !== undefined && editing === null && <span className="conflict-chosen">{describeChoice(choice, mine, theirs)}</span>}
         <span className="spacer" />
-        <div className="conflict-choices" role="group" aria-label="Keep">
+        <div className="conflict-choices" role="group" aria-label={t("Keep")}>
           {CHOICES.map((entry) => (
             <button
               key={entry.choice}
@@ -279,9 +279,9 @@ function ConflictCard({ conflict, number, count, mine, theirs, choice, onChoose,
             className={typeof choice === "object" || editing !== null ? "selected" : undefined}
             aria-pressed={typeof choice === "object"}
             onClick={() => onEdit(choice !== undefined ? resolveConflict(conflict, choice) : resolveConflict(conflict, "ours-then-theirs"))}
-            title="Write it yourself, starting from the current choice (or both sides)"
+            title={t("Write it yourself, starting from the current choice (or both sides)")}
           >
-            Edit…
+            {t("Edit…")}
           </button>
         </div>
       </header>
@@ -294,11 +294,11 @@ function ConflictCard({ conflict, number, count, mine, theirs, choice, onChoose,
             autoFocus
             rows={Math.min(20, Math.max(4, editing.split("\n").length + 1))}
             onChange={(event) => onEdit(event.target.value)}
-            aria-label={`Conflict ${number}, as it should be`}
+            aria-label={t("Conflict {0}, as it should be", number)}
           />
           <div className="conflict-edit-actions">
             <Button kind="outline" onClick={() => onEdit(null)}>
-              <span className="button-label">Cancel</span>
+              <span className="button-label">{t("Cancel")}</span>
             </Button>
             <Button
               kind="primary"
@@ -307,7 +307,7 @@ function ConflictCard({ conflict, number, count, mine, theirs, choice, onChoose,
                 onEdit(null);
               }}
             >
-              Use this
+              {t("Use this")}
             </Button>
           </div>
         </div>
@@ -317,13 +317,13 @@ function ConflictCard({ conflict, number, count, mine, theirs, choice, onChoose,
         <div className="conflict-sides">
           <div className="conflict-side mine">
             <div className="conflict-side-label">
-              Mine <span>{mine}</span>
+              {tx("Mine {0}", <span>{mine}</span>)}
             </div>
             <pre>{sideText(conflict.ours)}</pre>
           </div>
           <div className="conflict-side theirs">
             <div className="conflict-side-label">
-              Theirs <span>{theirs}</span>
+              {tx("Theirs {0}", <span>{theirs}</span>)}
             </div>
             <pre>{sideText(conflict.theirs)}</pre>
           </div>
@@ -332,7 +332,7 @@ function ConflictCard({ conflict, number, count, mine, theirs, choice, onChoose,
       {conflict.base !== null && editing === null && choice === undefined && (
         <div className="conflict-base">
           <Button kind="link" onClick={() => setShowBase(!showBase)} aria-expanded={showBase}>
-            {showBase ? "Hide" : "Show"} what it was before either change
+            {tx("{0} what it was before either change", showBase ? t("Hide") : t("Show"))}
           </Button>
           {showBase && <pre>{sideText(conflict.base)}</pre>}
         </div>

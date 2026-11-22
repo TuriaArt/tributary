@@ -3,6 +3,7 @@ import { gitHubRepositories, gitLabRepositories, type AccountRepo } from "../api
 import type { Accounts } from "../app/useAccounts";
 import { relativeTime } from "../lib/format";
 import { ChevronDownIcon, LockIcon, SearchIcon } from "./Icons";
+import { t } from "../lib/i18n";
 
 /** The repositories of the accounts you're signed in to, newest first, and what went wrong asking. */
 function useYourRepositories(accounts: Accounts) {
@@ -74,7 +75,7 @@ export function YourRepositories({ accounts, picked, onPick }: { accounts: Accou
           aria-expanded={open}
           aria-controls="your-repos-list"
           aria-activedescendant={open && shown[active] ? `your-repo-${active}` : undefined}
-          aria-label="Find one of your repositories"
+          aria-label={t("Find one of your repositories")}
           value={open || !chosen ? query : `${chosen.owner}/${chosen.name}`}
           onChange={(event) => {
             setQuery(event.target.value);
@@ -97,7 +98,7 @@ export function YourRepositories({ accounts, picked, onPick }: { accounts: Accou
               setOpen(false);
             }
           }}
-          placeholder={repos === null ? "Getting your repositories…" : "Find one of your repositories"}
+          placeholder={repos === null ? t("Getting your repositories…") : t("Find one of your repositories")}
           spellCheck={false}
           autoComplete="off"
           autoFocus
@@ -107,7 +108,7 @@ export function YourRepositories({ accounts, picked, onPick }: { accounts: Accou
           type="button"
           className="your-repos-toggle"
           tabIndex={-1}
-          aria-label={open ? "Hide your repositories" : "Show your repositories"}
+          aria-label={open ? t("Hide your repositories") : t("Show your repositories")}
           onMouseDown={(event) => event.preventDefault()}
           onClick={() => setOpen(!open)}
         >
@@ -115,10 +116,10 @@ export function YourRepositories({ accounts, picked, onPick }: { accounts: Accou
         </button>
       </div>
       {open && (
-        <ul ref={list} id="your-repos-list" className="your-repos-menu" role="listbox" aria-label="Your repositories">
-          {repos === null && <li className="your-repos-note">Getting your repositories…</li>}
+        <ul ref={list} id="your-repos-list" className="your-repos-menu" role="listbox" aria-label={t("Your repositories")}>
+          {repos === null && <li className="your-repos-note">{t("Getting your repositories…")}</li>}
           {repos !== null && shown.length === 0 && (
-            <li className="your-repos-note">{needle ? `None of your repositories matches “${query.trim()}”.` : "You don't have any repositories yet."}</li>
+            <li className="your-repos-note">{needle ? t("None of your repositories matches “{0}”.", query.trim()) : t("You don't have any repositories yet.")}</li>
           )}
           {shown.map((repo, index) => (
             <li

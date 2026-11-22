@@ -6,6 +6,7 @@ import { CheckIcon } from "./Icons";
 import { TOUR_LOOKS } from "./TourOverlay";
 import type { CSSProperties } from "react";
 import { Button } from "./ui/Button";
+import { t, tx } from "../lib/i18n";
 
 interface Props {
   /** The tours taken (finished or skipped). */
@@ -24,25 +25,24 @@ export function ToursDialog({ done, offered, setOffered, canStart, onStart, onCl
   const { lanes } = useThemeColors();
   return (
     <Dialog
-      title="Tours"
+      title={t("Tours")}
       wide
       className="tours-dialog"
       onCancel={onClose}
       buttons={
         <>
           <label className="checkbox tours-offered">
-            <input type="checkbox" checked={offered} onChange={(event) => setOffered(event.target.checked)} />
-            Offer a tour when I come across something new
+            {tx("{0}Offer a tour when I come across something new", <input type="checkbox" checked={offered} onChange={(event) => setOffered(event.target.checked)} />)}
           </label>
           <span className="spacer" />
           <Button kind="secondary" onClick={onClose}>
-            Close
+            {t("Close")}
           </Button>
         </>
       }
     >
       <p className="dialog-note-line">
-        {canStart ? "Short walks through Tributary that point at the real thing, a few stops each." : "Open a repository first: the tours walk through one."}
+        {canStart ? t("Short walks through Tributary that point at the real thing, a few stops each.") : t("Open a repository first: the tours walk through one.")}
       </p>
       <ul className="tours-list">
         {TOURS.map((tour) => {
@@ -53,16 +53,16 @@ export function ToursDialog({ done, offered, setOffered, canStart, onStart, onCl
               <span className="tours-text">
                 <strong>{tour.title}</strong>
                 <span>
-                  {tour.summary} · {tour.stops.length} stops
+                  {tx("{0} · {1} stops", tour.summary, tour.stops.length)}
                 </span>
               </span>
               {done.includes(tour.id) && (
-                <span className="tours-done" title="Taken">
+                <span className="tours-done" title={t("Taken")}>
                   <CheckIcon size={13} />
                 </span>
               )}
               <Button kind="outline" disabled={!canStart} onClick={() => onStart(tour.id)}>
-                <span className="button-label">{done.includes(tour.id) ? "Again" : "Start"}</span>
+                <span className="button-label">{done.includes(tour.id) ? t("Again") : t("Start")}</span>
               </Button>
             </li>
           );

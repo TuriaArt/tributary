@@ -1,3 +1,4 @@
+import { locale, pluralWord, t } from "./i18n";
 /** Where two pictures of the same size differ, pixel by pixel. */
 export interface PixelChanges {
   /** How many pixels changed. */
@@ -58,10 +59,11 @@ export function comparePixels(
 
 /** "1,204 pixels changed (0.8%), in a 120 × 80 area" or that none did. */
 export function describePixelChanges({ changed, total, area }: PixelChanges): string {
-  if (changed === 0 || !area) return "No pixels changed: only the file did (like its settings or how it's saved).";
+  if (changed === 0 || !area) return t("No pixels changed: only the file did (like its settings or how it's saved).");
   const share = (changed / total) * 100;
-  const percent = share < 0.1 ? "under 0.1%" : share >= 99.95 ? "all of them" : `${share < 10 ? share.toFixed(1) : Math.round(share)}%`;
-  const noun = changed === 1 ? "pixel" : "pixels";
-  if (changed === total) return `Every pixel changed (${total.toLocaleString("en-US")}).`;
-  return `${changed.toLocaleString("en-US")} ${noun} changed (${percent}), in a ${area.width} × ${area.height} area at ${area.x}, ${area.y}.`;
+  const percent = share < 0.1 ? t("under 0.1%") : share >= 99.95 ? t("all of them") : `${share < 10 ? share.toFixed(1) : Math.round(share)}%`;
+  const number = (n: number) => n.toLocaleString(locale() ?? "en-US");
+  const pixels = `${number(changed)} ${pluralWord(changed, "pixel", "pixels")}`;
+  if (changed === total) return t("Every pixel changed ({0}).", number(total));
+  return t("{0} changed ({1}), in a {2} × {3} area at {4}, {5}.", pixels, percent, area.width, area.height, area.x, area.y);
 }

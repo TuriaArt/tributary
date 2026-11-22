@@ -7,6 +7,7 @@ import { PullRequestsContext } from "../../lib/pullRequests";
 import type { RefEntry } from "../../lib/refs";
 import { CheckIcon, EyeIcon, EyeOffIcon, LaptopIcon, LockIcon } from "../Icons";
 import { PullRequestBadge } from "../RefPills";
+import { t } from "../../lib/i18n";
 
 /**
  * How far in a row starts, at this depth in folders. Every row starts with a chevron's
@@ -99,20 +100,20 @@ export function RefItem({ entry, label, icon, depth = 0, selected, visibility, c
             className={`sidebar-stack${stack.moved ? " moved" : ""}`}
             title={
               stack.moved
-                ? `Built on an earlier version of ${stack.on}, which was rewritten since: check ${entry.name} out, then move it onto the new one from its menu`
-                : `Built on ${stack.on}: rebasing ${entry.name} moves ${stack.on} along`
+                ? t("Built on an earlier version of {0}, which was rewritten since: check {1} out, then move it onto the new one from its menu", stack.on, entry.name)
+                : t("Built on {0}: rebasing {1} moves {2} along", stack.on, entry.name, stack.on)
             }
           >
-            {stack.moved ? `${below} moved` : `on ${below}`}
+            {stack.moved ? t("{0} moved", below) : t("on {0}", below)}
           </span>
         )}
         {isProtected && (
-          <span className="sidebar-lock" title={`${entry.name} is protected: it can't be deleted, and rewriting it needs its name typed`}>
+          <span className="sidebar-lock" title={t("{0} is protected: it can't be deleted, and rewriting it needs its name typed", entry.name)}>
             <LockIcon size={11} />
           </span>
         )}
         {localOnly && (
-          <span className="sidebar-local" title={`${entry.name} is only on this computer: it hasn't been pushed`}>
+          <span className="sidebar-local" title={t("{0} is only on this computer: it hasn't been pushed", entry.name)}>
             <LaptopIcon size={12} />
           </span>
         )}
@@ -135,13 +136,13 @@ export function RefItem({ entry, label, icon, depth = 0, selected, visibility, c
             title={
               soloing
                 ? soloed
-                  ? `Stop showing only ${entry.name}`
-                  : `Also show ${entry.name}`
+                  ? t("Stop showing only {0}", entry.name)
+                  : t("Also show {0}", entry.name)
                 : entry.hidden
-                  ? `Show ${entry.name} in the graph`
-                  : `Hide ${entry.name} from the graph`
+                  ? t("Show {0} in the graph", entry.name)
+                  : t("Hide {0} from the graph", entry.name)
             }
-            aria-label={entry.hidden ? `Show ${entry.name}` : `Hide ${entry.name}`}
+            aria-label={entry.hidden ? t("Show {0}", entry.name) : t("Hide {0}", entry.name)}
           >
             {entry.hidden ? <EyeOffIcon size={13} /> : <EyeIcon size={13} />}
           </button>

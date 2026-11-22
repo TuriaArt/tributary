@@ -24,6 +24,7 @@ import { copyText } from "../lib/clipboard";
 import { baseName, folderOf } from "../lib/paths";
 import { isMac } from "../lib/platform";
 import type { OpenDialog } from "../menus";
+import { t } from "../lib/i18n";
 
 /** What the file menus need from the app. */
 export interface FileMenuContext {
@@ -51,12 +52,12 @@ export interface FileMenuContext {
 function lockItems(ctx: FileMenuContext, path: string, lock: Lock | undefined, separated: boolean): MenuItem[] {
   const { canChange, run, openDialog } = ctx;
   if (!lock) {
-    return [{ label: "Lock file", icon: <LockIcon />, separated, disabled: !canChange, onSelect: () => run({ kind: "lockFiles", paths: [path] }) }];
+    return [{ label: t("Lock file"), icon: <LockIcon />, separated, disabled: !canChange, onSelect: () => run({ kind: "lockFiles", paths: [path] }) }];
   }
   if (lock.mine) {
     return [
       {
-        label: "Unlock file",
+        label: t("Unlock file"),
         icon: <UnlockIcon />,
         separated,
         disabled: !canChange,
@@ -65,8 +66,8 @@ function lockItems(ctx: FileMenuContext, path: string, lock: Lock | undefined, s
     ];
   }
   return [
-    { label: `Locked by ${lock.owner || "someone else"}`, icon: <LockIcon />, separated, disabled: true, onSelect: () => {} },
-    { label: "Force unlock…", icon: <UnlockIcon />, danger: true, disabled: !canChange, onSelect: () => openDialog({ kind: "forceUnlock", lock }) },
+    { label: t("Locked by {0}", lock.owner || t("someone else")), icon: <LockIcon />, separated, disabled: true, onSelect: () => {} },
+    { label: t("Force unlock…"), icon: <UnlockIcon />, danger: true, disabled: !canChange, onSelect: () => openDialog({ kind: "forceUnlock", lock }) },
   ];
 }
 
@@ -81,36 +82,36 @@ export function fileMenuItems(ctx: FileMenuContext, file: FileChange, source: Di
   const conflicted = where === "worktree" && file.status === "conflicted";
   if (!folder) {
     items.push(
-      { label: "Show changes", icon: <DiffIcon />, onSelect: () => ctx.showChanges(file, source) },
+      { label: t("Show changes"), icon: <DiffIcon />, onSelect: () => ctx.showChanges(file, source) },
       conflicted
-        ? { label: "Open in merge tool", icon: <ExternalLinkIcon />, disabled: !canChange, onSelect: () => run({ kind: "openInMergeTool", path }) }
-        : { label: "Open in diff tool", icon: <ExternalLinkIcon />, disabled: file.status === "untracked", onSelect: () => run({ kind: "openInDiffTool", source, path }) },
+        ? { label: t("Open in merge tool"), icon: <ExternalLinkIcon />, disabled: !canChange, onSelect: () => run({ kind: "openInMergeTool", path }) }
+        : { label: t("Open in diff tool"), icon: <ExternalLinkIcon />, disabled: file.status === "untracked", onSelect: () => run({ kind: "openInDiffTool", source, path }) },
     );
     // Blame needs the file to be there (and, in your changes, to be known to git).
     if (file.status !== "deleted" && file.status !== "untracked") {
-      items.push({ label: "Who changed each line", icon: <BlameIcon />, onSelect: () => ctx.showBlame(path, source) });
+      items.push({ label: t("Who changed each line"), icon: <BlameIcon />, onSelect: () => ctx.showBlame(path, source) });
     }
   }
   if (conflicted) {
     const sides = conflictSides(snapshot);
     items.push(
       {
-        label: `Keep mine (${sides.mine})`,
+        label: t("Keep mine ({0})", sides.mine),
         icon: <CheckIcon />,
         separated: items.length > 0,
         disabled: !canChange,
         onSelect: () => run({ kind: "resolveConflicts", paths: [path], keep: "mine" }),
       },
-      { label: `Take theirs (${sides.theirs})`, icon: <MergeIcon />, disabled: !canChange, onSelect: () => run({ kind: "resolveConflicts", paths: [path], keep: "theirs" }) },
+      { label: t("Take theirs ({0})", sides.theirs), icon: <MergeIcon />, disabled: !canChange, onSelect: () => run({ kind: "resolveConflicts", paths: [path], keep: "theirs" }) },
     );
   }
   items.push({
-    label: folder ? "Show this folder's history" : "Show this file's history",
+    label: folder ? t("Show this folder's history") : t("Show this file's history"),
     icon: <FileHistoryIcon />,
     separated: items.length > 0,
     onSelect: () => showHistory(folder ? `${path}/` : path),
   });
-  if (dir) items.push({ label: `Show the history of ${dir}/`, icon: <FolderIcon />, onSelect: () => showHistory(`${dir}/`) });
+  if (dir) items.push({ label: t("Show the history of {0}/", dir), icon: <FolderIcon />, onSelect: () => showHistory(`${dir}/`) });
   if (locks && !folder) items.push(...lockItems(ctx, path, locks.get(path), true));
   if (where === "worktree" && file.status !== "conflicted") {
     const paths = file.oldPath ? [file.oldPath, path] : [path];
@@ -119,7 +120,7 @@ export function fileMenuItems(ctx: FileMenuContext, file: FileChange, source: Di
       const pattern = lfsPattern(file.path);
       const staged = snapshot.worktree?.staged.some((other) => other.path === file.path);
       items.push({
-        label: `Track ${pattern} with Git LFS`,
+        label: t("Track {0} with Git LFS", pattern),
         icon: <CloudIcon />,
         separated: true,
         disabled: !canChange,
@@ -130,22 +131,22 @@ export function fileMenuItems(ctx: FileMenuContext, file: FileChange, source: Di
       const name = baseName(path);
       const pattern = lfsPattern(path);
       items.push({
-        label: folder ? `Ignore the folder ${name}/` : `Ignore ${name}`,
+        label: folder ? t("Ignore the folder {0}/", name) : t("Ignore {0}", name),
         icon: <IgnoreIcon />,
         separated: !big,
         disabled: !canChange,
         onSelect: () => run({ kind: "ignorePaths", patterns: [folder ? `/${path}/` : `/${path}`] }),
       });
       if (!folder && pattern !== path) {
-        items.push({ label: `Ignore all ${pattern} files`, icon: <IgnoreIcon />, disabled: !canChange, onSelect: () => run({ kind: "ignorePaths", patterns: [pattern] }) });
+        items.push({ label: t("Ignore all {0} files", pattern), icon: <IgnoreIcon />, disabled: !canChange, onSelect: () => run({ kind: "ignorePaths", patterns: [pattern] }) });
       }
       if (dir) {
-        items.push({ label: `Ignore the folder ${dir}/`, icon: <IgnoreIcon />, disabled: !canChange, onSelect: () => run({ kind: "ignorePaths", patterns: [`/${dir}/`] }) });
+        items.push({ label: t("Ignore the folder {0}/", dir), icon: <IgnoreIcon />, disabled: !canChange, onSelect: () => run({ kind: "ignorePaths", patterns: [`/${dir}/`] }) });
       }
     }
     items.push(
       {
-        label: folder ? "Stash this folder…" : "Stash this file…",
+        label: folder ? t("Stash this folder…") : t("Stash this file…"),
         icon: <StashIcon />,
         separated: true,
         disabled: !canChange,
@@ -153,15 +154,15 @@ export function fileMenuItems(ctx: FileMenuContext, file: FileChange, source: Di
       },
       ...(folder
         ? []
-        : [{ label: "Local history of this file…", icon: <HistoryIcon />, onSelect: () => openDialog({ kind: "localHistory", file: file.path }) }]),
+        : [{ label: t("Local history of this file…"), icon: <HistoryIcon />, onSelect: () => openDialog({ kind: "localHistory", file: file.path }) }]),
       {
-        label: folder ? "Shelve this folder for the team…" : "Shelve this file for the team…",
+        label: folder ? t("Shelve this folder for the team…") : t("Shelve this file for the team…"),
         icon: <ShelfIcon />,
         disabled: !canChange,
         onSelect: () => openDialog({ kind: "shelves", paths }),
       },
       {
-        label: folder ? "Delete this folder" : file.status === "untracked" ? "Delete this file" : "Discard changes",
+        label: folder ? t("Delete this folder") : file.status === "untracked" ? t("Delete this file") : t("Discard changes"),
         icon: <TrashIcon />,
         danger: true,
         disabled: !canChange,
@@ -169,10 +170,10 @@ export function fileMenuItems(ctx: FileMenuContext, file: FileChange, source: Di
       },
     );
   }
-  items.push({ label: "Copy path", icon: <CopyIcon />, separated: true, onSelect: () => copyText(path) });
+  items.push({ label: t("Copy path"), icon: <CopyIcon />, separated: true, onSelect: () => copyText(path) });
   if (where === "worktree" && file.status !== "deleted") {
-    items.push({ label: isMac ? "Show in Finder" : "Show in Explorer", icon: <FolderIcon />, onSelect: () => reveal(path) });
-    if (ctx.editor) items.push({ label: `Open in ${ctx.editor.name}`, icon: <CodeIcon />, onSelect: () => ctx.openInEditor(path) });
+    items.push({ label: isMac ? t("Show in Finder") : t("Show in Explorer"), icon: <FolderIcon />, onSelect: () => reveal(path) });
+    if (ctx.editor) items.push({ label: t("Open in {0}", ctx.editor.name), icon: <CodeIcon />, onSelect: () => ctx.openInEditor(path) });
   }
   return items;
 }
@@ -180,9 +181,9 @@ export function fileMenuItems(ctx: FileMenuContext, file: FileChange, source: Di
 /** A locked file in the sidebar. */
 export function lockMenuItems(ctx: FileMenuContext, lock: Lock): MenuItem[] {
   return [
-    { label: "Show this file's history", icon: <FileHistoryIcon />, onSelect: () => ctx.showHistory(lock.path) },
+    { label: t("Show this file's history"), icon: <FileHistoryIcon />, onSelect: () => ctx.showHistory(lock.path) },
     ...lockItems(ctx, lock.path, lock, true),
-    { label: "Copy path", icon: <CopyIcon />, separated: true, onSelect: () => copyText(lock.path) },
-    { label: isMac ? "Show in Finder" : "Show in Explorer", icon: <FolderIcon />, onSelect: () => ctx.reveal(lock.path) },
+    { label: t("Copy path"), icon: <CopyIcon />, separated: true, onSelect: () => copyText(lock.path) },
+    { label: isMac ? t("Show in Finder") : t("Show in Explorer"), icon: <FolderIcon />, onSelect: () => ctx.reveal(lock.path) },
   ];
 }

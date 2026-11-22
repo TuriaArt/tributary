@@ -1,6 +1,7 @@
 // What you did in a repository with Tributary, each with its undo: kept for a while, and
 // undoable as long as what it changed is still as it left it.
 import type { Action, RepoSnapshot } from "../api";
+import { t } from "./i18n";
 
 /** How to tell an undo is still safe: what the action changed must be as it left it. */
 export type UndoCheck = "head" | "conflicts" | "remote" | "always";
@@ -52,20 +53,20 @@ export function checkFor(action: Action): UndoCheck {
 
 /** Whether `entry` can still be undone in the repository as it is now, and if not, why. */
 export function undoState(entry: HistoryEntry, now: Pick<RepoSnapshot, "headBranch" | "headCommit" | "operation" | "remotes">): { ok: boolean; why?: string } {
-  if (!entry.undo) return { ok: false, why: "This can't be undone" };
-  if (entry.undone) return { ok: false, why: "Undone" };
+  if (!entry.undo) return { ok: false, why: t("This can't be undone") };
+  if (entry.undone) return { ok: false, why: t("Undone") };
   const sameHead = !entry.after || (entry.after.headBranch === now.headBranch && entry.after.headCommit === now.headCommit);
   switch (entry.check) {
     case "head":
       if (sameHead) return { ok: true };
       return entry.after && entry.after.headBranch !== now.headBranch
-        ? { ok: false, why: `You've switched to ${now.headBranch ?? "a commit"} since: switch back to ${entry.after.headBranch ?? "it"} to undo this` }
-        : { ok: false, why: "The branch has moved since: undoing this now would lose what came after" };
+        ? { ok: false, why: t("You've switched to {0} since: switch back to {1} to undo this", now.headBranch ?? t("a commit"), entry.after.headBranch ?? "it") }
+        : { ok: false, why: t("The branch has moved since: undoing this now would lose what came after") };
     case "conflicts":
-      return sameHead && now.operation ? { ok: true } : { ok: false, why: "The merge or rebase is over" };
+      return sameHead && now.operation ? { ok: true } : { ok: false, why: t("The merge or rebase is over") };
     case "remote": {
       const name = entry.action.kind === "addRemote" ? entry.action.name : entry.action.kind === "renameRemote" ? entry.action.to.trim() : "";
-      return now.remotes.includes(name) ? { ok: true } : { ok: false, why: `There's no remote called ${name} any more` };
+      return now.remotes.includes(name) ? { ok: true } : { ok: false, why: t("There's no remote called {0} any more", name) };
     }
     default:
       return { ok: true };

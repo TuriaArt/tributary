@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import { SearchIcon } from "./Icons";
+import { t } from "../lib/i18n";
 
 export interface Command {
   id: string;
@@ -50,7 +51,7 @@ export function CommandPalette({ commands, onClose }: { commands: Command[]; onC
 
   return (
     <div className="palette-backdrop" onMouseDown={onClose}>
-      <div className="palette" role="dialog" aria-label="Commands" onMouseDown={(event) => event.stopPropagation()}>
+      <div className="palette" role="dialog" aria-label={t("Commands")} onMouseDown={(event) => event.stopPropagation()}>
         <div className="palette-input">
           <SearchIcon size={15} />
           <input
@@ -69,13 +70,13 @@ export function CommandPalette({ commands, onClose }: { commands: Command[]; onC
               } else return;
               event.preventDefault();
             }}
-            placeholder="Type a command, a branch name, …"
+            placeholder={t("Type a command, a branch name, …")}
             spellCheck={false}
             autoFocus
           />
         </div>
         <ul ref={list} className="palette-list" role="listbox">
-          {results.length === 0 && <li className="palette-empty">No matching commands</li>}
+          {results.length === 0 && <li className="palette-empty">{t("No matching commands")}</li>}
           {results.map((command, index) => (
             <li
               key={command.id}

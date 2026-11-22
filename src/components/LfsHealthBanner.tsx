@@ -3,6 +3,7 @@ import { baseName } from "../lib/paths";
 import { plural } from "../lib/format";
 import { CloseIcon, WarningIcon } from "./Icons";
 import { Button } from "./ui/Button";
+import { t } from "../lib/i18n";
 
 interface Props {
   health: LfsHealth;
@@ -18,16 +19,18 @@ interface Props {
 export function describeLfsHealth(health: LfsHealth): { text: string; fix: "install" | "setUp" | "download" } {
   if (health.notInstalled)
     return {
-      text: "This repository stores files with Git LFS, which isn't installed. Until it is, those files are small pointer files, and files can't be locked.",
+      text: t("This repository stores files with Git LFS, which isn't installed. Until it is, those files are small pointer files, and files can't be locked."),
       fix: "install",
     };
   if (health.notSetUp)
-    return { text: "Git LFS is installed but git isn't set up to use it, so files stored with it are small pointer files.", fix: "setUp" };
+    return { text: t("Git LFS is installed but git isn't set up to use it, so files stored with it are small pointer files."), fix: "setUp" };
   const names = health.examples.map(baseName);
   const more = health.pointers - names.length;
-  const list = more > 0 ? `${names.join(", ")} and ${more.toLocaleString()} more` : names.join(", ");
+  const list = more > 0 ? t("{0} and {1} more", names.join(", "), more.toLocaleString()) : names.join(", ");
   return {
-    text: `${plural(health.pointers, "file")} stored with Git LFS ${health.pointers === 1 ? "hasn't" : "haven't"} been downloaded${list ? ` (${list})` : ""}.`,
+    text: health.pointers === 1
+      ? t("{0} stored with Git LFS hasn't been downloaded{1}.", plural(health.pointers, "file"), list ? ` (${list})` : "")
+      : t("{0} stored with Git LFS haven't been downloaded{1}.", plural(health.pointers, "file"), list ? ` (${list})` : ""),
     fix: "download",
   };
 }
@@ -41,20 +44,20 @@ export function LfsHealthBanner({ health, busy, onDownload, onSetUp, onGetLfs, o
       <span>{text}</span>
       {fix === "install" && (
         <button className="notice-action" onClick={onGetLfs}>
-          <span className="button-label">Get Git LFS</span>
+          <span className="button-label">{t("Get Git LFS")}</span>
         </button>
       )}
       {fix === "setUp" && (
-        <button className="notice-action" onClick={onSetUp} disabled={busy} title="Runs git lfs install (once for this computer), then downloads the files">
-          <span className="button-label">Set up Git LFS</span>
+        <button className="notice-action" onClick={onSetUp} disabled={busy} title={t("Runs git lfs install (once for this computer), then downloads the files")}>
+          <span className="button-label">{t("Set up Git LFS")}</span>
         </button>
       )}
       {fix === "download" && (
-        <button className="notice-action" onClick={onDownload} disabled={busy} title="git lfs pull">
-          <span className="button-label">Download them</span>
+        <button className="notice-action" onClick={onDownload} disabled={busy} title={t("git lfs pull")}>
+          <span className="button-label">{t("Download them")}</span>
         </button>
       )}
-      <Button kind="icon" onClick={onDismiss} aria-label="Dismiss" title="Dismiss">
+      <Button kind="icon" onClick={onDismiss} aria-label={t("Dismiss")} title={t("Dismiss")}>
         <CloseIcon size={14} />
       </Button>
     </div>

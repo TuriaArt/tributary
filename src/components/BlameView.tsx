@@ -8,6 +8,7 @@ import { FileKindIcon } from "./FileKindIcon";
 import { ChevronLeftIcon, ChevronRightIcon, CloseIcon, HistoryIcon } from "./Icons";
 import { Loader } from "./Loader";
 import { Button } from "./ui/Button";
+import { t } from "../lib/i18n";
 
 const ROW = 20;
 /** Rows drawn above and below the ones on screen. */
@@ -83,19 +84,19 @@ export function BlameView({ repoPath, path: startPath, at: startAt, onClose, onS
   const error = loaded?.key === key ? loaded.error : null;
   const slash = path.lastIndexOf("/");
   return (
-    <section className="diff-view blame-view" aria-label={`Who changed each line of ${path}`}>
+    <section className="diff-view blame-view" aria-label={t("Who changed each line of {0}", path)}>
       <header className="diff-header">
         {versions.list.length > 1 && (
           <div className="diff-steps">
-            <Button kind="icon" onClick={() => go(-1)} disabled={versions.index === 0} title="Back to the newer version" aria-label="Back">
+            <Button kind="icon" onClick={() => go(-1)} disabled={versions.index === 0} title={t("Back to the newer version")} aria-label={t("Back")}>
               <ChevronLeftIcon size={14} />
             </Button>
             <Button
               kind="icon"
               onClick={() => go(1)}
               disabled={versions.index === versions.list.length - 1}
-              title="Forward to the older version"
-              aria-label="Forward"
+              title={t("Forward to the older version")}
+              aria-label={t("Forward")}
             >
               <ChevronRightIcon size={14} />
             </Button>
@@ -105,25 +106,25 @@ export function BlameView({ repoPath, path: startPath, at: startAt, onClose, onS
           <FileKindIcon path={path} size={14} className="file-kind diff-kind" />
           <span className="diff-name">{path.slice(slash + 1)}</span>
           {slash > 0 && <span className="diff-dir">{path.slice(0, slash)}</span>}
-          <span className="diff-source" title={version.before ? `The version before ${shortId(version.before.id ?? "")}: ${version.before.summary}` : undefined}>
-            <span className="chip-text">{version.before ? `Before ${shortId(version.before.id ?? "")}` : at ? `At ${shortId(at)}` : "Your version"}</span>
+          <span className="diff-source" title={version.before ? t("The version before {0}: {1}", shortId(version.before.id ?? ""), version.before.summary) : undefined}>
+            <span className="chip-text">{version.before ? t("Before {0}", shortId(version.before.id ?? "")) : at ? t("At {0}", shortId(at)) : t("Your version")}</span>
           </span>
-          {blame && <span className="diff-source"><span className="chip-text">{blame.commits.length === 1 ? "1 commit" : `${blame.commits.length} commits`}</span></span>}
+          {blame && <span className="diff-source"><span className="chip-text">{blame.commits.length === 1 ? t("1 commit") : `${blame.commits.length} commits`}</span></span>}
         </div>
-        <Button kind="icon" onClick={onClose} title="Close (Esc)" aria-label="Close who changed each line">
+        <Button kind="icon" onClick={onClose} title={t("Close (Esc)")} aria-label={t("Close who changed each line")}>
           <CloseIcon />
         </Button>
       </header>
       <div className="diff-body">
         {error ? (
           <div className="diff-message">
-            <strong>Couldn't see who changed it</strong>
+            <strong>{t("Couldn't see who changed it")}</strong>
             <span>{error}</span>
           </div>
         ) : !blame ? (
-          <Loader size={88} title="Finding who changed each line" />
+          <Loader size={88} title={t("Finding who changed each line")} />
         ) : blame.lines.length === 0 ? (
-          <div className="diff-message muted">The file is empty.</div>
+          <div className="diff-message muted">{t("The file is empty.")}</div>
         ) : (
           <BlameLines
             key={key}
@@ -241,7 +242,7 @@ function BlameLines({
       style={{ height: blame.lines.length * ROW, ["--number-width" as string]: `${digits + 2}ch` }}
       onMouseLeave={() => setHovered(null)}
       role="table"
-      aria-label="Lines and who changed them"
+      aria-label={t("Lines and who changed them")}
     >
       {rows}
     </div>
@@ -265,23 +266,23 @@ function BlameGutter({
 }) {
   const id = commit.id;
   const title = id
-    ? `${commit.summary}\n${commit.author} <${commit.email}>, ${fullDate(commit.time)}\n${shortId(id)}${hasCommit(id) ? " — click to go to it" : ""}`
-    : "Not committed yet";
+    ? `${commit.summary}\n${commit.author} <${commit.email}>, ${fullDate(commit.time)}\n${shortId(id)}${hasCommit(id) ? t(" — click to go to it") : ""}`
+    : t("Not committed yet");
   const go = id && hasCommit(id) ? () => onSelectCommit(id) : undefined;
   if (start) {
     return (
       <span className="blame-gutter-cell">
         <button className="blame-gutter" onClick={go} disabled={!go} title={title}>
           {id ? <Avatar name={commit.author} email={commit.email} size={14} /> : <span className="blame-you" />}
-          <span className="blame-author">{id ? commit.author : "Not committed yet"}</span>
+          <span className="blame-author">{id ? commit.author : t("Not committed yet")}</span>
           {id && <span className="blame-when">{compactTime(commit.time)}</span>}
         </button>
         {commit.previous && (
           <button
             className="blame-back"
             onClick={onStepBack}
-            title={`Who changed these lines before ${shortId(commit.id ?? "")}: the version before “${commit.summary}”`}
-            aria-label={`Before ${shortId(commit.id ?? "")}`}
+            title={t("Who changed these lines before {0}: the version before “{1}”", shortId(commit.id ?? ""), commit.summary)}
+            aria-label={t("Before {0}", shortId(commit.id ?? ""))}
           >
             <HistoryIcon size={12} />
           </button>

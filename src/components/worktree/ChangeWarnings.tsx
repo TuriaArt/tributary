@@ -5,6 +5,7 @@ import { formatBytes, plural } from "../../lib/format";
 import { baseName } from "../../lib/paths";
 import { LockIcon, WarningIcon } from "../Icons";
 import { Button } from "../ui/Button";
+import { t, tx } from "../../lib/i18n";
 
 /** "*.umap" for "Content/Maps/Level.umap"; the path itself for a file without an extension. */
 export function lfsPattern(path: string): string {
@@ -35,7 +36,7 @@ export function ChangeWarnings({ staged, unstaged, lockOf, checks, canLock, busy
     const lock = lockOf(file.path);
     return lock && !lock.mine;
   });
-  const lockHolders = [...new Set(lockedByOthers.map((file) => lockOf(file.path)!.owner || "someone else"))];
+  const lockHolders = [...new Set(lockedByOthers.map((file) => lockOf(file.path)!.owner || t("someone else")))];
   // Grouped by the LFS pattern that would catch them.
   const large = checks?.large ?? [];
   const stagedPaths = new Set(staged.map((file) => file.path));
@@ -50,8 +51,7 @@ export function ChangeWarnings({ staged, unstaged, lockOf, checks, canLock, busy
         <WarningIcon size={14} />
         <div>
           <div>
-            {metas.length === 1 ? "A Unity .meta file is missing or wrong." : `${metas.length} Unity .meta files are missing or wrong.`} Unity
-            finds assets by the id in their .meta, so a teammate's copy would lose whatever uses them.
+            {tx("{0} Unity finds assets by the id in their .meta, so a teammate's copy would lose whatever uses them.", metas.length === 1 ? t("A Unity .meta file is missing or wrong.") : t("{0} Unity .meta files are missing or wrong.", metas.length))}
           </div>
           <ul className="file-warning-list">
             {metas.slice(0, 6).map((problem) => (
@@ -59,7 +59,7 @@ export function ChangeWarnings({ staged, unstaged, lockOf, checks, canLock, busy
                 <strong>{baseName(problem.path)}</strong> {describeMeta(problem)}
               </li>
             ))}
-            {metas.length > 6 && <li>and {plural(metas.length - 6, "more")}</li>}
+            {metas.length > 6 && <li>{tx("and {0}", plural(metas.length - 6, "more"))}</li>}
           </ul>
         </div>
       </div>
@@ -69,8 +69,7 @@ export function ChangeWarnings({ staged, unstaged, lockOf, checks, canLock, busy
         <WarningIcon size={14} />
         <div>
           <div>
-            {names.length === 1 ? "A new file's name" : `${names.length} new files' names`} won't work on everyone's computer: a
-            teammate's checkout fails, or goes wrong. Rename {names.length === 1 ? "it" : "them"} before committing.
+            {tx("{0} won't work on everyone's computer: a teammate's checkout fails, or goes wrong. Rename {1} before committing.", names.length === 1 ? t("A new file's name") : t("{0} new files' names", names.length), names.length === 1 ? "it" : "them")}
           </div>
           <ul className="file-warning-list">
             {names.slice(0, 6).map((problem) => (
@@ -78,7 +77,7 @@ export function ChangeWarnings({ staged, unstaged, lockOf, checks, canLock, busy
                 <strong>{baseName(problem.path)}</strong>: {describeNameProblem(problem)}
               </li>
             ))}
-            {names.length > 6 && <li>and {plural(names.length - 6, "more file")}</li>}
+            {names.length > 6 && <li>{tx("and {0}", plural(names.length - 6, "more file"))}</li>}
           </ul>
         </div>
       </div>
@@ -87,17 +86,15 @@ export function ChangeWarnings({ staged, unstaged, lockOf, checks, canLock, busy
       <div className="lock-warning" role="status">
         <LockIcon size={13} />
         <span>
-          {lockedByOthers.length === 1 ? (
+          {tx("{0}. You won't be able to push {1} until {2} unlocked.", lockedByOthers.length === 1 ? (
             <>
-              <strong>{lockedByOthers[0].path.split("/").pop()}</strong> is locked by {lockHolders[0]}
+              {tx("{0} is locked by {1}", <strong>{lockedByOthers[0].path.split("/").pop()}</strong>, lockHolders[0])}
             </>
           ) : (
             <>
-              {plural(lockedByOthers.length, "changed file")} are locked by {lockHolders.join(", ")}
+              {tx("{0} are locked by {1}", plural(lockedByOthers.length, "changed file"), lockHolders.join(", "))}
             </>
-          )}
-          . You won't be able to push {lockedByOthers.length === 1 ? "your changes to it" : "them"} until{" "}
-          {lockedByOthers.length === 1 ? "it's" : "they're"} unlocked.
+          ), lockedByOthers.length === 1 ? t("your changes to it") : "them", lockedByOthers.length === 1 ? "it's" : "they're")}
         </span>
       </div>
     )}
@@ -106,17 +103,15 @@ export function ChangeWarnings({ staged, unstaged, lockOf, checks, canLock, busy
         <WarningIcon size={14} />
         <div>
           <div>
-            {large.length === 1 ? (
+            {tx("{0} Committed like this, everyone who clones the repository downloads {1} forever.", large.length === 1 ? (
               <>
-                <strong>{baseName(large[0].path)}</strong> ({formatBytes(large[0].size)}) isn't stored with Git LFS.
+                {tx("{0} ({1}) isn't stored with Git LFS.", <strong>{baseName(large[0].path)}</strong>, formatBytes(large[0].size))}
               </>
             ) : (
               <>
-                {large.length} big files ({formatBytes(large.reduce((sum, file) => sum + file.size, 0))}) aren't stored with
-                Git LFS.
+                {tx("{0} big files ({1}) aren't stored with Git LFS.", large.length, formatBytes(large.reduce((sum, file) => sum + file.size, 0)))}
               </>
-            )}{" "}
-            Committed like this, everyone who clones the repository downloads {large.length === 1 ? "it" : "them"} forever.
+            ), large.length === 1 ? "it" : "them")}
           </div>
           <div className="file-warning-actions">
             {patterns.map((pattern) => (
@@ -132,7 +127,7 @@ export function ChangeWarnings({ staged, unstaged, lockOf, checks, canLock, busy
                   })
                 }
               >
-                Track {pattern} with LFS
+                {tx("Track {0} with LFS", pattern)}
               </Button>
             ))}
           </div>
@@ -144,13 +139,11 @@ export function ChangeWarnings({ staged, unstaged, lockOf, checks, canLock, busy
         <LockIcon size={14} />
         <div>
           <div>
-            {unlocked.length === 1 ? <strong>{baseName(unlocked[0])}</strong> : `${unlocked.length} files you changed`} can be
-            locked, and nobody has. Lock {unlocked.length === 1 ? "it" : "them"} before someone else starts on{" "}
-            {unlocked.length === 1 ? "it" : "them"}.
+            {tx("{0} can be locked, and nobody has. Lock {1} before someone else starts on {2}.", unlocked.length === 1 ? <strong>{baseName(unlocked[0])}</strong> : t("{0} files you changed", unlocked.length), unlocked.length === 1 ? "it" : "them", unlocked.length === 1 ? "it" : "them")}
           </div>
           <div className="file-warning-actions">
             <Button kind="outline" size="small" disabled={busy} onClick={() => run({ kind: "lockFiles", paths: unlocked })}>
-              {unlocked.length === 1 ? "Lock it" : `Lock ${unlocked.length} files`}
+              {unlocked.length === 1 ? t("Lock it") : t("Lock {0} files", unlocked.length)}
             </Button>
           </div>
         </div>

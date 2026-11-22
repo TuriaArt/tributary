@@ -4,6 +4,7 @@ import { ResizeHandle } from "../ResizeHandle";
 import { Button } from "../ui/Button";
 import { isMac } from "../../lib/platform";
 import { clamp, MAX_DRAGGED_GRAPH_WIDTH, MAX_REFS_WIDTH, MIN_GRAPH_WIDTH, MIN_REFS_WIDTH, type ColumnOptions, type ColumnWidths, type VisibleColumns } from "./layout";
+import { t } from "../../lib/i18n";
 
 interface Props {
   columns: string;
@@ -43,7 +44,7 @@ export function ListHeader({ columns, visible, options, narrow, refsWidth, graph
       }}
     >
       <div className="refs-heading">
-        <span className="list-heading-text">Branch / Tag</span>
+        <span className="list-heading-text">{t("Branch / Tag")}</span>
         <ResizeHandle
           onResizeStart={startDrag}
           onResize={(delta) => onColumnWidths({ ...columnWidths, refs: clamp(dragStart.current.refs + delta, MIN_REFS_WIDTH, MAX_REFS_WIDTH) })}
@@ -51,7 +52,7 @@ export function ListHeader({ columns, visible, options, narrow, refsWidth, graph
         />
       </div>
       <div className="graph-heading">
-        <span className="list-heading-text">Graph</span>
+        <span className="list-heading-text">{t("Graph")}</span>
         <ResizeHandle
           onResizeStart={startDrag}
           onResize={(delta) =>
@@ -61,24 +62,24 @@ export function ListHeader({ columns, visible, options, narrow, refsWidth, graph
         />
       </div>
       <div className="message-heading">
-        <span className="list-heading-text">Message</span>
+        <span className="list-heading-text">{t("Message")}</span>
       </div>
       {visible.author && (
         <div className="author-heading">
-          <span className="list-heading-text">{narrow ? "" : "Author"}</span>
+          <span className="list-heading-text">{narrow ? "" : t("Author")}</span>
         </div>
       )}
       {visible.date && (
         <div className="date-heading">
-          <span className="list-heading-text">{options.dateKind === "committed" ? "Committed" : "Date"}</span>
+          <span className="list-heading-text">{options.dateKind === "committed" ? t("Committed") : t("Date")}</span>
         </div>
       )}
       {visible.sha && (
         <div className="sha-heading">
-          <span className="list-heading-text">SHA</span>
+          <span className="list-heading-text">{t("SHA")}</span>
         </div>
       )}
-      <Button ref={viewButton} kind="icon" className="list-header-view" style={{ right: scrollbar }} onClick={onViewMenu} title={`View options (${isMac ? "⇧⌘O" : "Ctrl+Shift+O"})`} aria-label="View options">
+      <Button ref={viewButton} kind="icon" className="list-header-view" style={{ right: scrollbar }} onClick={onViewMenu} title={t("View options ({0})", isMac ? "⇧⌘O" : "Ctrl+Shift+O")} aria-label={t("View options")}>
         <ViewIcon size={14} />
       </Button>
     </div>

@@ -3,6 +3,7 @@ import { upstreamChoices, type Action, type UpstreamChoices } from "../api";
 import { relativeTime } from "../lib/format";
 import { Dialog } from "./Dialog";
 import { Button } from "./ui/Button";
+import { t, tx } from "../lib/i18n";
 
 interface Props {
   repoPath: string;
@@ -45,43 +46,43 @@ export function ChooseUpstreamDialog({ repoPath, branch, localBranches, onCancel
     };
   }, [repoPath, branch]);
 
-  const remote = choices?.remote ?? "the remote";
+  const remote = choices?.remote ?? t("the remote");
   const newName = chosen && choices ? shortName(chosen, choices.remote) : null;
   // The box shows when the chosen one has another name, and that name isn't taken here.
   const canRename = newName !== null && newName !== branch && !localBranches.includes(newName);
 
   return (
     <Dialog
-      title={`Which branch on ${remote} does ${branch} go with?`}
+      title={t("Which branch on {0} does {1} go with?", remote, branch)}
       error={error}
       onCancel={onCancel}
       buttons={
         <>
           <Button kind="secondary" onClick={onCancel}>
-            Cancel
+            {t("Cancel")}
           </Button>
           <Button
             kind="primary"
             disabled={!chosen}
             onClick={() => chosen && onChoose({ kind: "setUpstream", branch, upstream: chosen, renameTo: canRename && rename ? newName : null })}
           >
-            {chosen ? `Use ${chosen}` : "Use it"}
+            {chosen ? t("Use {0}", chosen) : t("Use it")}
           </Button>
         </>
       }
     >
       <p>
-        Pull and Sync take commits from it, and Push sends {branch}'s to it. {choices && <>{choices.gone} was renamed or deleted on {remote}.</>}
+        {tx("Pull and Sync take commits from it, and Push sends {0}'s to it. {1}", branch, choices && <>{tx("{0} was renamed or deleted on {1}.", choices.gone, remote)}</>)}
       </p>
-      {choices && choices.branches.length === 0 && <p className="hint">{remote} has no branches to choose from. Push {branch} to put it back there.</p>}
+      {choices && choices.branches.length === 0 && <p className="hint">{tx("{0} has no branches to choose from. Push {1} to put it back there.", remote, branch)}</p>}
       {choices && choices.branches.length > 0 && (
-        <div className="merge-methods upstream-choices" role="radiogroup" aria-label={`${remote}'s branches`}>
+        <div className="merge-methods upstream-choices" role="radiogroup" aria-label={t("{0}'s branches", remote)}>
           {choices.branches.map((choice) => (
             <label key={choice.name} className={`merge-method${chosen === choice.name ? " selected" : ""}`}>
               <input type="radio" name="upstream" checked={chosen === choice.name} onChange={() => setChosen(choice.name)} />
               <span className="merge-method-label">
                 <span className="mono">{choice.name}</span>
-                {choice.name === choices.defaultBranch && <span className="upstream-choice-tag">{remote}'s main branch</span>}
+                {choice.name === choices.defaultBranch && <span className="upstream-choice-tag">{tx("{0}'s main branch", remote)}</span>}
               </span>
               <span className="merge-method-hint">
                 {choice.summary} · {choice.author}, {relativeTime(choice.time)}
@@ -94,7 +95,7 @@ export function ChooseUpstreamDialog({ repoPath, branch, localBranches, onCancel
         <label className="checkbox upstream-rename">
           <input type="checkbox" checked={rename} onChange={(event) => setRename(event.target.checked)} />
           <span>
-            Also rename {branch} to <strong>{newName}</strong>, so it has the same name here as on {remote}.
+            {tx("Also rename {0} to {1}, so it has the same name here as on {2}.", branch, <strong>{newName}</strong>, remote)}
           </span>
         </label>
       )}

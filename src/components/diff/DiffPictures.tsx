@@ -3,6 +3,7 @@ import type { Media } from "../../api";
 import { pictureFormat, type EmbeddedPicture, type PictureChange } from "../../lib/embeddedPictures";
 import { formatBytes } from "../../lib/format";
 import { DiffImages } from "./DiffImages";
+import { t } from "../../lib/i18n";
 
 /** The picture change as media, for the picture comparison (side by side, swipe…). */
 function pictureMedia(change: PictureChange): Media {
@@ -22,7 +23,7 @@ function pictureMedia(change: PictureChange): Media {
 /** "PNG, line 3": what the picture is and where (where it was, for one taken out). */
 export function describePicture(change: PictureChange): string {
   const picture = (change.after ?? change.before)!;
-  const where = change.after ? `line ${change.after.line}` : `was line ${change.before!.line}`;
+  const where = change.after ? `line ${change.after.line}` : t("was line {0}", change.before!.line);
   return `${pictureFormat(picture.type)}, ${where}`;
 }
 
@@ -30,16 +31,16 @@ export function describePicture(change: PictureChange): string {
 export function describePictureSizes(change: PictureChange): string {
   const { before, after } = change;
   if (!before && after) return `Added, ${formatBytes(after.bytes)}`;
-  if (before && !after) return `Taken out (it was ${formatBytes(before.bytes)})`;
-  return before!.bytes === after!.bytes ? `${formatBytes(after!.bytes)}, the same size` : `${formatBytes(before!.bytes)} → ${formatBytes(after!.bytes)}`;
+  if (before && !after) return t("Taken out (it was {0})", formatBytes(before.bytes));
+  return before!.bytes === after!.bytes ? t("{0}, the same size", formatBytes(after!.bytes)) : `${formatBytes(before!.bytes)} → ${formatBytes(after!.bytes)}`;
 }
 
 /** One side's picture, small, on the checkerboard (or a dash where there's none). */
 function Thumb({ picture, side }: { picture: EmbeddedPicture | null; side: "before" | "after" }) {
-  const name = side === "before" ? "Before" : "After";
+  const name = side === "before" ? t("Before") : t("After");
   return (
-    <span className={`diff-picture-thumb${picture ? "" : " missing"}`} title={picture ? name : `${name}: none`}>
-      {picture ? <img src={picture.url} alt={name} draggable={false} /> : <span aria-label={`${name}: none`}>—</span>}
+    <span className={`diff-picture-thumb${picture ? "" : " missing"}`} title={picture ? name : t("{0}: none", name)}>
+      {picture ? <img src={picture.url} alt={name} draggable={false} /> : <span aria-label={t("{0}: none", name)}>—</span>}
     </span>
   );
 }
@@ -82,8 +83,8 @@ export function InlinePicture({ change, path, split = false }: { change: Picture
           <span className="diff-picture-card-name">{describePicture(change)}</span>
           <span className="diff-picture-card-sizes">{describePictureSizes(change)}</span>
         </span>
-        <button className="hunk-button" aria-expanded={open} onClick={() => setOpen(!open)} title={open ? "Close the comparison" : "Compare them side by side, wiped, faded, or pixel by pixel"}>
-          <span className="button-label">{open ? "Close" : "Compare"}</span>
+        <button className="hunk-button" aria-expanded={open} onClick={() => setOpen(!open)} title={open ? t("Close the comparison") : t("Compare them side by side, wiped, faded, or pixel by pixel")}>
+          <span className="button-label">{open ? t("Close") : t("Compare")}</span>
         </button>
       </div>
       {open && <PictureComparison change={change} path={path} />}

@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import type { WebRemote } from "../api";
 import { linkIssueKeys, useIssueTracker } from "../lib/issues";
 import { linkify, openInBrowser } from "../lib/weblinks";
+import { t } from "../lib/i18n";
 
 interface Props {
   text: string;
@@ -33,7 +34,7 @@ export function MessageText({ text, remote, resolveCommit, onSelectCommit }: Pro
             {part.text}
           </a>
         ) : (
-          <button key={index} className="sha-link inline" onClick={() => onSelectCommit(part.id)} title="Go to this commit">
+          <button key={index} className="sha-link inline" onClick={() => onSelectCommit(part.id)} title={t("Go to this commit")}>
             {part.text}
           </button>
         ),

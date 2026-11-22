@@ -3,6 +3,7 @@ import { errorKind, patchInfo, runAction, type PatchInfo } from "../api";
 import { plural } from "../lib/format";
 import { Dialog } from "./Dialog";
 import { Button } from "./ui/Button";
+import { t, tx } from "../lib/i18n";
 
 /**
  * Apply a patch file: what's in it (its commits and files) and whether it applies to your
@@ -59,7 +60,7 @@ export function ApplyPatchDialog({
   const shown = info?.files.slice(0, 8) ?? [];
   return (
     <Dialog
-      title={`Apply ${name}?`}
+      title={t("Apply {0}?", name)}
       error={error}
       busy={running}
       onCancel={onCancel}
@@ -67,16 +68,16 @@ export function ApplyPatchDialog({
       buttons={
         <>
           <Button kind="secondary" onClick={onCancel} disabled={running}>
-            Cancel
+            {t("Cancel")}
           </Button>
           <Button kind="primary" onClick={apply} disabled={running || !info}>
-            {running ? "Applying…" : asCommits && info && info.commits.length > 0 ? `Apply ${plural(info.commits.length, "commit")}` : "Apply the changes"}
+            {running ? t("Applying…") : asCommits && info && info.commits.length > 0 ? t("Apply {0}", plural(info.commits.length, "commit")) : t("Apply the changes")}
           </Button>
         </>
       }
     >
       {!info ? (
-        !error && <p className="muted">Reading the patch…</p>
+        !error && <p className="muted">{t("Reading the patch…")}</p>
       ) : (
         <>
           {info.commits.length > 0 ? (
@@ -89,7 +90,7 @@ export function ApplyPatchDialog({
               ))}
             </ul>
           ) : (
-            <p>Changes to {plural(info.files.length, "file")}, without commits of their own.</p>
+            <p>{tx("Changes to {0}, without commits of their own.", plural(info.files.length, "file"))}</p>
           )}
           <ul className="patch-files mono">
             {shown.map((each) => (
@@ -100,28 +101,28 @@ export function ApplyPatchDialog({
                     <span className="added">+{each.additions}</span> <span className="removed">−{each.deletions}</span>
                   </span>
                 ) : (
-                  <span className="muted">binary</span>
+                  <span className="muted">{t("binary")}</span>
                 )}
               </li>
             ))}
-            {info.files.length > shown.length && <li className="muted">and {plural(info.files.length - shown.length, "more file")}</li>}
+            {info.files.length > shown.length && <li className="muted">{tx("and {0}", plural(info.files.length - shown.length, "more file"))}</li>}
           </ul>
           <p className={`dialog-note-line${info.applies ? "" : " warning"}`}>
             {info.applies
-              ? "It applies to your files as they are."
-              : "It conflicts with your files: git will stop at the conflicts for you to resolve them, then continue."}
+              ? t("It applies to your files as they are.")
+              : t("It conflicts with your files: git will stop at the conflicts for you to resolve them, then continue.")}
           </p>
           {info.commits.length > 0 && (
-            <div className="merge-methods" role="radiogroup" aria-label="How to apply it">
+            <div className="merge-methods" role="radiogroup" aria-label={t("How to apply it")}>
               <label className={`merge-method${asCommits ? " selected" : ""}`}>
                 <input type="radio" name="apply-as" checked={asCommits} onChange={() => setAsCommits(true)} />
-                <span className="merge-method-label">As commits on {branch ?? "HEAD"}</span>
-                <span className="merge-method-hint">Each with its author and message, as it was made (git am).</span>
+                <span className="merge-method-label">{tx("As commits on {0}", branch ?? "HEAD")}</span>
+                <span className="merge-method-hint">{t("Each with its author and message, as it was made (git am).")}</span>
               </label>
               <label className={`merge-method${!asCommits ? " selected" : ""}`}>
                 <input type="radio" name="apply-as" checked={!asCommits} onChange={() => setAsCommits(false)} />
-                <span className="merge-method-label">As changes to commit yourself</span>
-                <span className="merge-method-hint">The files change; nothing is committed (git apply).</span>
+                <span className="merge-method-label">{t("As changes to commit yourself")}</span>
+                <span className="merge-method-hint">{t("The files change; nothing is committed (git apply).")}</span>
               </label>
             </div>
           )}

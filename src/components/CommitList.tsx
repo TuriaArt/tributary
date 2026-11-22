@@ -18,6 +18,7 @@ import { CommitPreview } from "./CommitPreview";
 import { hintAt, HintsInCardContext } from "./hints";
 import { Loader } from "./Loader";
 import { Button } from "./ui/Button";
+import { t, tx } from "../lib/i18n";
 
 export { DEFAULT_COLUMNS, type ColumnOptions, type ColumnWidths } from "./commitList/layout";
 
@@ -286,7 +287,7 @@ export function CommitList(props: Props) {
   return (
     <section
       className={`commit-list${dense ? " dense" : ""}${props.prNumbers ? " pr-numbers" : ""}${layout.graphGrowing ? " graph-growing" : ""}${litLanes.length > 0 ? " lane-lit" : ""}`}
-      aria-label="Commits"
+      aria-label={t("Commits")}
       // The rows' columns: set here, so a new width restyles the rows without re-rendering them.
       style={{ ["--list-columns" as string]: columns, ["--refs-width" as string]: `${refsWidth}px`, ["--graph-width" as string]: `${graphWidth}px` }}
     >
@@ -330,14 +331,14 @@ export function CommitList(props: Props) {
           }}
           onKeyDown={onKeyDown}
           role="listbox"
-          aria-label="Commits"
+          aria-label={t("Commits")}
           aria-multiselectable
           // Only while its row is drawn: the list draws the rows in view, and a name for one that
           // isn't there points at nothing.
           aria-activedescendant={selectedId && selectedIndex >= 0 && slotOf[selectedIndex] >= first && slotOf[selectedIndex] < last ? `commit-${selectedId}` : undefined}
         >
           {commits.length === 0 ? (
-            <div className="list-empty">This repository doesn't have any commits yet.</div>
+            <div className="list-empty">{t("This repository doesn't have any commits yet.")}</div>
           ) : (
             <div className="list-spacer" style={{ height: contentHeight }}>
               {/* With the hover card on, what's in a row says what it is in the card, not in a tooltip. */}
@@ -348,9 +349,9 @@ export function CommitList(props: Props) {
               </div>
               {snapshot.truncated && (
                 <div className="list-footer" style={{ top: slots.length * rowHeight, height: FOOTER_HEIGHT }}>
-                  <span>Showing the {commits.length.toLocaleString()} most recent commits.</span>
+                  <span>{tx("Showing the {0} most recent commits.", commits.length.toLocaleString())}</span>
                   <Button kind="tool" onClick={onLoadMore} disabled={loadingMore}>
-                    {loadingMore ? <Loader inline size={18} title="Loading…" /> : `Load ${PAGE_SIZE.toLocaleString()} more`}
+                    {loadingMore ? <Loader inline size={18} title={t("Loading…")} /> : t("Load {0} more", PAGE_SIZE.toLocaleString())}
                   </Button>
                 </div>
               )}

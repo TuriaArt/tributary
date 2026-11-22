@@ -22,6 +22,7 @@ import type { Selection } from "./useSelection";
 import type { Submodules } from "./useSubmodules";
 import { RepoErrorBanner } from "./RepoErrorBanner";
 import { Button } from "../components/ui/Button";
+import { t, tx } from "../lib/i18n";
 
 interface Props {
   snapshot: RepoSnapshot;
@@ -97,32 +98,32 @@ export function RepositoryBanners(props: Props) {
           busy={running !== null}
           onMark={(verdict) => act({ kind: "bisectMark", verdict, id: null })}
           onStop={() => act({ kind: "bisectReset" })}
-          onShow={(id) => (selection.byId.has(id) ? selection.select(id) : repo.setError({ message: "That commit isn't loaded: load more commits" }))}
+          onShow={(id) => (selection.byId.has(id) ? selection.select(id) : repo.setError({ message: t("That commit isn't loaded: load more commits") }))}
         />
       )}
       {error && hook && (
         <div className="error-banner inline hook-failure" role="alert">
           <div className="hook-failure-text">
             <strong>
-              The {hook.hook} hook stopped the {hook.stopped}
+              {tx("The {0} hook stopped the {1}", hook.hook, hook.stopped)}
             </strong>
-            {hook.output ? <pre className="hook-output mono">{hook.output}</pre> : <span> without saying why.</span>}
+            {hook.output ? <pre className="hook-output mono">{hook.output}</pre> : <span>{" "}{t("without saying why.")}</span>}
           </div>
           {error.skipHooks && (
             <button
               className="error-action"
               disabled={running !== null}
-              title={`Run it again without the repository's ${hook.stopped === "commit" ? "pre-commit and commit-msg hooks" : "pre-push hook"}: their checks are skipped this once`}
+              title={t("Run it again without the repository's {0}: their checks are skipped this once", hook.stopped === "commit" ? t("pre-commit and commit-msg hooks") : t("pre-push hook"))}
               onClick={() =>
                 act(error.skipHooks!).then((done) => {
                   if (done && error.skipHooks?.kind === "commit") props.onCommitted();
                 })
               }
             >
-              {hook.stopped === "commit" ? "Commit anyway (skip hooks)" : "Push anyway (skip hooks)"}
+              {hook.stopped === "commit" ? t("Commit anyway (skip hooks)") : t("Push anyway (skip hooks)")}
             </button>
           )}
-          <Button kind="icon" onClick={() => setError(null)} aria-label="Dismiss">
+          <Button kind="icon" onClick={() => setError(null)} aria-label={t("Dismiss")}>
             <CloseIcon size={14} />
           </Button>
         </div>

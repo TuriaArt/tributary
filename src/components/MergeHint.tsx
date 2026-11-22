@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { MergeCheck } from "../api";
 import { checkMerge, conflictList, describeMergeCheck } from "../lib/mergeChecks";
+import { t } from "../lib/i18n";
 
 /**
  * A menu item's second line: whether merging `from` into the checked-out branch (or
@@ -18,9 +19,9 @@ export function MergeHint({ repo, from, at, kind }: { repo: string; from: string
       current = false;
     };
   }, [repo, from, at]);
-  if (check === null) return <span>Checking for conflicts…</span>;
+  if (check === null) return <span>{t("Checking for conflicts…")}</span>;
   const said = check === "failed" ? null : describeMergeCheck(check, kind);
-  if (!said || check === "failed") return <span>Couldn't check for conflicts</span>;
+  if (!said || check === "failed") return <span>{t("Couldn't check for conflicts")}</span>;
   return (
     <span className={said.tone} title={check.outcome === "conflicts" ? conflictList(check) : undefined}>
       {said.text}

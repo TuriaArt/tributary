@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { t } from "../../lib/i18n";
 
 /** A section of the sidebar, as the strip shows it. */
 export interface StripSection {
@@ -17,7 +18,7 @@ export interface StripSection {
  */
 export function SidebarStrip({ sections, open, onOpen }: { sections: StripSection[]; open: string | null; onOpen: (id: string) => void }) {
   return (
-    <nav className="sidebar-strip" aria-label="Sidebar">
+    <nav className="sidebar-strip" aria-label={t("Sidebar")}>
       {sections.map((section) => (
         <button
           key={section.id}

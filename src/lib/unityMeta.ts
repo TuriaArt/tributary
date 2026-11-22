@@ -1,18 +1,19 @@
 // Unity's .meta files: saying what's wrong, and which of the staged files are being
 // committed without their .meta.
 import type { FileChange, MetaProblem } from "../api";
+import { t } from "./i18n";
 
 /** What's wrong, in a few words. */
 export function describeMeta(problem: MetaWarning): string {
   switch (problem.problem) {
     case "missing":
-      return "has no .meta yet: open the project in Unity so it makes one";
+      return t("has no .meta yet: open the project in Unity so it makes one");
     case "orphan":
-      return "is a .meta whose file is gone: delete it too";
+      return t("is a .meta whose file is gone: delete it too");
     case "leftBehind":
-      return "is deleted, but its .meta isn't: delete that too";
+      return t("is deleted, but its .meta isn't: delete that too");
     case "notStaged":
-      return "is staged without its .meta: stage that too";
+      return t("is staged without its .meta: stage that too");
   }
 }
 

@@ -2,6 +2,8 @@
 // about how syncing went. The Forks screen (components/ForksView) and the automatic sync
 // (app/useForkSync) share these.
 import type { Fork, ForkStatus, ForkSync, SyncOutcome } from "../api";
+import { t } from "./i18n";
+import { joinAnd } from "./format";
 
 /** How often the forks with Auto on are synced, while Tributary is open. */
 export type ForkSyncEvery = "hour" | "day" | "off";
@@ -27,15 +29,15 @@ export const synced = (outcome: SyncOutcome) => outcome === "fastForward" || out
 export function outcomeText(sync: ForkSync): string {
   switch (sync.outcome) {
     case "fastForward":
-      return "Synced: it moved straight on to the original's commits";
+      return t("Synced: it moved straight on to the original's commits");
     case "merged":
-      return "Synced: the original's commits were merged into it, with a merge commit";
+      return t("Synced: the original's commits were merged into it, with a merge commit");
     case "upToDate":
-      return "It already had all of the original's commits";
+      return t("It already had all of the original's commits");
     case "conflict":
-      return "Its own changes clash with the original's";
+      return t("Its own changes clash with the original's");
     case "refused":
-      return sync.message || "GitHub didn't sync it";
+      return sync.message || t("GitHub didn't sync it");
   }
 }
 
@@ -55,8 +57,7 @@ export interface ForkRun {
 
 /** "a", "a and b", "a, b and c". */
 export function listNames(names: string[]): string {
-  if (names.length <= 1) return names.join("");
-  return `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
+  return joinAnd(names);
 }
 
 /** What an automatic sync did, in a sentence or two; null when it had nothing to say (all up to date). */
@@ -65,12 +66,12 @@ export function describeForkRun(run: ForkRun): string | null {
   const clashed = run.results.filter((result) => result.outcome === "conflict").map((result) => result.name);
   const failed = run.results.filter((result) => result.outcome === "refused" || result.outcome === "failed");
   const parts: string[] = [];
-  if (done.length > 0) parts.push(`Synced ${listNames(done)} with ${done.length === 1 ? "its original" : "their originals"}.`);
+  if (done.length > 0) parts.push(t("Synced {0} with {1}.", listNames(done), done.length === 1 ? t("its original") : t("their originals")));
   if (clashed.length > 0)
     parts.push(
-      `${listNames(clashed)} couldn't sync by ${clashed.length === 1 ? "itself: its" : "themselves: their"} own changes clash with the original's.`,
+      t("{0} couldn't sync by {1} own changes clash with the original's.", listNames(clashed), clashed.length === 1 ? t("itself: its") : t("themselves: their")),
     );
-  for (const result of failed) parts.push(`${result.name} couldn't sync: ${result.message.replace(/\.$/, "")}.`);
+  for (const result of failed) parts.push(t("{0} couldn't sync: {1}.", result.name, result.message.replace(/\.$/, "")));
   return parts.length > 0 ? parts.join(" ") : null;
 }
 

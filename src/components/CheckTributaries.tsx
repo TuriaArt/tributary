@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { RequestCheck } from "../api";
 import { checkKey, checkName, checksVerdict, checkTime } from "../lib/pullRequests";
 import { ExternalLinkIcon } from "./Icons";
+import { t } from "../lib/i18n";
 
 type Props = {
   checks: RequestCheck[];
@@ -211,7 +212,7 @@ export function CheckTributaries({ checks: given, now, openUrl, lit, onLight, wo
     <div className={`tributaries ${v.tone}${celebrating ? " celebrating" : ""}${litCheck ? " lit" : ""}`}>
       <div className="tributaries-streams" ref={box}>
         {/* Each check's stream is a link to its page, from the keyboard too. */}
-        <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} role="group" aria-label="The checks, as streams into a river">
+        <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} role="group" aria-label={t("The checks, as streams into a river")}>
           <defs>
             <linearGradient id="tributaries-confluence" gradientUnits="userSpaceOnUse" x1={confluence} y1={middle} x2={riverEnd} y2={middle}>
               <stop offset="0" style={{ stopColor: from }} />
@@ -325,7 +326,7 @@ export function CheckTributaries({ checks: given, now, openUrl, lit, onLight, wo
                   d={shore}
                   role={check.url ? "link" : undefined}
                   tabIndex={check.url ? 0 : -1}
-                  aria-label={check.url ? `${title}: open its page` : title}
+                  aria-label={check.url ? t("{0}: open its page", title) : title}
                   onMouseEnter={() => onLight(checkKey(check))}
                   onMouseLeave={() => onLight(null)}
                   onFocus={() => onLight(checkKey(check))}

@@ -12,9 +12,11 @@ import type { Theme } from "../lib/appearance";
 import { FETCH_MINUTES, HISTORY_MINUTES, SCHEDULE_TIMES, ZOOM_LEVELS } from "./constants";
 import type { NewCommitNotices, Preferences, ReleaseLocks, SubmoduleUpdates } from "./usePreferences";
 import { Button } from "../components/ui/Button";
+import { LANGUAGES, language, languageSetting, setLanguageSetting, t, type LanguageSetting } from "../lib/i18n";
+import { plural } from "../lib/format";
 
 /** The Settings section with the diff and merge tools, to open it at. */
-export const DIFF_SECTION = "Diff and merge";
+export const DIFF_SECTION = t("Diff and merge");
 
 interface Options {
   preferences: Preferences;
@@ -53,102 +55,111 @@ export function settingsSections({ preferences, onFetchLatestNow, accounts, diff
   const looks = appearanceRows(preferences.appearance, preferences.setAppearance, theme);
   const zoomRow: SettingRow = {
     kind: "select",
-    label: "Zoom",
+    label: t("Zoom"),
     value: String(zoom),
     options: ZOOM_LEVELS.map((level) => ({ value: String(level), label: `${Math.round(level * 100)}%` })),
     set: (value) => setZoom(Number(value)),
   };
   const sections: SettingsSection[] = [
     {
-      title: "General",
+      title: t("General"),
       icon: <GearIcon size={15} />,
       rows: [
         {
+          kind: "select",
+          // Named in English too, so it can be found whichever language the app is in.
+          label: language() === "en" ? "Language" : `${t("Language")} (Language)`,
+          hint: t("The language of the app's menus, buttons and messages. Changing it reloads the window."),
+          value: languageSetting(),
+          options: [{ value: "system", label: t("Same as the system") }, ...LANGUAGES],
+          set: (value) => setLanguageSetting(value as LanguageSetting),
+        },
+        {
           kind: "toggle",
-          label: "Simple mode",
-          hint: "Get latest, your changes with their locks and Submit (commit and push in one), and what the team's working on, without branches and the commit graph. View → Simple Mode, or Full view, switches back.",
+          label: t("Simple mode"),
+          hint: t("Get latest, your changes with their locks and Submit (commit and push in one), and what the team's working on, without branches and the commit graph. View → Simple Mode, or Full view, switches back."),
           value: preferences.simpleMode,
           set: preferences.setSimpleMode,
         },
         {
           kind: "toggle",
-          label: "Offer tours",
-          hint: "A short guided tour when you first come across something, like locks or Simple mode. Help → Tours has them all, any time.",
+          label: t("Offer tours"),
+          hint: t("A short guided tour when you first come across something, like locks or Simple mode. Help → Tours has them all, any time."),
           value: !preferences.toursOff,
           set: (offered) => preferences.setToursOff(!offered),
         },
         {
           kind: "toggle",
-          label: "Introduce Why Is a File Ignored…",
-          hint: "What it does, before you choose a file (Repository → Tools).",
+          label: t("Introduce Why Is a File Ignored…"),
+          hint: t("What it does, before you choose a file (Repository → Tools)."),
           value: !preferences.skipIgnoreIntro,
           set: (shown) => preferences.setSkipIgnoreIntro(!shown),
         },
         {
           kind: "toggle",
-          label: "Reopen tabs on launch",
-          hint: "The repositories you had open when you last quit open again.",
+          label: t("Reopen tabs on launch"),
+          hint: t("The repositories you had open when you last quit open again."),
           value: reopenTabs,
           set: setReopenTabs,
         },
         ...apps,
         {
           kind: "select",
-          label: "Submodules after a checkout or pull",
-          hint: "When the commit recorded for a submodule changes, git leaves the submodule where it was until it's updated.",
+          label: t("Submodules after a checkout or pull"),
+          hint: t("When the commit recorded for a submodule changes, git leaves the submodule where it was until it's updated."),
           value: submoduleUpdates,
           options: [
-            { value: "ask", label: "Offer to update them" },
-            { value: "always", label: "Update them" },
-            { value: "never", label: "Leave them as they are" },
+            { value: "ask", label: t("Offer to update them") },
+            { value: "always", label: t("Update them") },
+            { value: "never", label: t("Leave them as they are") },
           ],
           set: (value) => setSubmoduleUpdates(value as SubmoduleUpdates),
         },
       ],
     },
     {
-      title: "Appearance",
+      title: t("Appearance"),
       icon: <ContrastIcon size={15} />,
       rows: [...looks.look, zoomRow, looks.reset],
     },
     {
-      title: "Graph",
+      title: t("Graph"),
       icon: <BranchIcon size={15} />,
-      parent: "Appearance",
+      parent: t("Appearance"),
       rows: looks.graph,
     },
     {
-      title: "Commit list",
+      title: t("Commit list"),
       icon: <ColumnsIcon size={15} />,
-      parent: "Appearance",
+      parent: t("Appearance"),
       rows: [
-        { kind: "toggle", label: "Compact rows", value: dense, set: setDense },
-        { kind: "toggle", label: "Day separators", value: daySeparators, set: setDaySeparators },
+        { kind: "toggle", label: t("Compact rows"), value: dense, set: setDense },
+        { kind: "toggle", label: t("Day separators"), value: daySeparators, set: setDaySeparators },
         {
           kind: "toggle",
-          label: "Pull request numbers",
-          hint: "On branch labels, beside the icon for the pull request's checks (a spinner while they run, a tick or a cross). Without them, labels leave more room for the branch's name; the sidebar always has them.",
+          label: t("Pull request numbers"),
+          hint: t("On branch labels, beside the icon for the pull request's checks (a spinner while they run, a tick or a cross). Without them, labels leave more room for the branch's name; the sidebar always has them."),
           value: prNumbers,
           set: setPrNumbers,
         },
-        { kind: "toggle", label: "Previews on hover", hint: "A commit's details when you rest the pointer on it.", value: previews, set: setPreviews },
+        { kind: "toggle", label: t("Previews on hover"), hint: t("A commit's details when you rest the pointer on it."), value: previews, set: setPreviews },
         {
           kind: "toggle",
-          label: "Profile pictures",
-          hint: "Looked up by email address: on GitHub or GitLab for repositories there, otherwise on Gravatar (which gets a hash of the address).",
+          label: t("Profile pictures"),
+          hint: t("Looked up by email address: on GitHub or GitLab for repositories there, otherwise on Gravatar (which gets a hash of the address)."),
           value: profilePictures,
           set: setProfilePictures,
         },
         {
           kind: "toggle",
-          label: "Checks on commits",
-          hint: "A dot on each commit for its CI on GitHub or GitLab: green when the checks passed, red when they failed, amber while they run.",
+          label: t("Checks on commits"),
+          hint: t("A dot on each commit for its CI on GitHub or GitLab: green when the checks passed, red when they failed, amber while they run."),
           value: columnOptions.checks !== false,
           set: (on) => setColumnOptions({ ...columnOptions, checks: on }),
         },
         {
           kind: "custom",
-          label: "Columns",
+          label: t("Columns"),
           content: (
             <span className="settings-checks">
               {(["author", "date", "sha"] as const).map((column) => (
@@ -166,22 +177,22 @@ export function settingsSections({ preferences, onFetchLatestNow, accounts, diff
         },
         {
           kind: "select",
-          label: "Dates",
+          label: t("Dates"),
           value: columnOptions.dateFormat,
           options: [
-            { value: "relative", label: "Relative (“3 hours ago”)" },
-            { value: "exact", label: "Exact dates and times" },
+            { value: "relative", label: t("Relative (“3 hours ago”)") },
+            { value: "exact", label: t("Exact dates and times") },
           ],
           set: (value) => setColumnOptions({ ...columnOptions, dateFormat: value as ColumnOptions["dateFormat"] }),
           disabled: !columnOptions.date,
         },
         {
           kind: "select",
-          label: "Which date",
+          label: t("Which date"),
           value: columnOptions.dateKind,
           options: [
-            { value: "authored", label: "When it was written" },
-            { value: "committed", label: "When it was committed" },
+            { value: "authored", label: t("When it was written") },
+            { value: "committed", label: t("When it was committed") },
           ],
           set: (value) => setColumnOptions({ ...columnOptions, dateKind: value as ColumnOptions["dateKind"] }),
           disabled: !columnOptions.date,
@@ -189,9 +200,9 @@ export function settingsSections({ preferences, onFetchLatestNow, accounts, diff
       ],
     },
     {
-      title: "Sidebar",
+      title: t("Sidebar"),
       icon: <SidebarIcon size={15} />,
-      parent: "Appearance",
+      parent: t("Appearance"),
       // The same switches as the menu by the sidebar's filter.
       rows: SIDEBAR_SECTIONS.map(
         (entry): SettingRow => ({
@@ -204,7 +215,7 @@ export function settingsSections({ preferences, onFetchLatestNow, accounts, diff
       ),
     },
     {
-      title: "Accounts",
+      title: t("Accounts"),
       icon: <UserIcon size={15} />,
       rows: [
         accountRow({
@@ -214,8 +225,8 @@ export function settingsSections({ preferences, onFetchLatestNow, accounts, diff
           known: accounts.github !== null,
           who: accounts.github?.account ? `${accounts.github.account.login}${accounts.github.account.name ? ` (${accounts.github.account.name})` : ""}` : null,
           rejected: Boolean(accounts.github?.tokenRejected),
-          signedIn: "Pull requests of private repositories show too, and Clone lists your repositories.",
-          signedOut: "Sign in to see pull requests of private repositories, pick from your repositories when cloning, and push without being asked.",
+          signedIn: t("Pull requests of private repositories show too, and Clone lists your repositories."),
+          signedOut: t("Sign in to see pull requests of private repositories, pick from your repositories when cloning, and push without being asked."),
           onSignIn: accounts.onSignIn,
           onSignOut: accounts.onSignOut,
         }),
@@ -226,34 +237,34 @@ export function settingsSections({ preferences, onFetchLatestNow, accounts, diff
           known: accounts.gitlab !== null,
           who: accounts.gitlab?.account ? `${accounts.gitlab.account.username}${accounts.gitlab.account.name ? ` (${accounts.gitlab.account.name})` : ""}` : null,
           rejected: Boolean(accounts.gitlab?.tokenRejected),
-          signedIn: "Merge requests of private projects show too, and Clone lists your projects.",
-          signedOut: "Sign in to gitlab.com or your company's GitLab to see merge requests of private projects, pick from your projects when cloning, and push without being asked.",
+          signedIn: t("Merge requests of private projects show too, and Clone lists your projects."),
+          signedOut: t("Sign in to gitlab.com or your company's GitLab to see merge requests of private projects, pick from your projects when cloning, and push without being asked."),
           onSignIn: accounts.onSignIn,
           onSignOut: accounts.onSignOut,
         }),
       ],
     },
     {
-      title: "Forks",
+      title: t("Forks"),
       icon: <ForkIcon size={15} />,
-      parent: "Accounts",
+      parent: t("Accounts"),
       rows: [
         {
           kind: "toggle",
-          label: "Your forks",
-          hint: "A Forks button in the toolbar, and View → Your Forks, open your forks on GitHub: how far each one is behind the repository it was forked from, its new commits, and Sync, which brings them into the fork on GitHub, as its Sync fork button does. You need to be signed in to GitHub.",
+          label: t("Your forks"),
+          hint: t("A Forks button in the toolbar, and View → Your Forks, open your forks on GitHub: how far each one is behind the repository it was forked from, its new commits, and Sync, which brings them into the fork on GitHub, as its Sync fork button does. You need to be signed in to GitHub."),
           value: forksShown,
           set: setForksShown,
         },
         {
           kind: "select",
-          label: "Sync the forks with Auto on",
-          hint: "While Tributary is open, and when it starts. Each fork has its Auto switch on the Forks screen. A fork whose own changes clash with its original's is left for you, and Tributary says which.",
+          label: t("Sync the forks with Auto on"),
+          hint: t("While Tributary is open, and when it starts. Each fork has its Auto switch on the Forks screen. A fork whose own changes clash with its original's is left for you, and Tributary says which."),
           value: forksEvery,
           options: [
-            { value: "hour", label: "Every hour" },
-            { value: "day", label: "Every day" },
-            { value: "off", label: "Only when I press Sync" },
+            { value: "hour", label: t("Every hour") },
+            { value: "day", label: t("Every day") },
+            { value: "off", label: t("Only when I press Sync") },
           ],
           set: (value) => setForksEvery(value as ForkSyncEvery),
           disabled: !forksShown,
@@ -262,8 +273,8 @@ export function settingsSections({ preferences, onFetchLatestNow, accounts, diff
           ? [
               {
                 kind: "custom" as const,
-                label: "Last time",
-                hint: `${new Date(forksRun.time).toLocaleString(undefined, { weekday: "long", hour: "2-digit", minute: "2-digit" })}: ${describeForkRun(forksRun) ?? "all up to date."}`,
+                label: t("Last time"),
+                hint: `${new Date(forksRun.time).toLocaleString(undefined, { weekday: "long", hour: "2-digit", minute: "2-digit" })}: ${describeForkRun(forksRun) ?? t("all up to date.")}`,
                 content: null,
               },
             ]
@@ -271,77 +282,77 @@ export function settingsSections({ preferences, onFetchLatestNow, accounts, diff
       ],
     },
     {
-      title: "SSH keys",
+      title: t("SSH keys"),
       icon: <KeyIcon size={15} />,
-      rows: [{ kind: "block", label: "Your SSH keys", content: <SshKeys /> }],
+      rows: [{ kind: "block", label: t("Your SSH keys"), content: <SshKeys /> }],
     },
     {
-      title: "Fetching",
+      title: t("Fetching"),
       icon: <FetchIcon size={15} />,
       rows: [
         {
           kind: "toggle",
-          label: "Fetch in the background",
-          hint: "Keeps the pull and push counts current.",
+          label: t("Fetch in the background"),
+          hint: t("Keeps the pull and push counts current."),
           value: autoFetch,
           set: setAutoFetch,
         },
         {
           kind: "select",
-          label: "How often",
+          label: t("How often"),
           value: String(fetchMinutes),
-          options: FETCH_MINUTES.map((minutes) => ({ value: String(minutes), label: minutes === 1 ? "Every minute" : `Every ${minutes} minutes` })),
+          options: FETCH_MINUTES.map((minutes) => ({ value: String(minutes), label: minutes === 1 ? t("Every minute") : t("Every {0} minutes", minutes) })),
           set: (value) => setFetchMinutes(Number(value)),
           disabled: !autoFetch,
         },
         {
           kind: "select",
-          label: "New commits",
-          hint: "When a background fetch finds new commits on main, or on the branch yours tracks.",
+          label: t("New commits"),
+          hint: t("When a background fetch finds new commits on main, or on the branch yours tracks."),
           value: newCommitNotices,
           options: [
-            { value: "off", label: "Don't tell me" },
-            { value: "app", label: "Show a message in Tributary" },
-            { value: "system", label: "Also notify me when Tributary is in the background" },
+            { value: "off", label: t("Don't tell me") },
+            { value: "app", label: t("Show a message in Tributary") },
+            { value: "system", label: t("Also notify me when Tributary is in the background") },
           ],
           set: (value) => setNewCommitNotices(value as NewCommitNotices),
           disabled: !autoFetch,
         },
         {
           kind: "select",
-          label: "Your pull requests",
-          hint: "Reviews and comments on the pull requests you opened (or from your branches), checks that finish or fail, and merges, on GitHub and GitLab.",
+          label: t("Your pull requests"),
+          hint: t("Reviews and comments on the pull requests you opened (or from your branches), checks that finish or fail, and merges, on GitHub and GitLab."),
           value: requestNotices,
           options: [
-            { value: "off", label: "Don't tell me" },
-            { value: "app", label: "Show a message in Tributary" },
-            { value: "system", label: "Also notify me when Tributary is in the background" },
+            { value: "off", label: t("Don't tell me") },
+            { value: "app", label: t("Show a message in Tributary") },
+            { value: "system", label: t("Also notify me when Tributary is in the background") },
           ],
           set: (value) => setRequestNotices(value as NewCommitNotices),
         },
       ],
     },
     {
-      title: "Fetch latest",
+      title: t("Fetch latest"),
       icon: <ClockIcon size={15} />,
-      parent: "Fetching",
+      parent: t("Fetching"),
       rows: [
         {
           kind: "select",
-          label: "Fetch the latest of every open repository",
-          hint: "Fetches each open tab's repository and moves your branch forward when it can without merging (never past commits of your own, or changes it would overwrite), with its Git LFS files, so a big update is waiting when you start. Tributary has to be running and the computer awake; one that was asleep catches up within an hour of the time, or waits for the next day.",
+          label: t("Fetch the latest of every open repository"),
+          hint: t("Fetches each open tab's repository and moves your branch forward when it can without merging (never past commits of your own, or changes it would overwrite), with its Git LFS files, so a big update is waiting when you start. Tributary has to be running and the computer awake; one that was asleep catches up within an hour of the time, or waits for the next day."),
           value: scheduleDays,
           options: [
-            { value: "off", label: "Only when I fetch" },
-            { value: "weekdays", label: "On weekdays" },
-            { value: "daily", label: "Every day" },
+            { value: "off", label: t("Only when I fetch") },
+            { value: "weekdays", label: t("On weekdays") },
+            { value: "daily", label: t("Every day") },
           ],
           set: (value) => setScheduleDays(value as ScheduleDays),
         },
         {
           kind: "select",
-          label: "At",
-          hint: next ? `Next: ${next.toLocaleString(undefined, { weekday: "long", hour: "2-digit", minute: "2-digit" })}` : undefined,
+          label: t("At"),
+          hint: next ? t("Next: {0}", next.toLocaleString(undefined, { weekday: "long", hour: "2-digit", minute: "2-digit" })) : undefined,
           value: scheduleTime,
           options: (SCHEDULE_TIMES.includes(scheduleTime) ? SCHEDULE_TIMES : [scheduleTime, ...SCHEDULE_TIMES]).map((time) => ({ value: time, label: time })),
           set: setScheduleTime,
@@ -349,41 +360,41 @@ export function settingsSections({ preferences, onFetchLatestNow, accounts, diff
         },
         {
           kind: "custom",
-          label: "Last time",
+          label: t("Last time"),
           hint: scheduleRun
             ? `${new Date(scheduleRun.time).toLocaleString(undefined, { weekday: "long", hour: "2-digit", minute: "2-digit" })}: ${describeRun(scheduleRun)}.${scheduleRun.results
                 .filter((result) => !result.ok)
                 .map((result) => ` ${result.name}: ${result.message}`)
                 .join("")}`
-            : "Not yet.",
+            : t("Not yet."),
           content: (
             <Button kind="outline" onClick={onFetchLatestNow}>
               <FetchIcon size={14} />
-              <span className="button-label">Fetch latest now</span>
+              <span className="button-label">{t("Fetch latest now")}</span>
             </Button>
           ),
         },
       ],
     },
     {
-      title: "Local history",
+      title: t("Local history"),
       icon: <HistoryIcon size={15} />,
       rows: [
         {
           kind: "select",
-          label: "Keep snapshots of your changes",
-          hint: "Every few minutes, the files you've changed but not committed are kept, so a crash or an overwrite doesn't lose your work. Repository → Local History… puts them back.",
+          label: t("Keep snapshots of your changes"),
+          hint: t("Every few minutes, the files you've changed but not committed are kept, so a crash or an overwrite doesn't lose your work. Repository → Local History… puts them back."),
           value: String(historyMinutes),
           options: [
-            { value: "0", label: "Never" },
-            ...HISTORY_MINUTES.map((minutes) => ({ value: String(minutes), label: `Every ${minutes} minutes` })),
+            { value: "0", label: t("Never") },
+            ...HISTORY_MINUTES.map((minutes) => ({ value: String(minutes), label: t("Every {0} minutes", minutes) })),
           ],
           set: (value) => setHistoryMinutes(Number(value)),
         },
         {
           kind: "select",
-          label: "Leave out files bigger than",
-          hint: "A copy of every version of big files would fill the disk.",
+          label: t("Leave out files bigger than"),
+          hint: t("A copy of every version of big files would fill the disk."),
           value: String(historyMaxMB),
           options: [10, 50, 200, 1000].map((mb) => ({ value: String(mb), label: mb >= 1000 ? `${mb / 1000} GB` : `${mb} MB` })),
           set: (value) => setHistoryMaxMB(Number(value)),
@@ -391,42 +402,42 @@ export function settingsSections({ preferences, onFetchLatestNow, accounts, diff
         },
         {
           kind: "select",
-          label: "Keep them for",
+          label: t("Keep them for"),
           value: String(historyDays),
-          options: [1, 3, 7, 14, 30].map((days) => ({ value: String(days), label: days === 1 ? "A day" : `${days} days` })),
+          options: [1, 3, 7, 14, 30].map((days) => ({ value: String(days), label: days === 1 ? t("A day") : plural(days, "day") })),
           set: (value) => setHistoryDays(Number(value)),
           disabled: historyMinutes <= 0,
         },
       ],
     },
     {
-      title: "Large files and Git LFS",
+      title: t("Large files and Git LFS"),
       icon: <LockIcon size={15} />,
       rows: [
         {
           kind: "select",
-          label: "Warn about big files outside Git LFS",
-          hint: "Committed into git itself, they stay in every clone forever.",
+          label: t("Warn about big files outside Git LFS"),
+          hint: t("Committed into git itself, they stay in every clone forever."),
           value: String(largeFileMB),
-          options: [1, 5, 10, 25, 50, 100].map((mb) => ({ value: String(mb), label: `Bigger than ${mb} MB` })),
+          options: [1, 5, 10, 25, 50, 100].map((mb) => ({ value: String(mb), label: t("Bigger than {0} MB", mb) })),
           set: (value) => setLargeFileMB(Number(value)),
         },
         {
           kind: "toggle",
-          label: "Lock files when I change them",
-          hint: "Lockable files (like .uasset), as soon as you change one that nobody has locked.",
+          label: t("Lock files when I change them"),
+          hint: t("Lockable files (like .uasset), as soon as you change one that nobody has locked."),
           value: autoLock,
           set: setAutoLock,
         },
         {
           kind: "select",
-          label: "After pushing",
-          hint: "Your locks on the files you pushed, so your teammates can work on them. Files you're still changing keep theirs.",
+          label: t("After pushing"),
+          hint: t("Your locks on the files you pushed, so your teammates can work on them. Files you're still changing keep theirs."),
           value: releaseLocks,
           options: [
-            { value: "ask", label: "Ask to release my locks" },
-            { value: "always", label: "Release my locks" },
-            { value: "never", label: "Keep my locks" },
+            { value: "ask", label: t("Ask to release my locks") },
+            { value: "always", label: t("Release my locks") },
+            { value: "never", label: t("Keep my locks") },
           ],
           set: (value) => setReleaseLocks(value as ReleaseLocks),
         },
@@ -439,7 +450,7 @@ export function settingsSections({ preferences, onFetchLatestNow, accounts, diff
     },
 
     {
-      title: "Export and import",
+      title: t("Export and import"),
       icon: <TransferIcon size={15} />,
       separated: true,
       rows: transfer,
@@ -476,26 +487,26 @@ function accountRow({
     kind: "custom",
     label: name,
     hint: error
-      ? `Couldn't check: ${error}`
+      ? t("Couldn't check: {0}", error)
       : !known
-        ? "Checking…"
+        ? t("Checking…")
         : who
-          ? `Signed in as ${who}. ${signedIn} Signing out makes git forget the token too.`
+          ? t("Signed in as {0}. {1} Signing out makes git forget the token too.", who, signedIn)
           : rejected
-            ? `The token git keeps for ${name} doesn't work any more. Sign in again.`
+            ? t("The token git keeps for {0} doesn't work any more. Sign in again.", name)
             : signedOut,
     content: who ? (
       <span className="settings-buttons">
         <Button kind="outline" onClick={() => onSignIn(forge)}>
-          <span className="button-label">Switch account…</span>
+          <span className="button-label">{t("Switch account…")}</span>
         </Button>
         <Button kind="outline" onClick={() => onSignOut(forge)}>
-          <span className="button-label">Sign out</span>
+          <span className="button-label">{t("Sign out")}</span>
         </Button>
       </span>
     ) : (
       <Button kind="outline" onClick={() => onSignIn(forge)} disabled={!known && !error}>
-        <span className="button-label">{rejected ? "Sign in again…" : "Sign in…"}</span>
+        <span className="button-label">{rejected ? t("Sign in again…") : t("Sign in…")}</span>
       </Button>
     ),
   };

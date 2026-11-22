@@ -5,12 +5,13 @@ import type { ToastMessage } from "../components/Toast";
 import { notifySystem } from "../lib/notify";
 import { describeRun, dueRun, type ScheduleDays, type ScheduledResult, type ScheduledRun } from "../lib/schedule";
 import { FIRST_AUTO_FETCH_DELAY } from "./constants";
+import { t } from "../lib/i18n";
 
 /** Why a repository wasn't brought up to date, in a sentence. */
 function whyNot(error: unknown): string {
   const kind = errorKind(error)?.kind;
   const message = String(error);
-  if (kind === "changesInTheWay") return "Fetched, but your uncommitted changes were in the way of moving the branch forward. Pull when you're ready.";
+  if (kind === "changesInTheWay") return t("Fetched, but your uncommitted changes were in the way of moving the branch forward. Pull when you're ready.");
   if (kind === "notEnoughSpace") return message.split(". ")[0] + ".";
   return message.split("\n")[0];
 }
@@ -48,13 +49,13 @@ export function useScheduledFetch(options: Options): () => Promise<void> {
       for (const tab of latest.current.tabs) {
         if (tab.path === latest.current.activePath) {
           const ok = await latest.current.fetchActive();
-          results.push({ name: tab.name, ok, message: ok ? "Fetched." : "Stopped: its tab says why." });
+          results.push({ name: tab.name, ok, message: ok ? t("Fetched.") : t("Stopped: its tab says why.") });
           continue;
         }
         try {
           const state = await remoteState(tab.path);
           if (!state.upstream) {
-            results.push({ name: tab.name, ok: false, message: "Its branch isn't on a remote" });
+            results.push({ name: tab.name, ok: false, message: t("Its branch isn't on a remote") });
             continue;
           }
           results.push({ name: tab.name, ok: true, message: await runAction(tab.path, { kind: "fetchLatest" }) });
@@ -68,7 +69,7 @@ export function useScheduledFetch(options: Options): () => Promise<void> {
     const run = { time: Date.now(), results };
     latest.current.setRun(run);
     latest.current.notify({ text: describeRun(run) });
-    if (!document.hasFocus()) void notifySystem("Tributary", describeRun(run));
+    if (!document.hasFocus()) void notifySystem(t("Tributary"), describeRun(run));
   }, []);
 
   const { days, time } = options;

@@ -14,6 +14,7 @@ import {
   PullRequestIcon } from "../components/Icons";
 import { MergeHint } from "../components/MergeHint";
 import { pillRefNames, splitRemoteBranch, type MenuContext } from "./context";
+import { t } from "../lib/i18n";
 
 /** Hide, solo and pin entries for a label. */
 export function visibilityItems(ctx: MenuContext, pill: RefPill): MenuItem[] {
@@ -24,20 +25,20 @@ export function visibilityItems(ctx: MenuContext, pill: RefPill): MenuItem[] {
   const pinned = ctx.pins.includes(own);
   return [
     {
-      label: soloing ? `Also show only ${pill.name}` : `Show only ${pill.name}`,
+      label: soloing ? t("Also show only {0}", pill.name) : t("Show only {0}", pill.name),
       icon: <EyeIcon />,
       separated: true,
       disabled: names.every((name) => ctx.visibility.solo.includes(name)),
       onSelect: () => ctx.solo(names),
     },
     {
-      label: `Hide ${pill.name}`,
+      label: t("Hide {0}", pill.name),
       icon: <EyeOffIcon />,
       disabled: pill.current,
       onSelect: () => ctx.setHidden(names, true),
     },
     {
-      label: pinned ? `Unpin ${pill.name}` : `Pin ${pill.name} in the sidebar`,
+      label: pinned ? t("Unpin {0}", pill.name) : t("Pin {0} in the sidebar", pill.name),
       icon: <PinIcon />,
       onSelect: () => ctx.togglePin(own),
     },
@@ -50,7 +51,7 @@ export function webItems(ctx: MenuContext, pill: RefPill): MenuItem[] {
   if (pill.kind === "tag") {
     const remote = webRemote(snapshot);
     const url = remote && branchUrl(remote, pill.name);
-    return url && remote ? [{ label: `Open ${pill.name} on ${siteName(remote)}`, icon: <ExternalLinkIcon />, separated: true, url, onSelect: () => ctx.openUrl(url) }] : [];
+    return url && remote ? [{ label: t("Open {0} on {1}", pill.name, siteName(remote)), icon: <ExternalLinkIcon />, separated: true, url, onSelect: () => ctx.openUrl(url) }] : [];
   }
   if (pill.kind !== "branch") return [];
   // The remote copy of the branch: the one it tracks, or one with the same name.
@@ -77,12 +78,12 @@ export function webItems(ctx: MenuContext, pill: RefPill): MenuItem[] {
   const items: MenuItem[] = [];
   const onRemote = !pill.local || Boolean(upstream) || pill.remotes.length > 0;
   const page = own && onRemote ? branchUrl(own, branch) : null;
-  if (page) items.push({ label: `Open ${branch} on ${siteName(remote)}`, icon: <ExternalLinkIcon />, separated: true, url: page, onSelect: () => ctx.openUrl(page) });
+  if (page) items.push({ label: t("Open {0} on {1}", branch, siteName(remote)), icon: <ExternalLinkIcon />, separated: true, url: page, onSelect: () => ctx.openUrl(page) });
   const existing = ctx.requests?.find(pill.name, pill.local, pill.remotes, upstream);
-  const noun = remote.host === "gitlab" ? "merge request" : "pull request";
+  const noun = remote.host === "gitlab" ? t("merge request") : t("pull request");
   if (existing) {
     items.push({
-      label: `Show ${noun} ${requestNumber(existing)}`,
+      label: t("Show {0} {1}", noun, requestNumber(existing)),
       icon: <PullRequestIcon />,
       separated: !page,
       onSelect: () => ctx.showRequest(existing),
@@ -90,7 +91,7 @@ export function webItems(ctx: MenuContext, pill: RefPill): MenuItem[] {
   } else if (remote.host === "github" || remote.host === "gitlab") {
     const url = newPullRequestUrl(remote, branch);
     items.push({
-      label: `Create ${noun}…`,
+      label: t("Create {0}…", noun),
       icon: <PullRequestIcon />,
       separated: !page,
       disabled: snapshot.bare,
@@ -113,7 +114,7 @@ export function mergeItems(ctx: MenuContext, revision: string, label: string, ta
   const hint = (kind: "merge" | "rebase") => (disabled || !snapshot.headCommit ? undefined : <MergeHint repo={snapshot.path} from={revision} at={at} kind={kind} />);
   return [
     {
-      label: `Merge ${label} into ${branch ?? "HEAD"}`,
+      label: t("Merge {0} into {1}", label, branch ?? "HEAD"),
       icon: <MergeIcon />,
       separated: true,
       disabled,
@@ -121,19 +122,19 @@ export function mergeItems(ctx: MenuContext, revision: string, label: string, ta
       onSelect: () => ctx.run({ kind: "merge", target: revision }),
     },
     {
-      label: `Merge ${label} with a merge commit`,
+      label: t("Merge {0} with a merge commit", label),
       icon: <MergeIcon />,
       disabled,
       onSelect: () => ctx.run({ kind: "merge", target: revision, mode: "noFastForward" }),
     },
     {
-      label: `Squash ${label} into ${branch ?? "HEAD"}`,
+      label: t("Squash {0} into {1}", label, branch ?? "HEAD"),
       icon: <SquashIcon />,
       disabled,
       onSelect: () => ctx.run({ kind: "merge", target: revision, mode: "squash" }),
     },
     {
-      label: `Rebase ${branch ?? "HEAD"} onto ${label}`,
+      label: t("Rebase {0} onto {1}", branch ?? "HEAD", label),
       icon: <RebaseIcon />,
       disabled,
       detail: hint("rebase"),

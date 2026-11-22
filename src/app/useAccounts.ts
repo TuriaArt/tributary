@@ -3,6 +3,7 @@ import { gitHubStatus, gitLabStatus, signOutOfGitHub, signOutOfGitLab, type GitH
 import { useStoredState } from "../lib/settings";
 import type { ToastMessage } from "../components/Toast";
 import type { Forge } from "../api/generated";
+import { t } from "../lib/i18n";
 export type { Forge };
 
 /** The GitLab server people sign in to unless they choose another. */
@@ -45,8 +46,8 @@ export function useAccounts(active: boolean, notify: (toast: ToastMessage) => vo
     (forge: Forge) => {
       const name = forge === "github" ? "GitHub" : host === GITLAB_COM ? "GitLab" : host;
       (forge === "github" ? signOutOfGitHub() : signOutOfGitLab(host))
-        .then(() => notify({ text: `Signed out of ${name}` }))
-        .catch((e) => notify({ text: `Couldn't sign out: ${e}` }))
+        .then(() => notify({ text: t("Signed out of {0}", name) }))
+        .catch((e) => notify({ text: t("Couldn't sign out: {0}", e) }))
         .finally(recheck);
     },
     [host, notify, recheck],

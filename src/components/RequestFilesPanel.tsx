@@ -11,6 +11,7 @@ import { FilesLayoutSwitch, useFilesLayout } from "./FilesLayoutSwitch";
 import { CloseIcon } from "./Icons";
 import { Loader } from "./Loader";
 import { Button } from "./ui/Button";
+import { t, tx } from "../lib/i18n";
 
 interface Props {
   repoPath: string;
@@ -62,11 +63,11 @@ export function RequestFilesPanel({ repoPath, request, details, files, onOpenFil
 
   return (
     <ActorNames.Provider value={actors}>
-      <aside className="details request-files" aria-label={`${Noun} ${requestNumber(request)}'s files`}>
+      <aside className="details request-files" aria-label={t("{0} {1}'s files", Noun, requestNumber(request))}>
         <header className="details-header">
           <span className="details-label">{Noun}</span>
           <span className="spacer" />
-          <Button kind="icon" onClick={onClose} title={`Close the ${noun} (Esc)`} aria-label={`Close the ${noun}`}>
+          <Button kind="icon" onClick={onClose} title={t("Close the {0} (Esc)", noun)} aria-label={t("Close the {0}", noun)}>
             <CloseIcon />
           </Button>
         </header>
@@ -88,27 +89,27 @@ export function RequestFilesPanel({ repoPath, request, details, files, onOpenFil
           </section>
           <section className="details-section files">
             <div className="details-section-head">
-              <h3>Changed files</h3>
+              <h3>{t("Changed files")}</h3>
               {all && <span className="details-section-note">{all.length.toLocaleString()}</span>}
               {all && all.length > 1 && <FilesLayoutSwitch />}
             </div>
             {error ? (
               <div className="details-error">{error}</div>
             ) : unknown ? (
-              <div className="muted">{site} didn't say which commits it's between, so its files can't be read here.</div>
+              <div className="muted">{tx("{0} didn't say which commits it's between, so its files can't be read here.", site)}</div>
             ) : missing ? (
               <div className="request-files-missing">
-                <p className="muted">Its commits aren't in this repository yet. Fetch them to see its files here.</p>
+                <p className="muted">{t("Its commits aren't in this repository yet. Fetch them to see its files here.")}</p>
                 {onFetch && (
-                  <Button kind="outline" onClick={onFetch} title={`Fetch ${requestNumber(request)}'s commits from ${request.remote}`}>
-                    <span className="button-label">Fetch its commits</span>
+                  <Button kind="outline" onClick={onFetch} title={t("Fetch {0}'s commits from {1}", requestNumber(request), request.remote)}>
+                    <span className="button-label">{t("Fetch its commits")}</span>
                   </Button>
                 )}
               </div>
             ) : !comparison ? (
-              <Loader size={48} title="Reading its files" />
+              <Loader size={48} title={t("Reading its files")} />
             ) : comparison.files.length === 0 ? (
-              <div className="muted">It doesn't change any files.</div>
+              <div className="muted">{t("It doesn't change any files.")}</div>
             ) : (
               <>
                 {comparison.files.length > FILTER_FROM && <FileFilter value={query} onChange={(value) => setFilter({ key: files.key, query: value })} shown={shown.length} total={comparison.files.length} />}
@@ -121,7 +122,7 @@ export function RequestFilesPanel({ repoPath, request, details, files, onOpenFil
                 ) : (
                   <FileList items={shown} keyOf={(file) => `${file.status}:${file.oldPath ?? ""}:${file.path}`} render={(file) => fileLine(file)} />
                 )}
-                {shown.length === 0 && <div className="muted">No files match “{query.trim()}”.</div>}
+                {shown.length === 0 && <div className="muted">{tx("No files match “{0}”.", query.trim())}</div>}
               </>
             )}
           </section>

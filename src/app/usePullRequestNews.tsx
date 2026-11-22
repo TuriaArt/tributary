@@ -5,6 +5,7 @@ import type { ToastMessage } from "../components/Toast";
 import { notifySystem } from "../lib/notify";
 import { describeRequestNews, seenNow, wasMergedHere, type RequestSeen } from "../lib/requestNews";
 import type { NewCommitNotices } from "./usePreferences";
+import { t } from "../lib/i18n";
 
 /** At most this many of your pull requests are followed. */
 const MOST = 8;
@@ -43,9 +44,9 @@ export function usePullRequestNews(options: Options) {
       const { notify, open, notices, repoName } = latest.current;
       if (news.length === 0 || notices === "off") return;
       notify({
-        text: news[0] + (news.length > 1 ? `, and ${news.length - 1} more` : ""),
+        text: news[0] + (news.length > 1 ? t(", and {0} more", news.length - 1) : ""),
         icon: <BellIcon size={14} />,
-        action: { label: "Show", onClick: () => open(pr) },
+        action: { label: t("Show"), onClick: () => open(pr) },
       });
       if (notices === "system" && !document.hasFocus()) for (const item of news) notifySystem(repoName, item);
     };

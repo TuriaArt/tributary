@@ -1,6 +1,7 @@
 import type { Operation } from "../api";
 import { plural } from "../lib/format";
 import { Button } from "./ui/Button";
+import { t, tx } from "../lib/i18n";
 
 interface Props {
   operation: Operation;
@@ -18,59 +19,75 @@ interface Props {
   onKeepAll: (keep: "mine" | "theirs") => void;
 }
 
-const NAMES = { merge: "merge", rebase: "rebase", cherryPick: "cherry-pick", revert: "revert", applyPatches: "patches", other: "operation" };
 
 /** Shown while a merge, rebase, cherry-pick or revert waits for conflicts to be resolved. */
 export function OperationBar({ operation, branch, conflicts, sides, busy, onContinue, onSkip, onAbort, onShowFiles, onKeepAll }: Props) {
-  const name = NAMES[operation.kind];
   if (operation.kind === "other") {
     return (
       <div className="operation-bar" role="status">
-        <span>A git operation is in progress. Finish it in a terminal.</span>
+        <span>{t("A git operation is in progress. Finish it in a terminal.")}</span>
       </div>
     );
   }
-  const next = operation.kind === "merge" ? "commit" : "continue";
+  const merging = operation.kind === "merge";
+  const title = {
+    merge: t("Merging into"),
+    rebase: t("Rebase in progress on"),
+    cherryPick: t("Cherry-pick in progress on"),
+    revert: t("Revert in progress on"),
+    applyPatches: t("Applying patches on"),
+  }[operation.kind];
+  const abort = {
+    merge: t("Abort merge"),
+    rebase: t("Abort rebase"),
+    cherryPick: t("Abort cherry-pick"),
+    revert: t("Abort revert"),
+    applyPatches: t("Stop applying"),
+  }[operation.kind];
+  const files = (
+    <Button kind="link" onClick={onShowFiles}>
+      {tx("{0} with conflicts", plural(conflicts, "file"))}
+    </Button>
+  );
   return (
     <div className="operation-bar" role="status">
       <span className="operation-text">
         <span className="operation-title">
-          {operation.kind === "merge" ? "Merging into" : operation.kind === "applyPatches" ? "Applying patches on" : `${name[0].toUpperCase()}${name.slice(1)} in progress on`}{" "}
+          {title}{" "}
           <strong>{branch}</strong>.
         </span>{" "}
         {conflicts > 0 ? (
           <>
-            <Button kind="link" onClick={onShowFiles}>
-              {plural(conflicts, "file")} with conflicts
-            </Button>
-            : pick a version of each, or fix and stage them, then {next}.
+            {merging
+              ? tx("{0}: pick a version of each, or fix and stage them, then commit.", files)
+              : tx("{0}: pick a version of each, or fix and stage them, then continue.", files)}
           </>
         ) : (
-          <>No conflicts left: {next} when you're ready.</>
+          <>{merging ? t("No conflicts left: commit when you're ready.") : t("No conflicts left: continue when you're ready.")}</>
         )}
       </span>
       <span className="operation-buttons">
         {conflicts > 0 ? (
           <>
-            <Button kind="secondary" onClick={() => onKeepAll("mine")} disabled={busy} title={`Keep ${sides.mine}'s version of every conflicted file`}>
-              Keep all mine
+            <Button kind="secondary" onClick={() => onKeepAll("mine")} disabled={busy} title={t("Keep {0}'s version of every conflicted file", sides.mine)}>
+              {t("Keep all mine")}
             </Button>
-            <Button kind="secondary" onClick={() => onKeepAll("theirs")} disabled={busy} title={`Take ${sides.theirs}'s version of every conflicted file`}>
-              Take all theirs
+            <Button kind="secondary" onClick={() => onKeepAll("theirs")} disabled={busy} title={t("Take {0}'s version of every conflicted file", sides.theirs)}>
+              {t("Take all theirs")}
             </Button>
           </>
         ) : (
           <Button kind="primary" onClick={onContinue} disabled={busy}>
-            {operation.kind === "merge" ? "Commit merge" : "Continue"}
+            {operation.kind === "merge" ? t("Commit merge") : t("Continue")}
           </Button>
         )}
         {operation.kind !== "merge" && (
-          <Button kind="secondary" onClick={onSkip} disabled={busy} title={operation.kind === "applyPatches" ? "Leave out this patch" : "Leave out this commit"}>
-            {operation.kind === "applyPatches" ? "Skip patch" : "Skip commit"}
+          <Button kind="secondary" onClick={onSkip} disabled={busy} title={operation.kind === "applyPatches" ? t("Leave out this patch") : t("Leave out this commit")}>
+            {operation.kind === "applyPatches" ? t("Skip patch") : t("Skip commit")}
           </Button>
         )}
         <button className="danger-outline-button" onClick={onAbort} disabled={busy}>
-          {operation.kind === "applyPatches" ? "Stop applying" : `Abort ${name}`}
+          {abort}
         </button>
       </span>
     </div>

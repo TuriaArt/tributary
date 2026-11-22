@@ -7,13 +7,14 @@ import { copyText } from "../lib/clipboard";
 import { isMac } from "../lib/platform";
 import { stashIndexOf } from "../lib/refs";
 import { canResetTo, type OpenDialog } from "../menus";
+import { t } from "../lib/i18n";
 
 /** The menu next to Push. */
 export function pushMenuItems(push: () => void, sync: () => void, openDialog: (dialog: OpenDialog) => void): MenuItem[] {
   return [
-    { label: "Push", icon: <PushIcon />, onSelect: push },
-    { label: "Sync: pull, then push", icon: <SyncIcon />, onSelect: sync },
-    { label: "Force push…", icon: <PushIcon />, danger: true, separated: true, onSelect: () => openDialog({ kind: "forcePush" }) },
+    { label: t("Push"), icon: <PushIcon />, onSelect: push },
+    { label: t("Sync: pull, then push"), icon: <SyncIcon />, onSelect: sync },
+    { label: t("Force push…"), icon: <PushIcon />, danger: true, separated: true, onSelect: () => openDialog({ kind: "forcePush" }) },
   ];
 }
 
@@ -26,37 +27,37 @@ export function columnMenuItems(
 ): MenuItem[] {
   const toggle = (key: "author" | "date" | "sha") => setOptions({ ...options, [key]: !options[key] });
   return [
-    { label: "Author", icon: <ColumnsIcon />, checked: options.author, onSelect: () => toggle("author") },
-    { label: "Date", icon: <ColumnsIcon />, checked: options.date, onSelect: () => toggle("date") },
+    { label: t("Author"), icon: <ColumnsIcon />, checked: options.author, onSelect: () => toggle("author") },
+    { label: t("Date"), icon: <ColumnsIcon />, checked: options.date, onSelect: () => toggle("date") },
     { label: "SHA", icon: <ColumnsIcon />, checked: options.sha, onSelect: () => toggle("sha") },
     {
-      label: "Relative dates (“3 hours ago”)",
+      label: t("Relative dates (“3 hours ago”)"),
       separated: true,
       checked: options.dateFormat === "relative",
       disabled: !options.date,
       onSelect: () => setOptions({ ...options, dateFormat: "relative" }),
     },
     {
-      label: "Exact dates and times",
+      label: t("Exact dates and times"),
       checked: options.dateFormat === "exact",
       disabled: !options.date,
       onSelect: () => setOptions({ ...options, dateFormat: "exact" }),
     },
     {
-      label: "When it was written (author date)",
+      label: t("When it was written (author date)"),
       separated: true,
       checked: options.dateKind === "authored",
       disabled: !options.date,
       onSelect: () => setOptions({ ...options, dateKind: "authored" }),
     },
     {
-      label: "When it was committed (commit date)",
+      label: t("When it was committed (commit date)"),
       checked: options.dateKind === "committed",
       disabled: !options.date,
       onSelect: () => setOptions({ ...options, dateKind: "committed" }),
     },
-    { label: "Day separators", separated: true, checked: daySeparators, onSelect: () => setDaySeparators(!daySeparators) },
-    { label: "Checks on commits (CI)", checked: options.checks !== false, onSelect: () => setOptions({ ...options, checks: options.checks === false }) },
+    { label: t("Day separators"), separated: true, checked: daySeparators, onSelect: () => setDaySeparators(!daySeparators) },
+    { label: t("Checks on commits (CI)"), checked: options.checks !== false, onSelect: () => setOptions({ ...options, checks: options.checks === false }) },
   ];
 }
 
@@ -72,10 +73,10 @@ export function detailsActionsFor(
     const index = stashIndexOf(commit);
     if (index === null || !canChange) return [];
     return [
-      { label: "Apply", icon: <StashIcon size={14} />, onClick: () => run({ kind: "stashApply", index, id: commit.id }) },
-      { label: "Pop", icon: <StashIcon size={14} />, onClick: () => run({ kind: "stashPop", index, id: commit.id }) },
+      { label: t("Apply"), icon: <StashIcon size={14} />, onClick: () => run({ kind: "stashApply", index, id: commit.id }) },
+      { label: t("Pop"), icon: <StashIcon size={14} />, onClick: () => run({ kind: "stashPop", index, id: commit.id }) },
       {
-        label: "Drop…",
+        label: t("Drop…"),
         icon: <TrashIcon size={14} />,
         danger: true,
         onClick: () => openDialog({ kind: "dropStash", index, id: commit.id, label: `stash@{${index}}` }),
@@ -85,7 +86,7 @@ export function detailsActionsFor(
   if (!canChange || !canResetTo(snapshot, commit)) return [];
   return [
     {
-      label: `Hard reset ${snapshot.headBranch ?? "HEAD"} to this commit…`,
+      label: t("Hard reset {0} to this commit…", snapshot.headBranch ?? "HEAD"),
       icon: <ResetIcon size={14} />,
       danger: true,
       onClick: () => openDialog({ kind: "reset", target: commit }),
@@ -106,14 +107,14 @@ export interface WorktreeMenuContext {
 /** A working tree in the sidebar: open it, show its folder, or remove it. */
 export function worktreeMenuItems(worktree: Worktree, ctx: WorktreeMenuContext): MenuItem[] {
   if (worktree.prunable) {
-    return [{ label: "Forget worktrees whose folders are gone", icon: <BroomIcon />, disabled: !ctx.canChange, onSelect: ctx.prune }];
+    return [{ label: t("Forget worktrees whose folders are gone"), icon: <BroomIcon />, disabled: !ctx.canChange, onSelect: ctx.prune }];
   }
   return [
-    { label: worktree.current ? "This worktree is open" : "Open", icon: <FolderIcon />, disabled: worktree.current, onSelect: () => ctx.open(worktree.path) },
-    { label: isMac ? "Show in Finder" : "Show in Explorer", icon: <FolderIcon />, onSelect: () => ctx.reveal(worktree.path) },
-    { label: "Copy path", icon: <CopyIcon />, onSelect: () => copyText(worktree.path) },
+    { label: worktree.current ? t("This worktree is open") : t("Open"), icon: <FolderIcon />, disabled: worktree.current, onSelect: () => ctx.open(worktree.path) },
+    { label: isMac ? t("Show in Finder") : t("Show in Explorer"), icon: <FolderIcon />, onSelect: () => ctx.reveal(worktree.path) },
+    { label: t("Copy path"), icon: <CopyIcon />, onSelect: () => copyText(worktree.path) },
     {
-      label: worktree.main ? "The main worktree stays" : worktree.current ? "Remove (open another one first)" : "Remove worktree…",
+      label: worktree.main ? t("The main worktree stays") : worktree.current ? t("Remove (open another one first)") : t("Remove worktree…"),
       icon: <TrashIcon />,
       danger: true,
       separated: true,
@@ -139,12 +140,12 @@ export function submoduleMenuItems(submodule: Submodule, ctx: SubmoduleMenuConte
   const items: MenuItem[] = [];
   const { state } = submodule;
   if (state === "notSetUp") {
-    items.push({ label: "Set it up (clone it here)", icon: <DownloadIcon />, disabled: !ctx.canChange, onSelect: () => ctx.update([submodule.path]) });
+    items.push({ label: t("Set it up (clone it here)"), icon: <DownloadIcon />, disabled: !ctx.canChange, onSelect: () => ctx.update([submodule.path]) });
   } else {
-    items.push({ label: "Open in a new tab", icon: <SubmoduleIcon />, onSelect: () => ctx.open(submodule) });
+    items.push({ label: t("Open in a new tab"), icon: <SubmoduleIcon />, onSelect: () => ctx.open(submodule) });
     if (state === "behind" || state === "different" || state === "ahead") {
       items.push({
-        label: "Update it to the recorded commit",
+        label: t("Update it to the recorded commit"),
         icon: <DownloadIcon />,
         separated: true,
         disabled: !ctx.canChange || submodule.changed,
@@ -153,16 +154,16 @@ export function submoduleMenuItems(submodule: Submodule, ctx: SubmoduleMenuConte
     }
     if (state === "ahead" || state === "different" || state === "conflicted") {
       items.push({
-        label: "Stage it, to record the commit it's at",
+        label: t("Stage it, to record the commit it's at"),
         icon: <PlusIcon />,
         separated: state === "conflicted",
         disabled: !ctx.canChange,
         onSelect: () => ctx.stage(submodule.path),
       });
     }
-    items.push({ label: isMac ? "Show in Finder" : "Show in Explorer", icon: <FolderIcon />, separated: true, onSelect: () => ctx.reveal(submodule) });
+    items.push({ label: isMac ? t("Show in Finder") : t("Show in Explorer"), icon: <FolderIcon />, separated: true, onSelect: () => ctx.reveal(submodule) });
   }
-  items.push({ label: "Copy path", icon: <CopyIcon />, separated: state === "notSetUp", onSelect: () => copyText(submodule.path) });
-  if (submodule.url) items.push({ label: "Copy its address", icon: <CopyIcon />, onSelect: () => copyText(submodule.url!) });
+  items.push({ label: t("Copy path"), icon: <CopyIcon />, separated: state === "notSetUp", onSelect: () => copyText(submodule.path) });
+  if (submodule.url) items.push({ label: t("Copy its address"), icon: <CopyIcon />, onSelect: () => copyText(submodule.url!) });
   return items;
 }

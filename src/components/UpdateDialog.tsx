@@ -2,6 +2,7 @@ import { withoutComments } from "../lib/markdown";
 import type { Updates } from "../lib/updates";
 import { Dialog } from "./Dialog";
 import { Button } from "./ui/Button";
+import { t, tx } from "../lib/i18n";
 
 /** Release notes, from GitHub's Markdown: headings, bullet points and paragraphs. */
 function Notes({ text }: { text: string }) {
@@ -47,41 +48,40 @@ export function UpdateDialog({ updates, onClose }: { updates: Updates; onClose: 
   const percent = downloading?.percent ?? null;
   return (
     <Dialog
-      title={ready ? `Tributary ${available.version} is ready` : `Tributary ${available.version} is available`}
+      title={ready ? t("Tributary {0} is ready", available.version) : t("Tributary {0} is available", available.version)}
       wide
       error={error && error.step !== "check" ? error.message : null}
       errorAction={
         error?.step === "download"
-          ? { label: "Try again", onClick: () => void updates.download() }
+          ? { label: t("Try again"), onClick: () => void updates.download() }
           : error?.step === "install"
-            ? { label: "Try again", onClick: () => void updates.restart() }
+            ? { label: t("Try again"), onClick: () => void updates.restart() }
             : null
       }
       onCancel={onClose}
       buttons={
         waiting ? (
           <>
-            <span className="update-waiting">Waiting for git to finish…</span>
+            <span className="update-waiting">{t("Waiting for git to finish…")}</span>
             <span className="spacer" />
             <Button kind="secondary" onClick={updates.stopWaiting}>
-              Don't restart
+              {t("Don't restart")}
             </Button>
           </>
         ) : (
           <>
             <Button kind="secondary" onClick={onClose}>
-              Later
+              {t("Later")}
             </Button>
             <Button kind="primary" onClick={() => void updates.restart()} disabled={!ready} autoFocus={ready}>
-              {ready ? "Restart now" : percent === null ? "Downloading…" : `Downloading… ${percent}%`}
+              {ready ? t("Restart now") : percent === null ? t("Downloading…") : t("Downloading… {0}%", percent)}
             </Button>
           </>
         )
       }
     >
       <p className="hint">
-        {available.current && `You have version ${available.current}. `}Restarting installs it, as soon as no git command is running, and your
-        tabs open again where you were. Later, it installs when you quit Tributary.
+        {tx("{0}Restarting installs it, as soon as no git command is running, and your tabs open again where you were. Later, it installs when you quit Tributary.", available.current && t("You have version {0}. ", available.current))}
       </p>
       {available.notes && <Notes text={available.notes} />}
       {downloading && (

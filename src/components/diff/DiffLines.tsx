@@ -5,9 +5,10 @@ import { splitRows, type SplitRow } from "../../lib/sideBySide";
 import { highlightHunk, MAX_HIGHLIGHT_LINES, pieces, type Piece } from "../../lib/syntax";
 import { wordSegments } from "../../lib/wordDiff";
 import { foldPictures, pictureLabel, picturesIn, type EmbeddedPicture, type Folded, type PictureChange } from "../../lib/embeddedPictures";
-import { formatBytes } from "../../lib/format";
+import { formatBytes, plural } from "../../lib/format";
 import { threadsAtLine, type ReviewThread } from "../../lib/reviewThreads";
 import { InlinePicture } from "./DiffPictures";
+import { t, tx } from "../../lib/i18n";
 
 const SIGNS = { added: "+", removed: "−", context: " " } as const;
 const NOTHING = new Set<string>();
@@ -52,9 +53,10 @@ export interface LineNotes {
 /** Beside a line with review threads: how many comments, and a click hides or shows them. */
 function NoteMark({ threads, open, onToggle }: { threads: ReviewThread[]; open: boolean; onToggle: () => void }) {
   const count = threads.reduce((sum, thread) => sum + thread.comments.length, 0);
-  const said = `${count} ${count === 1 ? "comment" : "comments"} on this line`;
+  const said = t("{0} on this line", plural(count, "comment"));
+  const action = open ? (count === 1 ? t("click to hide it") : t("click to hide them")) : count === 1 ? t("click to show it") : t("click to show them");
   return (
-    <button type="button" className="diff-note-mark" aria-expanded={open} onClick={onToggle} title={`${said}: click to ${open ? "hide" : "show"} ${count === 1 ? "it" : "them"}`} aria-label={said}>
+    <button type="button" className="diff-note-mark" aria-expanded={open} onClick={onToggle} title={t("{0}: {1}", said, action)} aria-label={said}>
       <span className="button-label">{count}</span>
     </button>
   );
@@ -63,7 +65,7 @@ function NoteMark({ threads, open, onToggle }: { threads: ReviewThread[]; open: 
 /** A picture's label in its line: what it is, and a click shows its letters instead. */
 function PictureChip({ picture, label, onUnfold }: { picture: EmbeddedPicture; label: string; onUnfold?: () => void }) {
   return (
-    <button type="button" className="diff-picture-chip" onClick={onUnfold} title={`${label}, written out in base64: click to show its letters`}>
+    <button type="button" className="diff-picture-chip" onClick={onUnfold} title={t("{0}, written out in base64: click to show its letters", label)}>
       <img src={picture.url} alt="" draggable={false} />
       <span className="button-label">{label}</span>
     </button>
@@ -197,7 +199,7 @@ export function DiffLines({
   };
 
   return (
-    <div className={`diff-lines${picking ? " picking" : ""}${split ? " split" : ""}${wrap ? " wrap" : ""}${notes ? " noted" : ""}`} role="table" aria-label="Changed lines">
+    <div className={`diff-lines${picking ? " picking" : ""}${split ? " split" : ""}${wrap ? " wrap" : ""}${notes ? " noted" : ""}`} role="table" aria-label={t("Changed lines")}>
       {hunks.map((hunk, hunkIndex) => {
         const keys = picking ? hunkKeys(hunk) : [];
         const chosenHere = picking ? keys.filter((key) => picking.selected.has(key)) : [];
@@ -223,20 +225,20 @@ export function DiffLines({
                         className="hunk-button"
                         disabled={picking.busy}
                         onClick={() => picking.onApply("discard", keys)}
-                        title="Undo these changes in the file (you can put them back)"
+                        title={t("Undo these changes in the file (you can put them back)")}
                       >
-                        <span className="button-label">Discard</span>
+                        <span className="button-label">{t("Discard")}</span>
                       </button>
-                      <button className="hunk-button primary" disabled={picking.busy} onClick={() => picking.onApply("stage", keys)} title="Stage these changes">
-                        <span className="button-label">Stage</span>
+                      <button className="hunk-button primary" disabled={picking.busy} onClick={() => picking.onApply("stage", keys)} title={t("Stage these changes")}>
+                        <span className="button-label">{t("Stage")}</span>
                       </button>
                     </>
                   ) : (
-                    <button className="hunk-button primary" disabled={picking.busy} onClick={() => picking.onApply("unstage", keys)} title="Take these changes out of what's staged">
-                      <span className="button-label">Unstage</span>
+                    <button className="hunk-button primary" disabled={picking.busy} onClick={() => picking.onApply("unstage", keys)} title={t("Take these changes out of what's staged")}>
+                      <span className="button-label">{t("Unstage")}</span>
                     </button>
                   )}
-                  {chosenHere.length > 0 && <span className="hunk-chosen">{chosenHere.length} chosen</span>}
+                  {chosenHere.length > 0 && <span className="hunk-chosen">{tx("{0} chosen", chosenHere.length)}</span>}
                 </span>
               )}
             </div>
@@ -252,14 +254,14 @@ export function DiffLines({
                     ? {
                         onPointerDown: (event: React.PointerEvent) => press(key, event),
                         onPointerEnter: () => enter(key),
-                        title: chosen ? "Chosen: click to leave it out" : "Click to choose this line (shift-click or drag for more)",
+                        title: chosen ? t("Chosen: click to leave it out") : t("Click to choose this line (shift-click or drag for more)"),
                       }
                     : undefined;
                   const number = side === "left" ? line.old : line.new;
                   return (
                     // A cell of the row: whether its line is chosen is in its number's name.
                     <div className={`diff-half ${line.kind}${key ? " pickable" : ""}${chosen ? " chosen" : ""}`} role="cell">
-                      <span className="diff-number" aria-label={number ? `Line ${number} ${side === "left" ? "before" : "after"}${chosen ? ", chosen" : ""}` : undefined} {...pick}>
+                      <span className="diff-number" aria-label={number ? side === "left" ? t("Line {0} before{1}", number, chosen ? t(", chosen") : "") : t("Line {0} after{1}", number, chosen ? t(", chosen") : "") : undefined} {...pick}>
                         {number ?? ""}
                       </span>
                       <span className="diff-sign" aria-hidden {...pick}>
@@ -293,7 +295,7 @@ export function DiffLines({
                 ? {
                     onPointerDown: (event: React.PointerEvent) => press(key, event),
                     onPointerEnter: () => enter(key),
-                    title: chosen ? "Chosen: click to leave it out" : "Click to choose this line (shift-click or drag for more)",
+                    title: chosen ? t("Chosen: click to leave it out") : t("Click to choose this line (shift-click or drag for more)"),
                   }
                 : undefined;
               const shown = lineParts(hunkIndex, lineIndex, pieces(line.text, syntax?.[hunkIndex][lineIndex] ?? null, parts));
@@ -302,10 +304,10 @@ export function DiffLines({
               return (
                 <Fragment key={lineIndex}>
                   <div className={`diff-row ${line.kind}${key ? " pickable" : ""}${chosen ? " chosen" : ""}`} role="row" aria-selected={key ? chosen : undefined}>
-                    <span className="diff-number" role="cell" aria-label={line.old ? `Line ${line.old} before` : undefined} {...pick}>
+                    <span className="diff-number" role="cell" aria-label={line.old ? t("Line {0} before", line.old) : undefined} {...pick}>
                       {line.old ?? ""}
                     </span>
-                    <span className="diff-number" role="cell" aria-label={line.new ? `Line ${line.new} after` : undefined} {...pick}>
+                    <span className="diff-number" role="cell" aria-label={line.new ? t("Line {0} after", line.new) : undefined} {...pick}>
                       {line.new ?? ""}
                     </span>
                     <span className="diff-sign" aria-hidden {...pick}>

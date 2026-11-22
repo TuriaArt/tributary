@@ -5,6 +5,7 @@ import { plural, relativeTime } from "../lib/format";
 import { baseName, folderOf } from "../lib/paths";
 import { BranchIcon, ChevronDownIcon, CloseIcon, EyeIcon } from "./Icons";
 import { Button } from "./ui/Button";
+import { t, tx } from "../lib/i18n";
 
 /** Files listed per branch before "and N more". */
 const MAX_FILES = 50;
@@ -78,18 +79,18 @@ export function ElsewherePanel({ overlaps, anchor, onClose, onShowCommit, onShow
       ref={panel}
       className="elsewhere-panel"
       role="dialog"
-      aria-label="Also changed on other branches"
+      aria-label={t("Also changed on other branches")}
       tabIndex={-1}
       style={{ left: place.left, bottom: place.bottom, width: Math.min(WIDTH, window.innerWidth - 16) }}
     >
       <header className="elsewhere-panel-header">
         <div>
-          <strong>Also changed on other branches</strong>
+          <strong>{t("Also changed on other branches")}</strong>
           <span>
-            {plural(overlaps.length, "file")} you're changing, on {plural(branches.length, "branch", "branches")}, in the last 30 days
+            {tx("{0} you're changing, on {1}, in the last 30 days", plural(overlaps.length, "file"), plural(branches.length, "branch", "branches"))}
           </span>
         </div>
-        <Button kind="icon" onClick={onClose} aria-label="Close" title="Close (Esc)">
+        <Button kind="icon" onClick={onClose} aria-label={t("Close")} title={t("Close (Esc)")}>
           <CloseIcon size={14} />
         </Button>
       </header>
@@ -105,10 +106,10 @@ export function ElsewherePanel({ overlaps, anchor, onClose, onShowCommit, onShow
                   <span className="elsewhere-branch-name">{entry.branch}</span>
                   <span className="elsewhere-branch-count">
                     {plural(entry.files.length, "file")}
-                    {entry.assets > 0 && ` · ${entry.assets === entry.files.length ? (entry.assets === 1 ? "an asset" : "all assets") : plural(entry.assets, "asset")}`}
+                    {entry.assets > 0 && ` · ${entry.assets === entry.files.length ? (entry.assets === 1 ? t("an asset") : t("all assets")) : plural(entry.assets, "asset")}`}
                   </span>
                 </button>
-                <Button kind="icon" onClick={() => onShowBranch(entry.branch)} title={`Highlight ${entry.branch}'s history`} aria-label={`Highlight ${entry.branch}`}>
+                <Button kind="icon" onClick={() => onShowBranch(entry.branch)} title={t("Highlight {0}'s history", entry.branch)} aria-label={t("Highlight {0}", entry.branch)}>
                   <EyeIcon size={14} />
                 </Button>
               </div>
@@ -119,7 +120,7 @@ export function ElsewherePanel({ overlaps, anchor, onClose, onShowCommit, onShow
                 <ul className="elsewhere-files">
                   {entry.files.slice(0, MAX_FILES).map(({ overlap, change }) => (
                     <li key={overlap.path}>
-                      <button className="elsewhere-file-row" onClick={() => onShowCommit(change.commit)} title={`${overlap.path}\nShow "${change.summary}"`}>
+                      <button className="elsewhere-file-row" onClick={() => onShowCommit(change.commit)} title={t("{0}\nShow \"{1}\"", overlap.path, change.summary)}>
                         <span className={`elsewhere-file-name${overlap.unmergeable ? " asset" : ""}`}>{baseName(overlap.path)}</span>
                         {folderOf(overlap.path) && <span className="elsewhere-file-dir">{folderOf(overlap.path)}</span>}
                         <span className="elsewhere-file-change">
@@ -128,7 +129,7 @@ export function ElsewherePanel({ overlaps, anchor, onClose, onShowCommit, onShow
                       </button>
                     </li>
                   ))}
-                  {entry.files.length > MAX_FILES && <li className="muted elsewhere-more">and {plural(entry.files.length - MAX_FILES, "more file")}</li>}
+                  {entry.files.length > MAX_FILES && <li className="muted elsewhere-more">{tx("and {0}", plural(entry.files.length - MAX_FILES, "more file"))}</li>}
                 </ul>
               )}
             </li>

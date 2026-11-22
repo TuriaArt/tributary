@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import type { FileDiff, Media } from "../../api";
 import { useThemeColors } from "../../app/useAppearance";
 import { dataUrlBytes, formatDuration, missingSide } from "../../lib/media";
+import { plural } from "../../lib/format";
+import { t } from "../../lib/i18n";
 
 interface Decoded {
   peaks: Float32Array;
@@ -58,10 +60,10 @@ export function DiffAudio({ diff, media }: { diff: FileDiff; media: Media }) {
         return (
           <figure key={side} className="diff-media-side">
             <figcaption>
-              {side === "before" ? "Before" : "After"}
+              {side === "before" ? t("Before") : t("After")}
               {info && (
                 <span className="diff-media-facts">
-                  {formatDuration(info.duration)} · {info.channels === 1 ? "mono" : info.channels === 2 ? "stereo" : `${info.channels} channels`}
+                  {formatDuration(info.duration)} · {info.channels === 1 ? t("mono") : info.channels === 2 ? t("stereo") : plural(info.channels, "channel")}
                 </span>
               )}
             </figcaption>

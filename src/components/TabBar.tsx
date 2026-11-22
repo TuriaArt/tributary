@@ -7,6 +7,7 @@ import { isWindows, modKey } from "../lib/platform";
 import { openInBrowser, TRIBUTARY_ON_GITHUB } from "../lib/weblinks";
 import { useTabDrag } from "./useTabDrag";
 import { WindowControls } from "./WindowControls";
+import { t } from "../lib/i18n";
 
 export interface Tab {
   path: string;
@@ -198,20 +199,20 @@ export function TabBar({ tabs, activePath, startTab, onSelect, onClose, onMove, 
             <span className="tab-name" data-text={tab.name}>
               <span>{tab.name}</span>
             </span>
-            {news?.[tab.path] && <span className="tab-news" aria-label="New commits" />}
+            {news?.[tab.path] && <span className="tab-news" aria-label={t("New commits")} />}
             {/* For the pointer: a tab is a single control, closed from the keyboard with Delete,
                 ⌘W (Ctrl+W) or its menu. */}
-            <span className="tab-close" onMouseDown={(event) => event.stopPropagation()} onClick={() => onClose(tab.path)} title={`Close tab (${modKey}W)`} aria-hidden>
+            <span className="tab-close" onMouseDown={(event) => event.stopPropagation()} onClick={() => onClose(tab.path)} title={t("Close tab ({0}W)", modKey)} aria-hidden>
               <CloseIcon size={12} />
             </span>
           </div>
         ))}
         {startTab && (
-          <div role="tab" aria-selected className="tab active start-tab" title="Open, clone or create a repository">
+          <div role="tab" aria-selected className="tab active start-tab" title={t("Open, clone or create a repository")}>
             <span className="tab-name" data-text="New tab">
-              <span>New tab</span>
+              <span>{t("New tab")}</span>
             </span>
-            <span className="tab-close" onClick={onCloseStart} title={`Close tab (${modKey}W)`} aria-hidden>
+            <span className="tab-close" onClick={onCloseStart} title={t("Close tab ({0}W)", modKey)} aria-hidden>
               <CloseIcon size={12} />
             </span>
           </div>
@@ -219,12 +220,12 @@ export function TabBar({ tabs, activePath, startTab, onSelect, onClose, onMove, 
       </div>
       {/* After the tabs, outside their list (where only tabs belong); a tab closing shrinks
           away at the list's end, just before it. */}
-      <button className="tab-new" onClick={onNew} title={`New tab (${modKey}T)`} aria-label="New tab">
+      <button className="tab-new" onClick={onNew} title={t("New tab ({0}T)", modKey)} aria-label={t("New tab")}>
         <PlusIcon size={14} />
       </button>
       <div className="tab-bar-fill" data-tauri-drag-region />
       {extra}
-      <Button kind="icon" className="tab-bar-github" onClick={() => openInBrowser(TRIBUTARY_ON_GITHUB)} title="Tributary on GitHub" aria-label="Tributary on GitHub" data-url={TRIBUTARY_ON_GITHUB}>
+      <Button kind="icon" className="tab-bar-github" onClick={() => openInBrowser(TRIBUTARY_ON_GITHUB)} title={t("Tributary on GitHub")} aria-label={t("Tributary on GitHub")} data-url={TRIBUTARY_ON_GITHUB}>
         <GitHubIcon size={15} />
       </Button>
       {isWindows && <WindowControls />}

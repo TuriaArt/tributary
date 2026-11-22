@@ -4,6 +4,7 @@ import { openInBrowser } from "../lib/weblinks";
 import { Dialog } from "./Dialog";
 import { Button } from "./ui/Button";
 import { Field } from "./ui/Field";
+import { t, tx } from "../lib/i18n";
 
 const CREDENTIAL_MANAGER_URL = "https://gh.io/gcm";
 
@@ -49,24 +50,23 @@ export function GitLabSignInDialog({ host: startHost, status, onCancel, onDone }
 
   return (
     <Dialog
-      title="Sign in to GitLab"
+      title={t("Sign in to GitLab")}
       error={error}
       busy={running !== null}
       onCancel={onCancel}
       buttons={
         <>
           <Button kind="secondary" onClick={onCancel} disabled={running !== null}>
-            Cancel
+            {t("Cancel")}
           </Button>
           <Button kind="primary" onClick={() => signIn("token")} disabled={running !== null || !server || !token.trim()}>
-            {running === "token" ? "Checking…" : "Sign in"}
+            {running === "token" ? t("Checking…") : t("Sign in")}
           </Button>
         </>
       }
     >
       <p>
-        With your GitLab sign-in, Tributary lists your projects to clone, shows merge requests and their pipelines for private projects
-        too, and git uses it to push. Git's credential helper keeps it, not Tributary.
+        {t("With your GitLab sign-in, Tributary lists your projects to clone, shows merge requests and their pipelines for private projects too, and git uses it to push. Git's credential helper keeps it, not Tributary.")}
       </p>
       <form
         className="dialog-form"
@@ -75,7 +75,7 @@ export function GitLabSignInDialog({ host: startHost, status, onCancel, onDone }
           signIn("token");
         }}
       >
-        <Field label="Server">
+        <Field label={t("Server")}>
           <input
             className="text-input"
             value={host}
@@ -83,7 +83,7 @@ export function GitLabSignInDialog({ host: startHost, status, onCancel, onDone }
               setHost(event.target.value);
               setError(null);
             }}
-            placeholder="gitlab.com, or your company's, like gitlab.example.com"
+            placeholder={t("gitlab.com, or your company's, like gitlab.example.com")}
             spellCheck={false}
             autoCapitalize="off"
             autoCorrect="off"
@@ -93,12 +93,12 @@ export function GitLabSignInDialog({ host: startHost, status, onCancel, onDone }
         {status?.browserSignIn && (
           <div className="sign-in-browser">
             <Button type="button" kind="outline" onClick={() => signIn("browser")} disabled={running !== null || !server}>
-              <span className="button-label">{running === "browser" ? "Waiting for the browser…" : "Sign in with browser"}</span>
+              <span className="button-label">{running === "browser" ? t("Waiting for the browser…") : t("Sign in with browser")}</span>
             </Button>
-            <span className="hint">With Git Credential Manager.</span>
+            <span className="hint">{t("With Git Credential Manager.")}</span>
           </div>
         )}
-        <Field label={status?.browserSignIn ? "Or a personal access token" : "Personal access token"}>
+        <Field label={status?.browserSignIn ? t("Or a personal access token") : t("Personal access token")}>
           <input
             className="text-input"
             type="password"
@@ -107,7 +107,7 @@ export function GitLabSignInDialog({ host: startHost, status, onCancel, onDone }
               setToken(event.target.value);
               setError(null);
             }}
-            placeholder="glpat-…"
+            placeholder={"glpat-…"}
             spellCheck={false}
             autoCapitalize="off"
             autoCorrect="off"
@@ -117,18 +117,15 @@ export function GitLabSignInDialog({ host: startHost, status, onCancel, onDone }
           />
         </Field>
         <p className="hint">
-          <Button type="button" kind="link" onClick={() => server && openInBrowser(newGitLabTokenUrl(server))} disabled={!server} data-url={server ? newGitLabTokenUrl(server) : undefined}>
-            Make a token on {server || "GitLab"}
-          </Button>{" "}
-          with the “api” and “write_repository” scopes.
+          {tx("{0} with the “api” and “write_repository” scopes.", <Button type="button" kind="link" onClick={() => server && openInBrowser(newGitLabTokenUrl(server))} disabled={!server} data-url={server ? newGitLabTokenUrl(server) : undefined}>
+            {tx("Make a token on {0}", server || "GitLab")}
+          </Button>)}
         </p>
         {status && !status.canKeepToken && (
           <p className="hint warning">
-            Git has no credential helper, so there's nowhere safe to keep a token.{" "}
-            <Button type="button" kind="link" onClick={() => openInBrowser(CREDENTIAL_MANAGER_URL)} data-url={CREDENTIAL_MANAGER_URL}>
-              Install Git Credential Manager
-            </Button>{" "}
-            first.
+            {tx("Git has no credential helper, so there's nowhere safe to keep a token. {0} first.", <Button type="button" kind="link" onClick={() => openInBrowser(CREDENTIAL_MANAGER_URL)} data-url={CREDENTIAL_MANAGER_URL}>
+              {t("Install Git Credential Manager")}
+            </Button>)}
           </p>
         )}
         <button type="submit" hidden />

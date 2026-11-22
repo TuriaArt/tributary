@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { actorNames, isExternalActor, type ActorName } from "../api";
+import { t } from "./i18n";
 
 /** The actors in the file list being drawn, by path: what FileLine shows instead of a hash. */
 export const ActorNames = createContext<ReadonlyMap<string, ActorName>>(new Map());
@@ -57,7 +58,7 @@ export function useActorNames(repoPath: string, at: string | null, fallback: str
 
 /** "SM_RackShelf_215 (StaticMeshActor) in Maps/Tavern". */
 export function describeActor(actor: ActorName): string {
-  const what = actor.label ?? actor.class ?? "An actor";
+  const what = actor.label ?? actor.class ?? t("An actor");
   const kind = actor.label && actor.class ? ` (${actor.class})` : "";
   return `${what}${kind}${actor.level ? ` in ${actor.level}` : ""}`;
 }

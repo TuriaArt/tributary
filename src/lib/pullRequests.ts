@@ -1,5 +1,7 @@
 import { createContext, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { pullRequests, type CommitMessage, type PullRequest, type RequestCheck, type RequestDetails, type RequestReview } from "../api";
+import { joinAnd } from "./format";
+import { t } from "./i18n";
 
 /** Asked for again this often while a repository is open: cheap, since the app asks with
  * each answer's ETag, and an unchanged one costs nothing against GitHub's hourly limit. */
@@ -51,7 +53,7 @@ export function requestNumber(pr: PullRequest): string {
 
 /** What a pull request is called where it is: "pull request", or "merge request" on GitLab. */
 export function requestNoun(forge: "github" | "gitlab" | undefined): string {
-  return forge === "gitlab" ? "merge request" : "pull request";
+  return forge === "gitlab" ? t("merge request") : t("pull request");
 }
 
 /** "feat/sync-retry" → "Sync retry": a title from a branch's name. */
@@ -249,17 +251,17 @@ export const anyRunning = (checks: RequestCheck[]) => checks.some((check) => che
 
 /** A list of names in words: "maya", "maya and theo", "maya, theo and sam". */
 function names(list: string[]): string {
-  return list.length <= 2 ? list.join(" and ") : `${list.slice(0, -1).join(", ")} and ${list[list.length - 1]}`;
+  return joinAnd(list);
 }
 
 /** Where a request's reviews stand, in words, like "Approved by maya · waiting for sam". */
 export function describeReviews(reviews: RequestReview[]): string | null {
   const who = (state: RequestReview["state"]) => reviews.filter((review) => review.state === state).map((review) => review.author);
   const parts = [
-    who("changesRequested").length > 0 && `${names(who("changesRequested"))} asked for changes`,
-    who("approved").length > 0 && `approved by ${names(who("approved"))}`,
-    who("commented").length > 0 && `${names(who("commented"))} commented`,
-    who("requested").length > 0 && `waiting for ${names(who("requested"))}`,
+    who("changesRequested").length > 0 && t("{0} asked for changes", names(who("changesRequested"))),
+    who("approved").length > 0 && t("approved by {0}", names(who("approved"))),
+    who("commented").length > 0 && t("{0} commented", names(who("commented"))),
+    who("requested").length > 0 && t("waiting for {0}", names(who("requested"))),
   ].filter((part): part is string => Boolean(part));
   if (parts.length === 0) return null;
   const text = parts.join(" · ");
@@ -271,23 +273,28 @@ export function describeReviews(reviews: RequestReview[]): string | null {
 export function describeCheckProgress(checks: RequestCheck[], gitlab = false): string | null {
   const counted = checks.filter((check) => check.state !== null);
   if (counted.length === 0) return null;
-  const what = gitlab ? "jobs" : "checks";
   const count = (state: RequestCheck["state"]) => counted.filter((check) => check.state === state).length;
   const [failed, running, passed, cancelled] = [count("failure"), count("pending"), count("success"), count("cancelled")];
-  if (counted.length === 1) return `The ${what.slice(0, -1)} ${failed ? "failed" : running ? "is still running" : cancelled ? "was cancelled" : "passed"}`;
-  const still = running > 0 ? `, ${running} still running` : "";
-  if (failed > 0) return `${failed} of ${counted.length} ${what} failed${still}`;
-  if (running > 0) return `${passed} of ${counted.length} ${what} passed${still}`;
-  if (cancelled > 0) return `${passed} of ${counted.length} ${what} passed, ${cancelled} cancelled`;
-  return counted.length === 1 ? `The ${what.slice(0, -1)} passed` : `All ${counted.length} ${what} passed`;
+  const total = counted.length;
+  if (total === 1) {
+    if (failed) return gitlab ? t("The job failed") : t("The check failed");
+    if (running) return gitlab ? t("The job is still running") : t("The check is still running");
+    if (cancelled) return gitlab ? t("The job was cancelled") : t("The check was cancelled");
+    return gitlab ? t("The job passed") : t("The check passed");
+  }
+  const still = running > 0 ? t(", {0} still running", running) : "";
+  if (failed > 0) return gitlab ? t("{0} of {1} jobs failed{2}", failed, total, still) : t("{0} of {1} checks failed{2}", failed, total, still);
+  if (running > 0) return gitlab ? t("{0} of {1} jobs passed{2}", passed, total, still) : t("{0} of {1} checks passed{2}", passed, total, still);
+  if (cancelled > 0) return gitlab ? t("{0} of {1} jobs passed, {2} cancelled", passed, total, cancelled) : t("{0} of {1} checks passed, {2} cancelled", passed, total, cancelled);
+  return gitlab ? t("All {0} jobs passed", total) : t("All {0} checks passed", total);
 }
 
 /** How a request's checks went, in a word: failing if any failed, running if any still are, passing once all have passed. */
 export function checksVerdict(checks: RequestCheck[]): { tone: "success" | "failure" | "pending" | "cancelled"; word: string } {
-  if (checks.some((check) => check.state === "failure")) return { tone: "failure", word: "Failing" };
-  if (checks.some((check) => check.state === "pending")) return { tone: "pending", word: "Running" };
-  if (checks.some((check) => check.state === "cancelled")) return { tone: "cancelled", word: "Cancelled" };
-  return { tone: "success", word: "Passing" };
+  if (checks.some((check) => check.state === "failure")) return { tone: "failure", word: t("Failing") };
+  if (checks.some((check) => check.state === "pending")) return { tone: "pending", word: t("Running") };
+  if (checks.some((check) => check.state === "cancelled")) return { tone: "cancelled", word: t("Cancelled") };
+  return { tone: "success", word: t("Passing") };
 }
 
 /** Whether a request can be merged, in words, and how it looks: good, bad or waiting. */
@@ -295,19 +302,19 @@ export function describeMergeable(details: RequestDetails): { text: string; tone
   const base = details.base;
   switch (details.mergeable) {
     case "ready":
-      return { text: `Ready to merge into ${base}`, tone: "good" };
+      return { text: t("Ready to merge into {0}", base), tone: "good" };
     case "conflicts":
-      return { text: `Conflicts with ${base}: merge ${base} into ${details.branch} (or rebase it) and resolve them`, tone: "bad" };
+      return { text: t("Conflicts with {0}: merge {1} into {2} (or rebase it) and resolve them", base, base, details.branch), tone: "bad" };
     case "behind":
-      return { text: `Behind ${base}: bring ${base}'s new commits into ${details.branch} first`, tone: "waiting" };
+      return { text: t("Behind {0}: bring {1}'s new commits into {2} first", base, base, details.branch), tone: "waiting" };
     case "blocked": {
       const changes = details.reviews.some((review) => review.state === "changesRequested");
       const failed = details.checks.some((check) => check.state === "failure");
-      const reason = changes ? "changes were asked for" : failed ? "checks failed" : "it needs approvals or passing checks";
-      return { text: `Can't be merged yet: ${reason}`, tone: changes || failed ? "bad" : "waiting" };
+      const reason = changes ? t("changes were asked for") : failed ? t("checks failed") : t("it needs approvals or passing checks");
+      return { text: t("Can't be merged yet: {0}", reason), tone: changes || failed ? "bad" : "waiting" };
     }
     case "checking":
-      return { text: `Checking whether it can be merged into ${base}…`, tone: "waiting" };
+      return { text: t("Checking whether it can be merged into {0}…", base), tone: "waiting" };
     default:
       return null;
   }
@@ -326,27 +333,21 @@ export interface Standing {
  */
 export function requestStanding(details: RequestDetails): Standing | null {
   const merge = describeMergeable(details);
-  if (details.state === "merged") return { text: `Merged into ${details.base}`, tone: "merged" };
-  if (details.state === "closed") return { text: "Closed without merging", tone: "closed" };
-  if (details.state === "draft" && merge?.tone !== "bad") return { text: "A draft: not ready for review yet", tone: "neutral" };
+  if (details.state === "merged") return { text: t("Merged into {0}", details.base), tone: "merged" };
+  if (details.state === "closed") return { text: t("Closed without merging"), tone: "closed" };
+  if (details.state === "draft" && merge?.tone !== "bad") return { text: t("A draft: not ready for review yet"), tone: "neutral" };
   return merge;
 }
 
 /** "Checks passed", for a pull request's badge. */
 export function describeChecks(pr: PullRequest): string {
   const gitlab = pr.forge === "gitlab";
-  const what = gitlab ? "pipeline" : "checks";
-  const checks =
-    pr.checks === "success"
-      ? `${what} passed`
-      : pr.checks === "failure"
-        ? `${what} failed`
-        : pr.checks === "pending"
-          ? `${what} running`
-          : pr.checks === "cancelled"
-            ? `${what} cancelled`
-            : null;
-  return `${gitlab ? "Merge request" : "Pull request"} ${requestNumber(pr)}${pr.draft ? " (draft)" : ""}: ${pr.title}${pr.author ? ` by ${pr.author}` : ""}${checks ? ` · ${checks}` : ""}`;
+  const words = gitlab
+    ? { success: t("pipeline passed"), failure: t("pipeline failed"), pending: t("pipeline running"), cancelled: t("pipeline cancelled") }
+    : { success: t("checks passed"), failure: t("checks failed"), pending: t("checks running"), cancelled: t("checks cancelled") };
+  const checks = pr.checks ? (words as Record<string, string>)[pr.checks] ?? null : null;
+  const kind = gitlab ? t("Merge request") : t("Pull request");
+  return `${kind} ${requestNumber(pr)}${pr.draft ? t(" (draft)") : ""}: ${pr.title}${pr.author ? t(" by {0}", pr.author) : ""}${checks ? ` · ${checks}` : ""}`;
 }
 
 /**

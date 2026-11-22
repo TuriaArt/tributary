@@ -20,6 +20,7 @@ import { placeThreads, threadsOn, type ReviewThread } from "../../lib/reviewThre
 import { DiffSubmodule } from "./DiffSubmodule";
 import { Loader } from "../Loader";
 import { Button } from "../ui/Button";
+import { t, tx } from "../../lib/i18n";
 
 interface Props {
   repoPath: string;
@@ -127,15 +128,15 @@ export function DiffView({ repoPath, targets, index, onIndex, onClose, run, vers
   const notPickable = !side
     ? null
     : target.file.status === "untracked"
-      ? "Stage the new file first, then choose its lines"
+      ? t("Stage the new file first, then choose its lines")
       : target.file.status === "conflicted"
-        ? "Resolve the conflict first"
+        ? t("Resolve the conflict first")
         : target.file.oldPath
-          ? "Renamed files are staged whole"
+          ? t("Renamed files are staged whole")
           : diff?.lfs
-            ? "Files stored with Git LFS are staged whole"
+            ? t("Files stored with Git LFS are staged whole")
             : ignoreWhitespace
-              ? "Turn off Ignore whitespace to choose lines"
+              ? t("Turn off Ignore whitespace to choose lines")
               : null;
   const apply = async (mode: LineMode, keys: Iterable<string>) => {
     setApplying(true);
@@ -164,7 +165,7 @@ export function DiffView({ repoPath, targets, index, onIndex, onClose, run, vers
   /** Open the file in the diff (or merge) tool, or choose one first. */
   const openInTool = () =>
     tools && !tool ? onChooseTool() : run(conflicted ? { kind: "openInMergeTool", path } : { kind: "openInDiffTool", source: target.source, path });
-  const toolButton = tools && !tool ? `Choose a ${conflicted ? "merge" : "diff"} tool…` : `Open in ${toolLabel(tool, conflicted ? "merge" : "diff")}`;
+  const toolButton = tools && !tool ? t("Choose a {0} tool…", conflicted ? "merge" : "diff") : t("Open in {0}", toolLabel(tool, conflicted ? "merge" : "diff"));
   // Pictures written into the text (data: URLs, notebook outputs): folded into labels, and
   // the ones that changed shown under their lines.
   const pictures = useMemo(() => (diff && !diff.media ? { changes: changedPictures(diff.hunks), path } : undefined), [diff, path]);
@@ -181,29 +182,29 @@ export function DiffView({ repoPath, targets, index, onIndex, onClose, run, vers
   /** Shown as something other than lines: whitespace and diff tools don't apply. */
   const whole = Boolean(diff && (diff.binary || diff.tooLarge || diff.submodule || showMedia));
   return (
-    <section ref={view} className="diff-view" aria-label={`Changes to ${path}`}>
+    <section ref={view} className="diff-view" aria-label={t("Changes to {0}", path)}>
       <header className="diff-header">
         {back && (
-          <button className="diff-back" onClick={back.onBack} title={`Back to ${back.label} (Esc)`}>
+          <button className="diff-back" onClick={back.onBack} title={t("Back to {0} (Esc)", back.label)}>
             <ChevronLeftIcon size={14} />
             <span className="button-label">{back.label}</span>
           </button>
         )}
         <div className="diff-steps">
-          <Button kind="icon" onClick={() => onIndex(index - 1)} disabled={index === 0} title="Previous file ([)" aria-label="Previous file">
+          <Button kind="icon" onClick={() => onIndex(index - 1)} disabled={index === 0} title={t("Previous file ([)")} aria-label={t("Previous file")}>
             <ChevronUpIcon size={14} />
           </Button>
           <Button
             kind="icon"
             onClick={() => onIndex(index + 1)}
             disabled={index === targets.length - 1}
-            title="Next file (])"
-            aria-label="Next file"
+            title={t("Next file (])")}
+            aria-label={t("Next file")}
           >
             <ChevronDownIcon size={14} />
           </Button>
           <span className="diff-count">
-            {index + 1} of {targets.length}
+            {tx("{0} of {1}", index + 1, targets.length)}
           </span>
         </div>
         <div className="diff-title" title={`${target.file.oldPath ? `${target.file.oldPath} → ${path}` : path}${actor ? `\n${describeActor(actor)}` : ""}`}>
@@ -217,30 +218,29 @@ export function DiffView({ repoPath, targets, index, onIndex, onClose, run, vers
           {actor?.level ? <span className="diff-dir">{actor.level}</span> : slash > 0 && <span className="diff-dir">{path.slice(0, slash)}</span>}
           <span className="diff-source"><span className="chip-text">{target.label}</span></span>
           {owners.length > 0 && (
-            <span className="diff-source diff-owners" title={`Its owners, by CODEOWNERS: ${owners.join(", ")}`}>
-              <span className="chip-text">Owned by {describeOwners(owners)}</span>
+            <span className="diff-source diff-owners" title={t("Its owners, by CODEOWNERS: {0}", owners.join(", "))}>
+              <span className="chip-text">{tx("Owned by {0}", describeOwners(owners))}</span>
             </span>
           )}
           {diff?.lfs && !diff.binary && !diff.tooLarge && (
-            <span className="diff-source" title="Stored with Git LFS: these are the files' real contents">
-              <span className="chip-text">Git LFS</span>
+            <span className="diff-source" title={t("Stored with Git LFS: these are the files' real contents")}>
+              <span className="chip-text">{t("Git LFS")}</span>
             </span>
           )}
         </div>
         {both && (
-          <div className="diff-switch" role="group" aria-label="Show as">
+          <div className="diff-switch" role="group" aria-label={t("Show as")}>
             <button className={showMedia ? "selected" : undefined} onClick={() => setAsText(false)} aria-pressed={showMedia}>
-              <span className="button-label">{picture ? "Picture" : "3D"}</span>
+              <span className="button-label">{picture ? t("Picture") : "3D"}</span>
             </button>
             <button className={!showMedia ? "selected" : undefined} onClick={() => setAsText(true)} aria-pressed={!showMedia}>
-              <span className="button-label">Text</span>
+              <span className="button-label">{t("Text")}</span>
             </button>
           </div>
         )}
         {!whole && !conflicted && (
           <label className="checkbox diff-option">
-            <input type="checkbox" checked={ignoreWhitespace} onChange={(event) => setIgnoreWhitespace(event.target.checked)} />
-            Ignore whitespace
+            {tx("{0}Ignore whitespace", <input type="checkbox" checked={ignoreWhitespace} onChange={(event) => setIgnoreWhitespace(event.target.checked)} />)}
           </label>
         )}
 
@@ -250,10 +250,10 @@ export function DiffView({ repoPath, targets, index, onIndex, onClose, run, vers
             onClick={openInTool}
             title={`${toolButton}: ${
               tools && !tool
-                ? "no tool is set up in git yet, choose one in Settings"
+                ? t("no tool is set up in git yet, choose one in Settings")
                 : conflicted
-                  ? "resolve it in the merge tool set up in git (merge.tool)"
-                  : "compare it in the diff tool set up in git (diff.tool)"
+                  ? t("resolve it in the merge tool set up in git (merge.tool)")
+                  : t("compare it in the diff tool set up in git (diff.tool)")
             }`}
             aria-label={toolButton}
           >
@@ -268,8 +268,8 @@ export function DiffView({ repoPath, targets, index, onIndex, onClose, run, vers
             onClick={() => setWrap(!wrap)}
             disabled={split && roomy}
             aria-pressed={wrap || (split && roomy)}
-            title={split && roomy ? "Side by side, long lines always wrap" : wrap ? "Scroll sideways to long lines instead of wrapping them" : "Wrap long lines to fit, instead of scrolling sideways to them"}
-            aria-label="Wrap lines"
+            title={split && roomy ? t("Side by side, long lines always wrap") : wrap ? t("Scroll sideways to long lines instead of wrapping them") : t("Wrap long lines to fit, instead of scrolling sideways to them")}
+            aria-label={t("Wrap lines")}
           >
             <WrapIcon size={15} />
           </Button>
@@ -281,22 +281,22 @@ export function DiffView({ repoPath, targets, index, onIndex, onClose, run, vers
             aria-pressed={split}
             title={
               split && !roomy
-                ? "Side by side (shown in one column until there's more room)"
+                ? t("Side by side (shown in one column until there's more room)")
                 : split
-                  ? "Show the changes in one column"
-                  : "Show before and after side by side"
+                  ? t("Show the changes in one column")
+                  : t("Show before and after side by side")
             }
-            aria-label="Side by side"
+            aria-label={t("Side by side")}
           >
             <SplitIcon size={15} />
           </Button>
         )}
         {!whole && !conflicted && target.file.status !== "deleted" && target.file.status !== "untracked" && (
-          <Button kind="icon" onClick={() => onBlame(target)} title="Who changed each line" aria-label="Who changed each line">
+          <Button kind="icon" onClick={() => onBlame(target)} title={t("Who changed each line")} aria-label={t("Who changed each line")}>
             <BlameIcon size={15} />
           </Button>
         )}
-        <Button kind="icon" onClick={onClose} title="Close (Esc)" aria-label="Close the changes">
+        <Button kind="icon" onClick={onClose} title={t("Close (Esc)")} aria-label={t("Close the changes")}>
           <CloseIcon />
         </Button>
       </header>
@@ -307,11 +307,11 @@ export function DiffView({ repoPath, targets, index, onIndex, onClose, run, vers
           <ConflictEditor repoPath={repoPath} path={path} mine={sides.mine} theirs={sides.theirs} version={version} run={run} />
         ) : error ? (
           <div className="diff-message">
-            <strong>Couldn't read the changes</strong>
+            <strong>{t("Couldn't read the changes")}</strong>
             <span>{error}</span>
           </div>
         ) : !diff ? (
-          <Loader size={88} title="Reading the changes" />
+          <Loader size={88} title={t("Reading the changes")} />
         ) : diff.submodule ? (
           <DiffSubmodule change={diff.submodule} />
         ) : diff.media && showMedia ? (
@@ -319,29 +319,29 @@ export function DiffView({ repoPath, targets, index, onIndex, onClose, run, vers
         ) : diff.binary || diff.tooLarge ? (
           <DiffBinary diff={diff} tool={toolButton} onOpen={openInTool} />
         ) : diff.hunks.length === 0 ? (
-          <div className="diff-message muted">{ignoreWhitespace ? "Only whitespace changed." : "No changes to show (only the file's name or mode changed)."}</div>
+          <div className="diff-message muted">{ignoreWhitespace ? t("Only whitespace changed.") : t("No changes to show (only the file's name or mode changed).")}</div>
         ) : (
           <DiffLines hunks={diff.hunks} picking={picking} language={languageFor(path)} split={split && roomy} wrap={wrap} pictures={pictures} notes={notes} />
         )}
       </div>
         {picking && selected.size > 0 && (
-          <div className="line-bar" role="toolbar" aria-label="Chosen lines">
-            <span>{linesLabel(selected.size)} chosen</span>
+          <div className="line-bar" role="toolbar" aria-label={t("Chosen lines")}>
+            <span>{tx("{0} chosen", linesLabel(selected.size))}</span>
             {picking.side === "unstaged" ? (
               <>
-                <Button kind="outline" disabled={applying} onClick={() => void apply("discard", selected)} title="Undo them in the file (you can put them back)">
-                  <span className="button-label">Discard</span>
+                <Button kind="outline" disabled={applying} onClick={() => void apply("discard", selected)} title={t("Undo them in the file (you can put them back)")}>
+                  <span className="button-label">{t("Discard")}</span>
                 </Button>
                 <Button kind="primary" disabled={applying} onClick={() => void apply("stage", selected)}>
-                  Stage {linesLabel(selected.size)}
+                  {tx("Stage {0}", linesLabel(selected.size))}
                 </Button>
               </>
             ) : (
               <Button kind="primary" disabled={applying} onClick={() => void apply("unstage", selected)}>
-                Unstage {linesLabel(selected.size)}
+                {tx("Unstage {0}", linesLabel(selected.size))}
               </Button>
             )}
-            <Button kind="icon" onClick={() => setSelected(new Set())} title="Let go of them (Esc)" aria-label="Let go of the chosen lines">
+            <Button kind="icon" onClick={() => setSelected(new Set())} title={t("Let go of them (Esc)")} aria-label={t("Let go of the chosen lines")}>
               <CloseIcon size={13} />
             </Button>
           </div>
@@ -359,16 +359,16 @@ function ReviewElsewhere({ threads, review }: { threads: ReviewThread[]; review:
   const outdated = threads.filter((thread) => thread.outdated);
   const others = threads.filter((thread) => !thread.outdated);
   return (
-    <section className="review-elsewhere" aria-label="Comments on lines not shown">
+    <section className="review-elsewhere" aria-label={t("Comments on lines not shown")}>
       {outdated.length > 0 && (
         <>
-          <h3>On an older version of this file</h3>
+          <h3>{t("On an older version of this file")}</h3>
           <ReviewThreads threads={outdated} notes={review} atLine={false} />
         </>
       )}
       {others.length > 0 && (
         <>
-          <h3>On lines not shown here</h3>
+          <h3>{t("On lines not shown here")}</h3>
           <ReviewThreads threads={others} notes={review} atLine={false} />
         </>
       )}

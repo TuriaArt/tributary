@@ -3,6 +3,7 @@ import type { RequestComment } from "../../api";
 import type { ReviewThread } from "../../lib/reviewThreads";
 import { CommentBody, CommentBox } from "../RequestReview";
 import { Button } from "../ui/Button";
+import { t } from "../../lib/i18n";
 
 /** A pull request's review comments, to show in its files' changes, and how to reply to them. */
 export interface ReviewNotes {
@@ -43,7 +44,7 @@ export function ReviewThreads({ threads, notes, atLine }: { threads: ReviewThrea
                   repoPath={notes.repoPath}
                   number={notes.number}
                   thread={replyTo}
-                  placeholder="Your reply"
+                  placeholder={t("Your reply")}
                   onDone={(message) => {
                     setReplying(null);
                     notes.onReplied(message);
@@ -52,7 +53,7 @@ export function ReviewThreads({ threads, notes, atLine }: { threads: ReviewThrea
                 />
               ) : (
                 <Button kind="link" className="request-reply" onClick={() => setReplying(thread.id)}>
-                  Reply
+                  {t("Reply")}
                 </Button>
               ))}
           </div>

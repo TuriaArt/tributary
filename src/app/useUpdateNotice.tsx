@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { DownloadIcon } from "../components/Icons";
 import type { ToastMessage } from "../components/Toast";
 import type { Updates } from "../lib/updates";
+import { t } from "../lib/i18n";
 
 /**
  * Says when a new version is ready to install (it's downloaded as soon as it's found, a few
@@ -22,11 +23,11 @@ export function useUpdateNotice(updates: Updates, notify: (toast: ToastMessage) 
     };
     if (ready) {
       say(`${version}:ready`, {
-        text: `Tributary ${version} is ready: it installs when you restart or quit`,
-        action: { label: "Restart", onClick: () => void restart() },
+        text: t("Tributary {0} is ready: it installs when you restart or quit", version),
+        action: { label: t("Restart"), onClick: () => void restart() },
       });
     } else if (failed) {
-      say(`${version}:out`, { text: `Tributary ${version} is out`, action: { label: "Update", onClick: showUpdate } });
+      say(`${version}:out`, { text: t("Tributary {0} is out", version), action: { label: t("Update"), onClick: showUpdate } });
     }
   }, [version, ready, failed, restart, notify, showUpdate]);
 }

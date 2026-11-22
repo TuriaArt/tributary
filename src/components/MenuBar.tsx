@@ -1,4 +1,5 @@
 import type { MenuItem } from "./ContextMenu";
+import { t } from "../lib/i18n";
 
 export interface AppMenu {
   label: string;
@@ -14,7 +15,7 @@ interface Props {
 /** The File, View, Repository and Help menus, in the tab bar (on Windows and Linux; macOS uses its own menu bar). */
 export function MenuBar({ menus, onOpen }: Props) {
   return (
-    <nav className="menu-bar" aria-label="Menu">
+    <nav className="menu-bar" aria-label={t("Menu")}>
       {menus.map((menu) => (
         <button
           key={menu.label}

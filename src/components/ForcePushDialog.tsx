@@ -3,6 +3,7 @@ import type { RepoSnapshot } from "../api";
 import { Dialog } from "./Dialog";
 import { TypeToConfirm } from "./Safety";
 import { Button } from "./ui/Button";
+import { t, tx } from "../lib/i18n";
 
 interface Props {
   snapshot: RepoSnapshot;
@@ -26,19 +27,19 @@ export function ForcePushDialog({ snapshot, protectedName, reason, onCancel, onP
   const [overwrite, setOverwrite] = useState(Boolean(props.overwrite));
   const confirmed = !protectedName || typed.trim() === protectedName;
   const branch = snapshot.headBranch ?? "HEAD";
-  const target = snapshot.upstream?.name ?? `${snapshot.remotes.includes("origin") ? "origin" : (snapshot.remotes[0] ?? "the remote")}/${branch}`;
+  const target = snapshot.upstream?.name ?? `${snapshot.remotes.includes("origin") ? "origin" : (snapshot.remotes[0] ?? t("the remote"))}/${branch}`;
 
   return (
     <Dialog
-      title={`Force push ${branch}?`}
+      title={t("Force push {0}?", branch)}
       onCancel={onCancel}
       buttons={
         <>
           <Button kind="secondary" onClick={onCancel} autoFocus={!protectedName}>
-            Cancel
+            {t("Cancel")}
           </Button>
           <Button kind="danger" onClick={() => onPush(overwrite)} disabled={!confirmed}>
-            {overwrite ? "Force push anyway" : "Force push"}
+            {overwrite ? t("Force push anyway") : t("Force push")}
           </Button>
         </>
       }
@@ -46,19 +47,19 @@ export function ForcePushDialog({ snapshot, protectedName, reason, onCancel, onP
       {/* Why it's asked for (Sync stopped for it), above what it does. */}
       {reason && <div className="dialog-warning force-push-reason">{reason}</div>}
       <p>
-        <strong>{target}</strong> will be replaced with your local <strong>{branch}</strong>.
+        {tx("{0} will be replaced with your local {1}.", <strong>{target}</strong>, <strong>{branch}</strong>)}
       </p>
       <ul className="dialog-consequences">
-        <li className="danger">Commits on {target} that aren't in your {branch} will be removed from it.</li>
+        <li className="danger">{tx("Commits on {0} that aren't in your {1} will be removed from it.", target, branch)}</li>
       </ul>
       <label className={`force-push-anyway${overwrite ? " on" : ""}`}>
         <input type="checkbox" checked={overwrite} onChange={(event) => setOverwrite(event.target.checked)} />
         <span className="force-push-anyway-text">
-          <strong>Also remove commits others pushed since you last fetched</strong>
+          <strong>{t("Also remove commits others pushed since you last fetched")}</strong>
           <span>
             {overwrite
-              ? "Their commits are removed too. A copy is kept in Repository\u00a0→\u00a0Restore."
-              : "If someone did, the force push stops instead, so their work isn't lost by mistake."}
+              ? t("Their commits are removed too. A copy is kept in Repository → Restore.")
+              : t("If someone did, the force push stops instead, so their work isn't lost by mistake.")}
           </span>
         </span>
       </label>

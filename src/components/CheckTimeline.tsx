@@ -4,8 +4,9 @@ import { checkKey, checkName, checkTime, checkTimeline, formatElapsed, formatSpa
 import { useCheckWhy, WhyChip } from "./CheckWhy";
 import { ExternalLinkIcon } from "./Icons";
 import { SlidingText } from "./SlidingText";
+import { t, tx } from "../lib/i18n";
 
-const WORDS = { success: "Passed", failure: "Failed", pending: "Running", cancelled: "Cancelled", skipped: "Skipped" } as const;
+const WORDS = { success: t("Passed"), failure: t("Failed"), pending: t("Running"), cancelled: t("Cancelled"), skipped: t("Skipped") } as const;
 
 /** "Finished 5 minutes ago", for the ends of the clock. */
 const ago = (what: string, ms: number, now: number) => `${what} ${relativeTime(ms / 1000, now / 1000)}`;
@@ -71,7 +72,7 @@ export function CheckTimeline({
         // for the keyboard (its click comes here).
         onClick={why ?? (check.url ? () => openUrl(check.url!) : undefined)}
         data-url={check.url ?? undefined}
-        title={why ? `${checkName(check.name)}: why it failed` : check.detail && check.detail !== "Queued" ? `${checkName(check.name)}: ${check.detail}` : check.url ? `See ${checkName(check.name)} on its page` : undefined}
+        title={why ? t("{0}: why it failed", checkName(check.name)) : check.detail && check.detail !== "Queued" ? `${checkName(check.name)}: ${check.detail}` : check.url ? t("See {0} on its page", checkName(check.name)) : undefined}
       >
         <span className="request-check-dot" aria-hidden />
         {check.url ? (
@@ -85,7 +86,7 @@ export function CheckTimeline({
           </span>
         )}
         {timeline && (
-          <span className="request-timeline-later" title={later.has(check) ? `Started ${formatElapsed(later.get(check)!)} after the first check` : undefined}>
+          <span className="request-timeline-later" title={later.has(check) ? t("Started {0} after the first check", formatElapsed(later.get(check)!)) : undefined}>
             {later.has(check) ? `+${formatElapsed(later.get(check)!)}` : null}
           </span>
         )}
@@ -101,8 +102,8 @@ export function CheckTimeline({
             ) : null}
           </span>
         )}
-        <span className="request-timeline-time" title={queued ? "Waiting for a runner" : undefined}>
-          {queued ? "Queued" : state === "cancelled" ? "Cancelled" : (checkTime(check, now) ?? WORDS[state])}
+        <span className="request-timeline-time" title={queued ? t("Waiting for a runner") : undefined}>
+          {queued ? t("Queued") : state === "cancelled" ? t("Cancelled") : (checkTime(check, now) ?? WORDS[state])}
         </span>
         {state === "failure" && check.detail && <span className="request-timeline-detail">{check.detail}</span>}
       </li>
@@ -117,19 +118,19 @@ export function CheckTimeline({
       <li key={`${each.name}\u0000${each.trigger}`} className="request-timeline-group">
         <div className="request-timeline-group-head">
           <span className="request-timeline-group-name">
-            {each.name ?? "Other checks"}
+            {each.name ?? t("Other checks")}
             {each.trigger && <span className="request-timeline-group-trigger"> · {each.trigger}</span>}
           </span>
           {/* The one start, at the top of its line. */}
           {index === 0 && timeline && (
             <span className="request-timeline-group-start">
               <span className="request-timeline-group-flag" style={{ left: 0 }}>
-                Started {relativeTime(timeline.first / 1000, now / 1000)}
+                {tx("Started {0}", relativeTime(timeline.first / 1000, now / 1000))}
               </span>
             </span>
           )}
           {span && (
-            <span className="request-timeline-group-total" title={running ? "Running for this long so far" : "From the first one starting to the last one finishing"}>
+            <span className="request-timeline-group-total" title={running ? t("Running for this long so far") : t("From the first one starting to the last one finishing")}>
               {formatElapsed(span.last - span.first)}
             </span>
           )}
@@ -153,10 +154,10 @@ export function CheckTimeline({
       <ul className="request-timeline-list">{headed ? groups.map((each, index) => group(each, index)) : ordered.map(row)}</ul>
       {timeline && (
         <div className="request-timeline-axis" aria-hidden>
-          <span>{headed ? null : ago("Started", timeline.first, now)}</span>
+          <span>{headed ? null : ago(t("Started"), timeline.first, now)}</span>
           {/* While they run, how long the clock is (it grows now and then, in round steps); then
               when the last one finished. */}
-          <span>{timeline.running ? `+${formatSpan(timeline.length)}` : ago("Finished", timeline.last, now)}</span>
+          <span>{timeline.running ? `+${formatSpan(timeline.length)}` : ago(t("Finished"), timeline.last, now)}</span>
         </div>
       )}
     </div>

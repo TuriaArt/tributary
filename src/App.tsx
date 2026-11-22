@@ -64,6 +64,7 @@ import { useActivityLog, useFolderDrop, useRepositoryWatch, useWindowFocus } fro
 import { useWorktrees } from "./app/useWorktrees";
 import { useZoom } from "./app/window";
 import { DEFAULT_COLUMNS } from "./components/CommitList";
+import { t } from "./lib/i18n";
 
 /**
  * Tributary's window: the tabs, the open repository (or the start screen), and what opens
@@ -90,7 +91,7 @@ export default function App() {
   // say so once it's back, with the way to the saved problem reports.
   useEffect(() => {
     takeRecoveryNote()
-      .then((note) => note && setToast({ text: note, action: { label: "Diagnostics", onClick: () => showOverlay("diagnostics") } }))
+      .then((note) => note && setToast({ text: note, action: { label: t("Diagnostics"), onClick: () => showOverlay("diagnostics") } }))
       .catch(() => {});
   }, [showOverlay]);
   /** The repository dialog that's open (the clone dialog shows on the start screen too). */
@@ -222,7 +223,7 @@ export default function App() {
   // A big repository without git's speed-ups: offered once.
   // Who's signed in: for the start screen's chips, the clone dialog's list and Settings.
   const accounts = useAccounts(!snapshot || overlays.open.settings || dialog?.kind === "clone", setToast);
-  useSpeedOffer(snapshot, setToast, () => setDialog({ kind: "repoSettings", section: "Speed" }));
+  useSpeedOffer(snapshot, setToast, () => setDialog({ kind: "repoSettings", section: t("Speed") }));
   usePullRequestNews({
     repoPath,
     repoName: snapshot?.name ?? "",
@@ -274,7 +275,7 @@ export default function App() {
     repo.whilePicking(async () => {
       if (!repoPath) return;
       const { paths, outside } = await chooseFilesToLock(repoPath);
-      if (outside > 0) repo.setError({ message: "Only files inside this repository can be locked." });
+      if (outside > 0) repo.setError({ message: t("Only files inside this repository can be locked.") });
       if (paths.length > 0) await act({ kind: "lockFiles", paths });
     });
 
@@ -511,12 +512,12 @@ export default function App() {
                     onClick={() => overlays.show("update")}
                     title={
                       updates.ready
-                        ? `Tributary ${updates.available.version} is ready: restart to install it (or it installs when you quit)`
-                        : `Tributary ${updates.available.version} is available`
+                        ? t("Tributary {0} is ready: restart to install it (or it installs when you quit)", updates.available.version)
+                        : t("Tributary {0} is available", updates.available.version)
                     }
                   >
                     <DownloadIcon size={13} />
-                    <span className="button-label">{updates.waiting ? "Restarting…" : updates.ready ? "Restart to update" : "Update"}</span>
+                    <span className="button-label">{updates.waiting ? t("Restarting…") : updates.ready ? t("Restart to update") : t("Update")}</span>
                   </button>
                 )
               }
@@ -578,8 +579,8 @@ export default function App() {
               onRequestCreated={(pr) => {
                 setDialog(null);
                 prs.refresh(true);
-                const what = pr.forge === "gitlab" ? "merge request" : "pull request";
-                setToast({ text: `Opened ${what} ${requestNumber(pr)}`, action: { label: "Show", onClick: () => showRequest(pr) } });
+                const what = pr.forge === "gitlab" ? t("merge request") : t("pull request");
+                setToast({ text: t("Opened {0} {1}", what, requestNumber(pr)), action: { label: t("Show"), onClick: () => showRequest(pr) } });
               }}
             />
           ) : (

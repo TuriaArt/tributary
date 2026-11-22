@@ -1,3 +1,4 @@
+import { locale, pluralWord, t } from "./i18n";
 // The arithmetic behind Team activity's charts: which day each commit falls on, everyone's
 // colour, and the scales.
 
@@ -57,10 +58,10 @@ export function assignSlots(known: ReadonlyMap<string, number>, emails: string[]
 
 /** "Today", "Yesterday", or like "Tue 3". */
 export function dayLabel(day: number, today: number): string {
-  if (day === today) return "Today";
-  if (nextDay(day) === today) return "Yesterday";
+  if (day === today) return t("Today");
+  if (nextDay(day) === today) return t("Yesterday");
   const date = new Date(day);
-  return `${date.toLocaleDateString(undefined, { weekday: "short" })} ${date.getDate()}`;
+  return `${date.toLocaleDateString(locale(), { weekday: "short" })} ${date.getDate()}`;
 }
 
 /** Which days get a label on an axis: every day for a week, then sparser, always today. */
@@ -161,9 +162,10 @@ export function median(values: number[]): number | null {
 /** "3 hours", "1.5 days", "40 minutes": a length of time, roughly. */
 export function roughDuration(seconds: number): string {
   const minutes = seconds / 60;
-  if (minutes < 60) return `${Math.max(1, Math.round(minutes))} minutes`;
+  const count = (n: number, word: string) => `${n.toLocaleString(locale())} ${pluralWord(n, word)}`;
+  if (minutes < 60) return count(Math.max(1, Math.round(minutes)), "minute");
   const hours = minutes / 60;
-  if (hours < 24) return `${Math.round(hours)} ${Math.round(hours) === 1 ? "hour" : "hours"}`;
+  if (hours < 24) return count(Math.round(hours), "hour");
   const days = Math.round((hours / 24) * 10) / 10;
-  return `${days} ${days === 1 ? "day" : "days"}`;
+  return count(days, "day");
 }
