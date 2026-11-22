@@ -213,6 +213,9 @@ jobs:
           # The AppImage is made with linuxdeploy, itself an AppImage: unpacked to run, as the
           # runner has no FUSE to mount it.
           APPIMAGE_EXTRACT_AND_RUN: "1"
+          # Builds of other branches, by hand, don't look for updates (src/lib/updates.ts): a
+          # release would replace the change they're there to try.
+          VITE_TRIBUTARY_NO_UPDATES: ${{ (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') && '0' || '1' }}
         run: |
           config=$(node -e '
             const config = { version: process.env.VERSION, bundle: {} };

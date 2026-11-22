@@ -1,5 +1,5 @@
 import { useEffect, useRef, type ReactNode } from "react";
-import { isBeta, type Updates } from "../lib/updates";
+import { isBeta, UPDATES, type Updates } from "../lib/updates";
 import { relativeTime } from "../lib/format";
 import { useNow } from "../lib/useNow";
 import { openInBrowser, TRIBUTARY_ON_GITHUB } from "../lib/weblinks";
@@ -49,7 +49,12 @@ function UpdateStatus({ updates, onInstall }: Pick<Props, "updates" | "onInstall
   let title: string;
   let detail: ReactNode;
   let action: ReactNode = null;
-  if (waiting) {
+  if (!UPDATES) {
+    tone = "unknown";
+    icon = <InfoIcon size={16} />;
+    title = t("This build doesn't update itself");
+    detail = t("It was built by hand from a branch, to try it. Install a release to get updates.");
+  } else if (waiting) {
     tone = "available";
     icon = <RefreshIcon size={16} className="spin" />;
     title = t("Restarting when git is done…");
@@ -165,17 +170,21 @@ export function AboutDialog({ version, updates, auto, setAuto, beta, setBeta, on
       </div>
       <section className="about-updates" aria-label={t("Updates")}>
         <UpdateStatus updates={updates} onInstall={onInstall} />
-        <Toggle label={t("Check for updates automatically")} hint={t("Shortly after Tributary starts, and every six hours.")} on={auto} set={setAuto} />
-        <Toggle
-          label={t("Get beta versions")}
-          hint={
-            beta
-              ? t("A new version with each change, before it's released. Turning this off keeps the version you have until a release is newer.")
-              : t("Try what's coming: a new version with each change, before it's released. It may have rough edges.")
-          }
-          on={beta}
-          set={setBeta}
-        />
+        {UPDATES && (
+          <>
+            <Toggle label={t("Check for updates automatically")} hint={t("Shortly after Tributary starts, and every six hours.")} on={auto} set={setAuto} />
+            <Toggle
+              label={t("Get beta versions")}
+              hint={
+                beta
+                  ? t("A new version with each change, before it's released. Turning this off keeps the version you have until a release is newer.")
+                  : t("Try what's coming: a new version with each change, before it's released. It may have rough edges.")
+              }
+              on={beta}
+              set={setBeta}
+            />
+          </>
+        )}
       </section>
       <nav className="about-links" aria-label={t("More about Tributary")}>
         <button className="about-link" onClick={onWhatsNew}>

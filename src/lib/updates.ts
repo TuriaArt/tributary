@@ -13,6 +13,12 @@ export interface UpdateProgress {
 const FIRST_CHECK = 5_000;
 const CHECK_EVERY = 6 * 60 * 60 * 1000;
 
+/**
+ * Whether this copy looks for new versions. Builds of a branch made by hand, to try it before
+ * it's merged, don't: a release would replace what they're there to try.
+ */
+export const UPDATES = import.meta.env.VITE_TRIBUTARY_NO_UPDATES !== "1";
+
 /** A newer version, if there is one: a beta too, if `beta`. */
 export function checkForUpdate(beta = false): Promise<UpdateInfo | null> {
   return invoke("check_for_update", { beta });
@@ -101,7 +107,7 @@ export function useUpdates(auto: boolean, beta = false): Updates {
   }, []);
 
   const check = useCallback(async () => {
-    if (checkingNow.current) return;
+    if (!UPDATES || checkingNow.current) return;
     checkingNow.current = true;
     setChecking(true);
     try {
