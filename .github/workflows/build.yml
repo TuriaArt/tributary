@@ -37,6 +37,7 @@ jobs:
       pull-requests: read
     outputs:
       version: ${{ steps.version.outputs.version }}
+      label: ${{ steps.version.outputs.label }}
       build: ${{ steps.changes.outputs.build }}
     steps:
       - uses: actions/checkout@v7
@@ -82,6 +83,10 @@ jobs:
             version=$(node .github/scripts/next-version.mjs --beta)
           fi
           echo "version=$version" >> "$GITHUB_OUTPUT"
+          # For the artifacts' names, like tributary-0.3.0-beta.4-8941df8-x86_64-pc-windows-msvc:
+          # the version and the commit, so builds downloaded into one folder don't clash
+          # (builds of other branches by hand get the same version as the next beta).
+          echo "label=$version-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
 
   build:
     name: ${{ matrix.name }}
@@ -275,7 +280,7 @@ jobs:
 
       - uses: actions/upload-artifact@v7
         with:
-          name: tributary-${{ matrix.target }}
+          name: tributary-${{ needs.version.outputs.label }}-${{ matrix.target }}
           path: ${{ matrix.bundles }}
           if-no-files-found: error
 
@@ -288,8 +293,9 @@ jobs:
           if-no-files-found: error
 
   # Tributary's Flatpak (flatpak/), made from the Linux job's .deb on the GNOME runtime: in
-  # the run's artifacts as Tributary.flatpak, to try (flatpak install --user
-  # Tributary.flatpak). It isn't one of the release's files: Flathub builds its own.
+  # the run's artifacts as Tributary-<version>-<commit>-flatpak, with Tributary.flatpak in it,
+  # to try (flatpak install --user Tributary.flatpak). It isn't one of the release's files:
+  # Flathub builds its own.
   flatpak:
     name: Flatpak
     needs: [version, build]
@@ -323,7 +329,7 @@ jobs:
 
       - uses: actions/upload-artifact@v7
         with:
-          name: Tributary-flatpak
+          name: Tributary-${{ needs.version.outputs.label }}-flatpak
           path: Tributary.flatpak
           if-no-files-found: error
 
@@ -333,13 +339,13 @@ jobs:
   # the sandbox and its permissions all work). Using it, nobody's tried here.
   flatpak-check:
     name: Flatpak starts
-    needs: flatpak
+    needs: [version, flatpak]
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       - uses: actions/download-artifact@v8
         with:
-          name: Tributary-flatpak
+          name: Tributary-${{ needs.version.outputs.label }}-flatpak
 
       - name: Flatpak, a virtual display, and the GNOME runtime
         timeout-minutes: 15
